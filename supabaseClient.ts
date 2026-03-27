@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const env = (import.meta as any).env || {};
 
 // Credenciais do projeto Supabase
-const supabaseUrl = env.VITE_SUPABASE_URL || 'https://ekxdvzquvoaeunmgopdp.supabase.co';
-const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVreGR2enF1dm9hZXVubWdvcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NDgyODUsImV4cCI6MjA4OTAyNDI4NX0.vCFSSWAHOU5sbTVuelJtVSRixwl3WHycSbYrZhwaqA0';
+const supabaseUrl = env.VITE_SUPABASE_URL || 'https://lhgzyrszzbxjjvnxfwzf.supabase.co';
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_5kxyqGvP9GV4e2BhvLwWVw_RraqN7Bt';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

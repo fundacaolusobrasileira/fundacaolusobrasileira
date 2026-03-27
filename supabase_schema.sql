@@ -1,11 +1,11 @@
 -- ============================================================
 -- FUNDAÇÃO LUSO-BRASILEIRA — Schema Completo para Supabase
--- Gerado em: 2026-03-13
+-- Atualizado em: 2026-03-27
 -- ============================================================
 -- INSTRUÇÕES:
 -- 1. Cole este arquivo no SQL Editor do Supabase
 -- 2. Execute tudo de uma vez (Run)
--- 3. Depois vá em Storage > New Bucket > nome: "media" > Public: ON
+-- 3. O bucket "media" será criado automaticamente abaixo
 -- ============================================================
 
 
@@ -13,6 +13,18 @@
 -- EXTENSÕES
 -- ============================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+
+-- ============================================================
+-- FUNÇÃO AUXILIAR: updated_at automático
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- ============================================================
@@ -24,23 +36,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   user_id     UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name        TEXT NOT NULL,
   email       TEXT NOT NULL,
-  type        TEXT NOT NULL DEFAULT 'individual',  -- 'individual' | 'institucional'
-  role        TEXT NOT NULL DEFAULT 'membro',       -- 'membro' | 'editor' | 'admin'
+  type        TEXT NOT NULL DEFAULT 'individual',   -- 'individual' | 'institucional'
+  role        TEXT NOT NULL DEFAULT 'membro',        -- 'membro' | 'editor' | 'admin'
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Índice para busca por user_id
 CREATE INDEX IF NOT EXISTS profiles_user_id_idx ON public.profiles(user_id);
-
--- Trigger: atualiza updated_at automaticamente
-CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER profiles_updated_at
   BEFORE UPDATE ON public.profiles
@@ -56,27 +58,30 @@ CREATE TABLE IF NOT EXISTS public.partners (
 
   -- Identidade
   name          TEXT NOT NULL DEFAULT 'Novo Membro',
-  type          TEXT NOT NULL DEFAULT 'pessoa',     -- 'pessoa' | 'empresa'
-  category      TEXT NOT NULL DEFAULT 'Parceiro',   -- 'Fundador' | 'Apoiador' | 'Institucional' | 'Parceiro' | 'Amigo' | 'Governança'
+  type          TEXT NOT NULL DEFAULT 'pessoa',      -- 'pessoa' | 'empresa'
+  category      TEXT NOT NULL DEFAULT 'Parceiro',    -- 'Parceiro Platinum' | 'Parceiro Gold' | 'Parceiro Silver' | 'Apoio Público' | 'Outro Apoio' | 'Exposição' | 'Governança'
 
   -- Perfil
-  role          TEXT,         -- Cargo ou função (ex: Presidente, CEO)
-  bio           TEXT,         -- Biografia ou descrição
-  image         TEXT,         -- URL da foto ou logo
-  avatar        TEXT,         -- URL de avatar alternativo
-  country       TEXT,         -- País de origem ou sede
-  website       TEXT,         -- URL do site
+  role          TEXT,          -- Cargo ou função (ex: Presidente, CEO)
+  bio           TEXT,          -- Biografia ou descrição
+  summary       TEXT,          -- Resumo curto do membro
+  "full"        TEXT,          -- Descrição completa do membro
+  image         TEXT,          -- URL da foto ou logo
+  avatar        TEXT,          -- URL de avatar alternativo
+  country       TEXT,          -- País de origem ou sede
+  website       TEXT,          -- URL do site
 
   -- Redes sociais (JSON)
   -- Estrutura: { "youtube": "...", "linkedin": "...", "twitter": "...", "facebook": "...", "instagram": "..." }
   social_links  JSONB DEFAULT '{}'::JSONB,
 
   -- Tags e metadados
-  tags          TEXT[],       -- ex: ['Portugal', 'Tecnologia']
-  since         TEXT,         -- Ano ou data de ingresso (ex: '2023')
+  tags          TEXT[],        -- ex: ['Portugal', 'Tecnologia']
+  tier          TEXT,          -- 'presidente' | 'direcao' | 'secretario-geral' | 'vogal'
+  since         TEXT,          -- Ano ou data de ingresso (ex: '2023')
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   featured      BOOLEAN NOT NULL DEFAULT FALSE,
-  "order"       INTEGER,      -- Ordem de exibição manual
+  "order"       INTEGER,       -- Ordem de exibição manual
 
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -85,6 +90,7 @@ CREATE TABLE IF NOT EXISTS public.partners (
 CREATE INDEX IF NOT EXISTS partners_category_idx ON public.partners(category);
 CREATE INDEX IF NOT EXISTS partners_active_idx   ON public.partners(active);
 CREATE INDEX IF NOT EXISTS partners_featured_idx ON public.partners(featured);
+CREATE INDEX IF NOT EXISTS partners_tier_idx     ON public.partners(tier);
 
 CREATE OR REPLACE TRIGGER partners_updated_at
   BEFORE UPDATE ON public.partners
@@ -102,10 +108,13 @@ CREATE TABLE IF NOT EXISTS public.events (
   title             TEXT NOT NULL DEFAULT 'Novo Evento',
   subtitle          TEXT,
   description       TEXT,
-  description_short TEXT,
+  description_short TEXT,          -- Descrição curta para cards
+  objective         TEXT,          -- Objetivo do evento
+  experience        TEXT,          -- Descrição da experiência
+  sponsors          TEXT,          -- Patrocinadores / apoios
 
   -- Data e hora
-  date              TEXT,          -- Data principal (ex: '2024-11-15' ou '15 de Novembro de 2024')
+  date              TEXT,          -- Data principal (ex: '2024-11-15')
   time              TEXT,          -- Hora de início (ex: '19:00')
   end_date          TEXT,          -- Data de término (para eventos multi-dia)
   end_time          TEXT,          -- Hora de término
@@ -117,12 +126,13 @@ CREATE TABLE IF NOT EXISTS public.events (
   country           TEXT,
 
   -- Classificação
-  category          TEXT NOT NULL DEFAULT 'Outros',  -- '33 Anos' | 'Fundação' | 'Embaixada' | 'Outros'
+  category          TEXT NOT NULL DEFAULT 'Outros',   -- '33 Anos' | 'Fundação' | 'Embaixada' | 'Outros'
   tags              TEXT[],
 
   -- Mídia
   image             TEXT,          -- URL da imagem principal de capa
   cover_image       TEXT,          -- URL da imagem de cover (hero)
+  card_image        TEXT,          -- URL da imagem para card
 
   -- Galeria oficial (array de GalleryItem em JSON)
   -- Estrutura de cada item:
@@ -142,7 +152,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   gallery           JSONB DEFAULT '[]'::JSONB,
 
   -- Links externos
-  -- Estrutura: { "registration": "...", "website": "..." }
+  -- Estrutura: { "registration": "...", "website": "...", "linkLabel": "..." }
   links             JSONB DEFAULT '{}'::JSONB,
 
   -- Redes sociais do evento
@@ -150,7 +160,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   social_links      JSONB DEFAULT '{}'::JSONB,
 
   -- Status e visibilidade
-  status            TEXT NOT NULL DEFAULT 'draft',   -- 'draft' | 'published'
+  status            TEXT NOT NULL DEFAULT 'draft',    -- 'draft' | 'published'
   featured          BOOLEAN NOT NULL DEFAULT FALSE,
   notes             TEXT,          -- Notas internas (só visíveis para editores)
 
@@ -173,17 +183,18 @@ CREATE OR REPLACE TRIGGER events_updated_at
 -- Formulário público de interesse / pré-inscrição
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.precadastros (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-  name        TEXT NOT NULL,
-  email       TEXT NOT NULL,
-  type        TEXT NOT NULL DEFAULT 'individual',  -- 'individual' | 'empresarial' | 'academico' | 'newsletter'
-  message     TEXT,
-  status      TEXT NOT NULL DEFAULT 'novo',        -- 'novo' | 'contatado' | 'aprovado' | 'rejeitado' | 'convertido'
-  notes       TEXT,          -- Notas internas do editor
+  name                TEXT NOT NULL,
+  email               TEXT NOT NULL,
+  type                TEXT NOT NULL DEFAULT 'individual',   -- 'individual' | 'empresarial' | 'academico' | 'newsletter'
+  "registrationType"  TEXT,                                 -- 'membro' | 'parceiro' | 'colaborador' | 'embaixador'
+  message             TEXT,
+  status              TEXT NOT NULL DEFAULT 'novo',         -- 'novo' | 'contatado' | 'aprovado' | 'rejeitado' | 'convertido'
+  notes               TEXT,          -- Notas internas do editor
 
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS precadastros_status_idx ON public.precadastros(status);
@@ -198,19 +209,17 @@ CREATE OR REPLACE TRIGGER precadastros_updated_at
 -- ============================================================
 -- 5. TABELA: community_media_submissions
 -- Submissões de mídia da comunidade (pendentes de aprovação)
--- Obs: Atualmente gerenciado em memória no app — esta tabela
---      prepara a migração para persistência real no Supabase
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.community_media_submissions (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   event_id    UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
 
-  type        TEXT NOT NULL DEFAULT 'image',  -- 'image' | 'video'
+  type        TEXT NOT NULL DEFAULT 'image',   -- 'image' | 'video'
   url         TEXT NOT NULL,
   author_name TEXT NOT NULL,
   email       TEXT NOT NULL,
   message     TEXT,
-  status      TEXT NOT NULL DEFAULT 'pending',  -- 'pending' | 'approved' | 'rejected'
+  status      TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
 
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -223,7 +232,6 @@ CREATE INDEX IF NOT EXISTS community_media_status_idx   ON public.community_medi
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================================
 
--- Ativa RLS em todas as tabelas
 ALTER TABLE public.profiles                    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.partners                    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events                      ENABLE ROW LEVEL SECURITY;
@@ -235,17 +243,14 @@ ALTER TABLE public.community_media_submissions ENABLE ROW LEVEL SECURITY;
 -- RLS: profiles
 -- ============================================================
 
--- Usuário lê apenas o próprio perfil
 CREATE POLICY "profiles: leitura própria"
   ON public.profiles FOR SELECT
   USING (auth.uid() = user_id);
 
--- Usuário cria o próprio perfil (no signup)
 CREATE POLICY "profiles: inserção própria"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- Usuário atualiza o próprio perfil
 CREATE POLICY "profiles: atualização própria"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = user_id);
@@ -255,12 +260,10 @@ CREATE POLICY "profiles: atualização própria"
 -- RLS: partners
 -- ============================================================
 
--- Qualquer pessoa (incluindo anônimos) pode ver membros
 CREATE POLICY "partners: leitura pública"
   ON public.partners FOR SELECT
   USING (true);
 
--- Apenas autenticados podem criar/editar/deletar
 CREATE POLICY "partners: inserção autenticados"
   ON public.partners FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
@@ -278,7 +281,6 @@ CREATE POLICY "partners: exclusão autenticados"
 -- RLS: events
 -- ============================================================
 
--- Anônimos veem apenas eventos publicados
 CREATE POLICY "events: leitura pública (publicados)"
   ON public.events FOR SELECT
   USING (
@@ -286,7 +288,6 @@ CREATE POLICY "events: leitura pública (publicados)"
     OR auth.role() = 'authenticated'
   );
 
--- Apenas autenticados podem criar/editar/deletar
 CREATE POLICY "events: inserção autenticados"
   ON public.events FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
@@ -304,22 +305,18 @@ CREATE POLICY "events: exclusão autenticados"
 -- RLS: precadastros
 -- ============================================================
 
--- Apenas autenticados podem ler pré-cadastros
 CREATE POLICY "precadastros: leitura autenticados"
   ON public.precadastros FOR SELECT
   USING (auth.role() = 'authenticated');
 
--- Qualquer pessoa pode enviar pré-cadastro (formulário público)
 CREATE POLICY "precadastros: inserção pública"
   ON public.precadastros FOR INSERT
   WITH CHECK (true);
 
--- Apenas autenticados podem atualizar (mudar status, adicionar notas)
 CREATE POLICY "precadastros: atualização autenticados"
   ON public.precadastros FOR UPDATE
   USING (auth.role() = 'authenticated');
 
--- Apenas autenticados podem excluir
 CREATE POLICY "precadastros: exclusão autenticados"
   ON public.precadastros FOR DELETE
   USING (auth.role() = 'authenticated');
@@ -329,22 +326,18 @@ CREATE POLICY "precadastros: exclusão autenticados"
 -- RLS: community_media_submissions
 -- ============================================================
 
--- Qualquer pessoa pode enviar mídia (formulário público)
 CREATE POLICY "community_media: inserção pública"
   ON public.community_media_submissions FOR INSERT
   WITH CHECK (true);
 
--- Apenas autenticados podem ver submissões pendentes
 CREATE POLICY "community_media: leitura autenticados"
   ON public.community_media_submissions FOR SELECT
   USING (auth.role() = 'authenticated');
 
--- Apenas autenticados podem aprovar/rejeitar (atualizar status)
 CREATE POLICY "community_media: atualização autenticados"
   ON public.community_media_submissions FOR UPDATE
   USING (auth.role() = 'authenticated');
 
--- Apenas autenticados podem excluir
 CREATE POLICY "community_media: exclusão autenticados"
   ON public.community_media_submissions FOR DELETE
   USING (auth.role() = 'authenticated');
@@ -352,7 +345,6 @@ CREATE POLICY "community_media: exclusão autenticados"
 
 -- ============================================================
 -- TRIGGER: criação automática de profile no signup
--- Quando um usuário se registra, cria um registro em profiles
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -370,7 +362,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Remove trigger antigo se existir, recria limpo
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER on_auth_user_created
@@ -381,23 +372,15 @@ CREATE TRIGGER on_auth_user_created
 -- ============================================================
 -- STORAGE: Bucket "media"
 -- ============================================================
--- ATENÇÃO: O bucket precisa ser criado manualmente no painel:
---   Supabase > Storage > New Bucket
---   Nome: media
---   Public bucket: SIM (ativado)
---
--- Após criar o bucket, rode os comandos abaixo para as policies:
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('media', 'media', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Qualquer pessoa pode visualizar arquivos do bucket público
 CREATE POLICY "media: leitura pública"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'media');
 
--- Apenas autenticados podem fazer upload
 CREATE POLICY "media: upload autenticados"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -405,7 +388,6 @@ CREATE POLICY "media: upload autenticados"
     AND auth.role() = 'authenticated'
   );
 
--- Apenas autenticados podem atualizar/deletar arquivos
 CREATE POLICY "media: atualização autenticados"
   ON storage.objects FOR UPDATE
   USING (
@@ -422,43 +404,11 @@ CREATE POLICY "media: exclusão autenticados"
 
 
 -- ============================================================
--- DADOS INICIAIS (OPCIONAL)
--- Descomente para inserir dados de exemplo
--- ============================================================
-
-/*
--- Evento de exemplo
-INSERT INTO public.events (title, description, date, location, category, status, featured, image)
-VALUES (
-  'Sessão de Abertura 2024',
-  'Evento inaugural da Fundação Luso-Brasileira com a presença de representantes de Portugal e Brasil.',
-  '2024-03-15',
-  'Auditório Vieira de Almeida, Lisboa',
-  'Fundação',
-  'published',
-  true,
-  'https://picsum.photos/1200/600?random=1'
-);
-
--- Membro de exemplo (Conselho)
-INSERT INTO public.partners (name, type, category, role, bio, active, featured)
-VALUES (
-  'Dr. João Silva',
-  'pessoa',
-  'Governança',
-  'Presidente do Conselho',
-  'Jurista e empresário com mais de 30 anos de experiência em relações luso-brasileiras.',
-  true,
-  true
-);
-*/
-
-
--- ============================================================
 -- FIM DO SCHEMA
 -- ============================================================
 -- Após executar este SQL:
 -- 1. Vá em Authentication > Users e crie o primeiro usuário editor
+--    (depois mude o role para 'editor' na tabela profiles)
 -- 2. O bucket "media" já estará configurado
 -- 3. O app estará pronto para usar
 -- ============================================================
