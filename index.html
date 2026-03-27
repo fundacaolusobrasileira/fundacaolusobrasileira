@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fundação Luso-Brasileira</title>
+    <meta name="description" content="Website institucional da Fundação Luso-Brasileira." />
+    <!-- Open Graph Placeholders -->
+    <meta property="og:title" content="Fundação Luso-Brasileira" />
+    <meta property="og:description" content="Conectando Portugal e Brasil através da cultura e inovação." />
+    <meta property="og:type" content="website" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+              script: ['Pinyon Script', 'cursive'],
+            },
+            colors: {
+              page: '#F9FAFB',
+              dark: '#050F0B',
+              brand: {
+                50: '#F2F7F5',
+                100: '#E1EBE6',
+                200: '#BFD4CB',
+                300: '#94B3A6',
+                400: '#6A8F7F',
+                500: '#486B5C',
+                600: '#2F4D40',
+                700: '#1F332B',
+                800: '#13211C',
+                900: '#0A1410',
+              },
+              sand: {
+                50: '#FCFAF7',
+                100: '#F7F2EB',
+                200: '#EBE0D1',
+                300: '#DBC9AD',
+                400: '#C9AF88',
+                500: '#B09265',
+                600: '#8F724B',
+                700: '#6E5538',
+              },
+              brasil: {
+                blue: '#002776',
+                yellow: '#FFDF00',
+                green: '#009C3B'
+              },
+              portugal: {
+                red: '#FF0000',
+                green: '#006600'
+              },
+              slate: {
+                50: '#FAFAFA',
+                100: '#F4F4F5',
+                200: '#E4E4E7',
+                300: '#D4D4D8',
+                400: '#A1A1AA',
+                500: '#71717A',
+                600: '#52525B',
+                700: '#3F3F46',
+                800: '#27272A',
+                900: '#18181B',
+              }
+            },
+            boxShadow: {
+              'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+              'glow': '0 0 40px -10px rgba(176, 146, 101, 0.3)',
+              'premium': '0 20px 40px -10px rgba(0,0,0,0.1)',
+              'float': '0 10px 30px -5px rgba(0,0,0,0.15)',
+            },
+            backgroundImage: {
+              'noise': "url('https://www.transparenttextures.com/patterns/stardust.png')",
+            },
+            keyframes: {
+              fadeInUpSlow: {
+                '0%': { opacity: '0', transform: 'translateY(30px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              shimmer: {
+                '0%': { backgroundPosition: '200% 0' },
+                '100%': { backgroundPosition: '-200% 0' }
+              }
+            },
+            animation: {
+              'fadeInUpSlow': 'fadeInUpSlow 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in-up-small': 'fadeInUpSlow 0.6s ease-out forwards',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #F9FAFB;
+        overflow-x: hidden;
+        color: #18181B;
+      }
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      .delay-100 { transition-delay: 100ms; animation-delay: 100ms; }
+      .delay-200 { transition-delay: 200ms; animation-delay: 200ms; }
+      .delay-300 { transition-delay: 300ms; animation-delay: 300ms; }
+      .delay-500 { transition-delay: 500ms; animation-delay: 500ms; }
+      
+      .lusobrasil-border {
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      /* Premium Scroll Reveal Styles */
+      .reveal-hidden {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
+        filter: blur(4px);
+        transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                    transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+                    filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform, filter;
+      }
+      
+      .reveal-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+
+      /* Hover Lift Effect */
+      .hover-lift {
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .hover-lift:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.87.3"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
