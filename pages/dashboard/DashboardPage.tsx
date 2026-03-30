@@ -71,7 +71,7 @@ export const DashboardPage = () => {
 
   const openMemberModal = (member?: Partial<Partner>) => {
       if (!checkAuth()) return;
-      setEditingMember(member || { name: '', category: 'Parceiro', socialLinks: {} });
+      setEditingMember(member || { name: '', category: 'Parceiro Silver', socialLinks: {} });
       setMemberModalOpen(true);
       setShowSearchResults(false);
   };

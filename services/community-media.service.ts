@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import { PENDING_MEDIA_SUBMISSIONS, notifyState, showToast } from '../store/app.store';
+import { PENDING_MEDIA_SUBMISSIONS, AUTH_SESSION, notifyState, showToast } from '../store/app.store';
 import type { PendingMediaSubmission } from '../types';
 
 const normalize = (row: any): PendingMediaSubmission => ({
@@ -35,6 +35,7 @@ export const submitCommunityMedia = async (
     url: submission.url,
     type: submission.type,
     message: submission.message,
+    user_id: AUTH_SESSION.userId || null,
   };
 
   const { data: res, error } = await supabase

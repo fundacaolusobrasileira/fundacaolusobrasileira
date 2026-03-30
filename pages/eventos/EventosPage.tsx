@@ -33,11 +33,11 @@ const EventCard: React.FC<{
         <div className={`h-full bg-white rounded-[2rem] overflow-hidden hover:shadow-premium transition-all duration-700 flex flex-col p-2 border border-slate-100/50 ${upcoming ? 'ring-1 ring-sand-400/30' : ''}`}>
           {/* Image */}
           <div className={`bg-slate-100 relative overflow-hidden rounded-[1.5rem] ${isStoryCard ? 'aspect-[9/14]' : 'aspect-[16/10]'}`}>
-            <img
+            {displayImage && <img
               src={displayImage}
               alt={event.title}
               className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-            />
+            />}
             <Badge variant="light" className="absolute top-4 left-4 backdrop-blur-md bg-white/90">{event.category}</Badge>
             {upcoming && (
               <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-sand-400 text-brand-900 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">

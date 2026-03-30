@@ -868,7 +868,7 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        setFormData(member || { name: '', type: 'pessoa', category: 'Parceiro', role: '', bio: '', image: '', socialLinks: {}, active: true, featured: false, order: 0 });
+        setFormData(member || { name: '', type: 'pessoa', category: 'Parceiro Silver', role: '', bio: '', image: '', socialLinks: {}, active: true, featured: false, order: 0 });
     }, [member, isOpen]);
 
     const handleSave = () => {
@@ -1222,7 +1222,7 @@ export const StatCard = ({ label, value, icon: Icon, onClick }: any) => (
 export const ListRow = ({ title, subtitle, image, onClick, actions }: any) => (
   <div onClick={onClick} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl cursor-pointer group transition-colors">
      <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-        <img src={image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />
+        {image && <img src={image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />}
      </div>
      <div className="flex-grow min-w-0">
         <div className="text-sm font-medium text-slate-700 truncate group-hover:text-brand-900">{title}</div>
