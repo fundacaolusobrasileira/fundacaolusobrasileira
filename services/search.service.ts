@@ -4,8 +4,10 @@ import { MEMBERS_SEED } from '../data/members.data';
 
 const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+const MAX_QUERY_LENGTH = 100;
+
 export const searchFoundation = (query: string) => {
-  const q = normalize(query);
+  const q = normalize(query.slice(0, MAX_QUERY_LENGTH));
   if (!q) return { partners: [], events: [], spaces: [], members: [] };
   return {
     partners: PARTNERS.filter(p => normalize(p.name).includes(q) || normalize(p.category).includes(q)),

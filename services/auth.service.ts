@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { setAuthSession, setAuthLoading, AUTH_SESSION, isAdmin, notifyState, showToast, logActivity } from '../store/app.store';
+import { LoginSchema, CadastroSchema } from '../validation/schemas';
 
 const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'viewer'> => {
   try {
@@ -19,8 +20,9 @@ const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'vi
 export { resolveUserRole };
 
 export const loginAsEditor = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
-  if (!email || !password) {
-    return { ok: false, error: 'Email e senha são obrigatórios.' };
+  const parsed = LoginSchema.safeParse({ email, password });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.message || 'Dados inválidos.' };
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -65,11 +67,9 @@ export const logout = async () => {
 };
 
 export const signUp = async (email: string, password: string, name: string, type: string): Promise<{ ok: boolean; error?: string }> => {
-  if (!email || !password || !name) {
-    return { ok: false, error: 'Todos os campos são obrigatórios.' };
-  }
-  if (password.length < 8) {
-    return { ok: false, error: 'A senha deve ter pelo menos 8 caracteres.' };
+  const parsed = CadastroSchema.safeParse({ email, password, name, type });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.message || 'Dados inválidos.' };
   }
 
   const { data, error } = await supabase.auth.signUp({
