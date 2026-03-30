@@ -1,7 +1,7 @@
 // components/domain/SmartInviteModal.tsx
 import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
-import { subscribeToNewsletter } from '../../App';
+import { subscribeToNewsletter } from '../../services/precadastros.service';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Forms';
 

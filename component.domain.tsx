@@ -5,7 +5,11 @@ import {
   ArrowRight, Video, Check, LogOut, Search as SearchIcon
 } from 'lucide-react';
 import { Button, Badge, Card, SocialIcons, LoginModal, Input, AsyncImage } from './component.ui';
-import { Partner, Event, PendingMediaSubmission, AUTH_SESSION, logout, FLB_STATE_EVENT, subscribeToNewsletter, Pillar, Space } from './App';
+import type { Partner, Event, PendingMediaSubmission, Pillar, Space } from './types';
+import { FLB_STATE_EVENT } from './store/app.store';
+import { logout } from './services/auth.service';
+import { subscribeToNewsletter } from './services/precadastros.service';
+import { useAuthSession } from './hooks/useAuthSession';
 
 // --- Interfaces for Props ---
 
@@ -56,7 +60,7 @@ export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const [authTick, setAuthTick] = useState(0);
+  const authSession = useAuthSession();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const isDarkPage = location.pathname === '/' || 
@@ -74,12 +78,7 @@ export const Header = () => {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handleScroll);
-    const handleAuthUpdate = () => setAuthTick(t => t + 1);
-    window.addEventListener(FLB_STATE_EVENT, handleAuthUpdate);
-    return () => {
-        window.removeEventListener('scroll', handleScroll);
-        window.removeEventListener(FLB_STATE_EVENT, handleAuthUpdate);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   if (['/login', '/cadastro'].includes(location.pathname)) return null;
@@ -125,10 +124,10 @@ export const Header = () => {
               ))}
               
               <div className={`pl-8 ml-2 border-l transition-colors duration-700 flex items-center gap-6 ${isHeaderWhite ? 'border-slate-200' : 'border-white/20'}`}>
-                  {AUTH_SESSION.isLoggedIn ? (
+                  {authSession.isLoggedIn ? (
                       <div className="flex items-center gap-4">
                           <Link to="/dashboard" className={`text-[10px] font-bold uppercase tracking-wider ${textColorClass} hover:opacity-70 focus:outline-none focus:underline`}>
-                              Olá, {AUTH_SESSION.displayName || 'Editor'}
+                              Olá, {authSession.displayName || 'Editor'}
                           </Link>
                           <button onClick={logout} className="p-2 text-red-400 hover:text-red-500 transition-colors" title="Sair" aria-label="Sair da conta">
                               <LogOut size={16} />
@@ -187,7 +186,7 @@ export const Header = () => {
               </Link>
             ))}
             <div className="h-px bg-white/10 w-full my-8" role="separator"></div>
-            {AUTH_SESSION.isLoggedIn ? (
+            {authSession.isLoggedIn ? (
                 <div className="space-y-4 animate-fadeInUpSlow delay-300">
                     <Link to="/dashboard" onClick={() => setIsOpen(false)} className="text-lg text-sand-400 font-medium block">
                        Dashboard

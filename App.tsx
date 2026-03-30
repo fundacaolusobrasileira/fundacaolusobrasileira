@@ -16,7 +16,7 @@ import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
 import { syncEvents } from './services/events.service';
-import { setAuthSession, isAdmin } from './store/app.store';
+import { setAuthSession, setAuthLoading, isAdmin, AUTH_SESSION, isEditor, notifyState as storeNotifyState } from './store/app.store';
 import { MEMBERS_SEED } from './data/members.data';
 
 /**
@@ -295,13 +295,10 @@ export const PENDING_MEDIA_SUBMISSIONS: PendingMediaSubmission[] = [];
 export const ACTIVITY_LOG: ActivityLogItem[] = [];
 
 // Auth Session Default
-export let AUTH_SESSION: AuthSession = { isLoggedIn: false, role: 'viewer' };
+// AUTH_SESSION lives in store/app.store.ts — re-exported for backwards compat
+export { AUTH_SESSION } from './store/app.store';
 
-const notifyState = () => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event(FLB_STATE_EVENT));
-  }
-};
+const notifyState = () => storeNotifyState();
 
 export const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
   if (typeof window !== 'undefined') {
@@ -387,7 +384,7 @@ export const importState = (jsonString: string): { success: boolean, message: st
 
 // --- AUTH OPERATIONS ---
 
-export const isEditor = () => AUTH_SESSION.isLoggedIn && AUTH_SESSION.role === 'editor';
+export { isEditor } from './store/app.store';
 
 export const loginAsEditor = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
     if (!email || !password) {
@@ -410,24 +407,28 @@ export const loginAsEditor = async (email: string, password: string): Promise<{ 
     }
 
     if (data.session) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .single();
+        let userRole: 'admin' | 'editor' | 'viewer' = 'viewer';
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('user_id', data.user.id)
+                .single();
+            userRole = profile?.role === 'admin' ? 'admin' :
+                       profile?.role === 'editor' ? 'editor' : 'viewer';
+        } catch (err) {
+            console.error('Profile lookup failed, defaulting to viewer:', err);
+        }
 
-        const userRole: 'admin' | 'editor' | 'viewer' =
-          profile?.role === 'admin' ? 'admin' :
-          profile?.role === 'editor' ? 'editor' : 'viewer';
-
-        AUTH_SESSION = {
+        setAuthSession({
             isLoggedIn: true,
             role: userRole,
             displayName: data.user.email || 'Editor',
             userId: data.user.id,
             lastLoginAt: new Date().toISOString()
-        };
-        setAuthSession(AUTH_SESSION);
+        });
+        setAuthLoading(false);
+        logActivity('Login', data.user.email || email);
         syncFromSupabase();
         notifyState();
         showToast(`Bem-vindo, ${data.user.email}!`, 'success');
@@ -438,9 +439,11 @@ export const loginAsEditor = async (email: string, password: string): Promise<{ 
 };
 
 export const logout = async () => {
+    const name = AUTH_SESSION.displayName || 'Editor';
     await supabase.auth.signOut();
-    AUTH_SESSION = { isLoggedIn: false, role: 'viewer' };
-    syncFromSupabase(); // Reset view to public RLS
+    logActivity('Logout', name);
+    setAuthSession({ isLoggedIn: false, role: 'viewer' });
+    syncFromSupabase();
     notifyState();
     showToast('Sessão encerrada.', 'info');
 };
@@ -645,6 +648,7 @@ export const updateEvent = async (id: string, patch: Partial<Event>, notify = tr
   const { error } = await supabase.from('events').update(payload).eq('id', id);
 
   if (!error) {
+    logActivity('Editou evento', EVENTS.find(e => e.id === id)?.title || id);
     if(notify) showToast('Evento salvo.', 'success');
   } else {
     if (import.meta.env.DEV) console.error('updateEvent error:', error);
@@ -659,7 +663,9 @@ export const deleteEvent = async (id: string) => {
   if (!error) {
       const idx = EVENTS.findIndex(e => e.id === id);
       if (idx !== -1) {
+        const title = EVENTS[idx].title;
         EVENTS.splice(idx, 1);
+        logActivity('Removeu evento', title);
         notifyState();
         showToast('Evento removido.', 'success');
       }
@@ -673,7 +679,7 @@ export const createMember = async (notify = true) => {
   const payload = {
       name: 'Novo Membro',
       type: 'pessoa',
-      category: 'Parceiro',
+      category: 'Parceiro Silver',
       active: true
   };
 
@@ -687,10 +693,13 @@ export const createMember = async (notify = true) => {
           socialLinks: newMember.social_links || {}
       };
       PARTNERS.unshift(normalized);
+      logActivity('Criou membro', normalized.name);
       notifyState();
       if(notify) showToast('Membro criado.', 'success');
       return normalized;
   }
+  console.error('createMember error:', error);
+  showToast('Erro ao criar membro.', 'error');
   return null;
 };
 
@@ -707,7 +716,10 @@ export const updateMember = async (id: string, patch: Partial<Partner>, notify =
   }
 
   const { error } = await supabase.from('partners').update(payload).eq('id', id);
-  if(!error && notify) showToast('Membro atualizado.', 'success');
+  if (!error) {
+    logActivity('Editou membro', PARTNERS.find(p => p.id === id)?.name || id);
+    if(notify) showToast('Membro atualizado.', 'success');
+  }
 };
 
 export const deleteMember = async (id: string) => {
@@ -716,7 +728,9 @@ export const deleteMember = async (id: string) => {
   if (!error) {
       const idx = PARTNERS.findIndex(p => p.id === id);
       if (idx !== -1) {
+          const name = PARTNERS[idx].name;
           PARTNERS.splice(idx, 1);
+          logActivity('Removeu membro', name);
           notifyState();
           showToast('Membro removido.', 'success');
       }
@@ -870,70 +884,57 @@ syncFromSupabase();
 syncMembers();
 syncEvents();
 
-// Restaurar sessão ao carregar
-const initAuth = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
+// Helper to resolve user role from Supabase profiles table
+const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'viewer'> => {
+  try {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
       .single();
-
-    const userRole: 'admin' | 'editor' | 'viewer' =
-      profile?.role === 'admin' ? 'admin' :
-      profile?.role === 'editor' ? 'editor' : 'viewer';
-
-    AUTH_SESSION = {
-      isLoggedIn: true,
-      role: userRole,
-      displayName: session.user.email || 'Editor',
-      userId: session.user.id,
-      lastLoginAt: new Date().toISOString()
-    };
-    setAuthSession(AUTH_SESSION);
-    syncFromSupabase();
-    syncMembers();
-    syncEvents();
-    notifyState();
+    return profile?.role === 'admin' ? 'admin' :
+           profile?.role === 'editor' ? 'editor' : 'viewer';
+  } catch (err) {
+    console.error('resolveUserRole failed, defaulting to viewer:', err);
+    return 'viewer';
   }
 };
-initAuth();
 
-// Listener para mudanças de autenticação
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .single();
-
-    const userRole: 'admin' | 'editor' | 'viewer' =
-      profile?.role === 'admin' ? 'admin' :
-      profile?.role === 'editor' ? 'editor' : 'viewer';
-
-    AUTH_SESSION = {
+// Single auth listener — handles initial session, sign in, and sign out.
+const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+  if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
+    const userRole = await resolveUserRole(session.user.id);
+    setAuthSession({
       isLoggedIn: true,
       role: userRole,
       displayName: session.user.email || 'Editor',
       userId: session.user.id,
       lastLoginAt: new Date().toISOString()
-    };
-    setAuthSession(AUTH_SESSION);
+    });
     syncFromSupabase();
     syncMembers();
     syncEvents();
-    notifyState();
+  } else if (event === 'INITIAL_SESSION' && !session) {
+    setAuthSession({ isLoggedIn: false, role: 'viewer' });
   } else if (event === 'SIGNED_OUT') {
-    AUTH_SESSION = { isLoggedIn: false, role: 'viewer' };
-    setAuthSession(AUTH_SESSION);
+    setAuthSession({ isLoggedIn: false, role: 'viewer' });
     syncFromSupabase();
     syncMembers();
     syncEvents();
-    notifyState();
   }
+
+  if (event === 'INITIAL_SESSION') {
+    setAuthLoading(false);
+  }
+  notifyState();
 });
+
+// Cleanup stale listeners on HMR
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    authSubscription.unsubscribe();
+  });
+}
 
 // User management (admin only)
 export const fetchAllProfiles = async () => {

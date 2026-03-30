@@ -10,8 +10,10 @@ export const PRECADASTROS: PreCadastro[] = [];
 export const PENDING_MEDIA_SUBMISSIONS: PendingMediaSubmission[] = [];
 export const ACTIVITY_LOG: ActivityLogItem[] = [];
 export let AUTH_SESSION: AuthSession = { isLoggedIn: false, role: 'viewer' };
+export let AUTH_LOADING = true;
 
 export const setAuthSession = (session: AuthSession) => { AUTH_SESSION = session; };
+export const setAuthLoading = (loading: boolean) => { AUTH_LOADING = loading; };
 
 export const notifyState = () => {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(FLB_STATE_EVENT));

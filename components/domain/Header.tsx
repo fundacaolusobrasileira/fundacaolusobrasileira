@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowRight, LogOut } from 'lucide-react';
 import { AUTH_SESSION, FLB_STATE_EVENT } from '../../store/app.store';
-import { logout } from '../../App';
+import { logout } from '../../services/auth.service';
 import { LoginModal } from '../ui/Modals';
 import { BrandLogo } from './BrandLogo';
 

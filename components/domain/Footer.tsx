@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
-import { subscribeToNewsletter } from '../../App';
+import { subscribeToNewsletter } from '../../services/precadastros.service';
 import { SocialIcons } from '../ui/Loaders';
 import { BrandLogo } from './BrandLogo';
 

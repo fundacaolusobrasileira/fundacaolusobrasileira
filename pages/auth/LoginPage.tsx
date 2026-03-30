@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input, Button, Badge, PremiumLoader } from '../../components/ui';
 import { BrandLogo } from '../../components/domain';
-import { loginAsEditor } from '../../App';
+import { loginAsEditor } from '../../services/auth.service';
 import { supabase } from '../../supabaseClient';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { ArrowLeft, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';

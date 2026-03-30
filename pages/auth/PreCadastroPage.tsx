@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Input, Button } from '../../components/ui';
-import { createPreCadastro } from '../../App';
+import { createPreCadastro } from '../../services/precadastros.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { ArrowLeft, Users, Handshake, Heart, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Input, Button, PremiumLoader } from '../../components/ui';
-import { signUp } from '../../App';
+import { signUp } from '../../services/auth.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { CadastroSchema } from '../../validation/schemas';

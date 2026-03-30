@@ -1,7 +1,13 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Link as LinkIcon, Link2, Share2, Loader2, Image as ImageIcon, Check, Lock, Trash2, Edit, Plus, ExternalLink, Search, Star, Upload, Mail, Settings, User, AlertTriangle, CheckCircle, Info, AlertCircle as AlertIcon } from 'lucide-react';
-import { resolveGalleryItemSrc, GalleryItem, SocialLinks, loginAsEditor, createEvent, updateEvent, createMember, updateMember, Partner, Event, PreCadastro, PRECADASTROS, updatePreCadastro, deletePreCadastro, convertPreCadastroToMember, isEditor, exportState, importState, addMediaToEvent, addUrlMediaToEvent, EVENTS, PENDING_MEDIA_SUBMISSIONS, approveCommunityMedia, rejectCommunityMedia, FLB_TOAST_EVENT, generateId, addEventImagesFromFiles, ActivityLogItem, deleteEvent, saveMediaBlob } from './App';
+import type { GalleryItem, SocialLinks, Partner, Event, PreCadastro, ActivityLogItem } from './types';
+import { EVENTS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
+import { resolveGalleryItemSrc, saveMediaBlob } from './services/media.service';
+import { loginAsEditor } from './services/auth.service';
+import { createEvent, updateEvent, deleteEvent, addMediaToEvent, addUrlMediaToEvent, addEventImagesFromFiles, approveCommunityMedia, rejectCommunityMedia } from './services/events.service';
+import { createMember, updateMember } from './services/members.service';
+import { updatePreCadastro, deletePreCadastro, convertPreCadastroToMember } from './services/precadastros.service';
 
 // --- TOAST NOTIFICATION SYSTEM ---
 interface Toast {
@@ -456,7 +462,8 @@ export const MediaManagerModal = ({ isOpen, onClose }: any) => {
     };
 
     const handleApprove = (id: string) => {
-        approveCommunityMedia(id);
+        if (!selectedEventId) return;
+        approveCommunityMedia(selectedEventId, id);
         setLocalEvents([...EVENTS]); // Refresh count
     };
 
@@ -873,14 +880,23 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
         setLoading(true);
 
         setTimeout(async () => {
-            if (formData.id) {
-                await updateMember(formData.id, formData);
-            } else {
-                 const newM = await createMember(false);
-                 if(newM) await updateMember(newM.id, formData, true);
+            try {
+                if (formData.id) {
+                    await updateMember(formData.id, formData);
+                    onClose();
+                } else {
+                    const newM = await createMember(false);
+                    if (newM) {
+                        await updateMember(newM.id, formData, true);
+                        onClose();
+                    }
+                }
+            } catch (err) {
+                console.error('handleSave error:', err);
+                showToast('Erro ao salvar membro.', 'error');
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
-            onClose();
         }, 800);
     };
 

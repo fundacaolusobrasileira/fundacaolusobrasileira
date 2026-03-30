@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Lock } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Forms';
-import { loginAsEditor } from '../../App';
+import { loginAsEditor } from '../../services/auth.service';
 
 // --- Standard Modal Container ---
 export const Modal = ({ isOpen, onClose, children, className = '', titleId = "modal-title" }: any) => {

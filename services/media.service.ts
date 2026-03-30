@@ -9,11 +9,15 @@ export const saveMediaBlob = async (file: File): Promise<string> => {
   return data.publicUrl;
 };
 
+export async function resolveGalleryItemSrc(item: { url: string }): Promise<string | null> {
+  return item.url || null;
+}
+
 export const deleteMediaBlob = async (url: string): Promise<void> => {
   try {
     const fileName = url.split('/').pop();
     if (fileName) await supabase.storage.from('media').remove([fileName]);
   } catch (e) {
-    if (import.meta.env.DEV) console.error('Error deleting media', e);
+    console.error('Error deleting media', e);
   }
 };
