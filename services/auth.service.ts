@@ -1,16 +1,15 @@
 import { supabase } from '../supabaseClient';
-import { setAuthSession, setAuthLoading, AUTH_SESSION, notifyState, showToast, logActivity } from '../store/app.store';
-import { syncMembers } from './members.service';
-import { syncEvents } from './events.service';
+import { setAuthSession, setAuthLoading, AUTH_SESSION, isAdmin, notifyState, showToast, logActivity } from '../store/app.store';
 
-const resolveUserRole = async (userId: string): Promise<'editor' | 'viewer'> => {
+const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'viewer'> => {
   try {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('user_id', userId)
       .single();
-    return (profile?.role === 'editor' || profile?.role === 'admin') ? 'editor' : 'viewer';
+    return profile?.role === 'admin' ? 'admin' :
+           profile?.role === 'editor' ? 'editor' : 'viewer';
   } catch (err) {
     console.error('resolveUserRole failed, defaulting to viewer:', err);
     return 'viewer';
@@ -100,4 +99,26 @@ export const signUp = async (email: string, password: string, name: string, type
   }
 
   return { ok: false, error: 'Erro ao criar conta.' };
+};
+
+// Admin-only user management
+export const fetchAllProfiles = async () => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, user_id, name, email, role, created_at')
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return data as { id: string; user_id: string; name: string; email: string; role: string; created_at: string }[];
+};
+
+export const updateUserRole = async (profileId: string, newRole: 'admin' | 'editor' | 'membro') => {
+  if (!isAdmin()) { showToast('Sem permissão.', 'error'); return false; }
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: newRole })
+    .eq('id', profileId);
+  if (error) { showToast('Erro ao atualizar permissão.', 'error'); return false; }
+  logActivity('Alterou permissão', `${profileId} → ${newRole}`);
+  showToast('Permissão atualizada.', 'success');
+  return true;
 };

@@ -43,6 +43,12 @@ export const logActivity = (action: string, target: string) => {
 export const isAdmin = () => AUTH_SESSION.isLoggedIn && AUTH_SESSION.role === 'admin';
 export const isEditor = () => AUTH_SESSION.isLoggedIn && (AUTH_SESSION.role === 'editor' || AUTH_SESSION.role === 'admin');
 
+export const generateTestActivity = () => {
+  logActivity('Teste', 'Sistema Conectado');
+  notifyState();
+  showToast('Supabase conectado!', 'info');
+};
+
 export const resolveGalleryItemSrc = (item: { srcType: string; url: string }) => item.url;
 
 export const exportState = () => { showToast('Exportação desativada no modo Supabase.', 'info'); };

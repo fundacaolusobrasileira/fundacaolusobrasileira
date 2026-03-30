@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalBody } from '../../components/ui/Modals';
-import { fetchAllProfiles, updateUserRole } from '../../App';
+import { fetchAllProfiles, updateUserRole } from '../../services/auth.service';
 import { Shield, User, Crown, Loader2 } from 'lucide-react';
 
 type Profile = { id: string; user_id: string; name: string; email: string; role: string; created_at: string };
