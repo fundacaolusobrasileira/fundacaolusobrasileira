@@ -4,6 +4,8 @@ export default {
   content: [
     './index.html',
     './**/*.{ts,tsx}',
+    '!./.claude/**',
+    '!./node_modules/**',
   ],
   theme: {
     extend: {
