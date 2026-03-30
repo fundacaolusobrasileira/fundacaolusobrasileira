@@ -148,6 +148,8 @@ export type PendingMediaSubmission = {
   authorName: string;
   email: string;
   message?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  userId?: string;
   createdAt: string;
 };
 

@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import { PENDING_MEDIA_SUBMISSIONS, AUTH_SESSION, notifyState, showToast } from '../store/app.store';
+import { PENDING_MEDIA_SUBMISSIONS, AUTH_SESSION, notifyState, showToast, logActivity } from '../store/app.store';
 import type { PendingMediaSubmission } from '../types';
 
 const normalize = (row: any): PendingMediaSubmission => ({
@@ -28,6 +28,18 @@ export const syncCommunityMedia = async () => {
 export const submitCommunityMedia = async (
   submission: Omit<PendingMediaSubmission, 'id' | 'createdAt' | 'status'>
 ): Promise<PendingMediaSubmission | null> => {
+  // FIX SEC-005: Validate URL
+  try {
+    const parsed = new URL(submission.url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      showToast('URL inválida. Use apenas HTTP ou HTTPS.', 'error');
+      return null;
+    }
+  } catch {
+    showToast('URL inválida.', 'error');
+    return null;
+  }
+
   const payload = {
     event_id: submission.eventId,
     author_name: submission.authorName,
@@ -51,6 +63,7 @@ export const submitCommunityMedia = async (
 
   const normalized = normalize(res[0]);
   PENDING_MEDIA_SUBMISSIONS.push(normalized);
+  logActivity('Submissão de mídia', submission.authorName);
   notifyState();
   return normalized;
 };
