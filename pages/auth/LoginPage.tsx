@@ -6,6 +6,7 @@ import { loginAsEditor } from '../../App';
 import { supabase } from '../../supabaseClient';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { ArrowLeft, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { LoginSchema } from '../../validation/schemas';
 
 export const LoginPage = () => {
   usePageMeta("Portal do Membro", "Acesso exclusivo para membros e parceiros da Fundacao Luso-Brasileira.");
@@ -21,11 +22,16 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
-    const result = await loginAsEditor(formData.email, formData.password);
+    const parsed = LoginSchema.safeParse(formData);
+    if (!parsed.success) {
+      setError(parsed.error.errors[0]?.message || 'Dados inválidos.');
+      return;
+    }
 
+    setLoading(true);
+    const result = await loginAsEditor(formData.email, formData.password);
     setLoading(false);
 
     if (result.ok) {

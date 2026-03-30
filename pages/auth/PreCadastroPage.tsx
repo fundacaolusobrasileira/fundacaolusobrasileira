@@ -5,6 +5,7 @@ import { usePageMeta } from '../../hooks/usePageMeta';
 import { ArrowLeft, Users, Handshake, Heart, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { RegistrationType } from '../../types';
+import { PreCadastroSchema } from '../../validation/schemas';
 
 const REGISTRATION_TYPES: {
   value: RegistrationType;
@@ -44,17 +45,36 @@ export const PreCadastroPage = () => {
   const [registrationType, setRegistrationType] = useState<RegistrationType | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', type: 'individual', message: '' });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registrationType) return;
+    setFieldErrors({});
+
+    const parsed = PreCadastroSchema.safeParse({
+      registrationType: registrationType ?? undefined,
+      name: formData.name,
+      email: formData.email,
+      type: formData.type,
+      message: formData.message || undefined,
+    });
+
+    if (!parsed.success) {
+      const errors: Record<string, string> = {};
+      parsed.error.errors.forEach(err => {
+        if (err.path[0]) errors[String(err.path[0])] = err.message;
+      });
+      setFieldErrors(errors);
+      return;
+    }
+
     setStatus('submitting');
 
     const result = await createPreCadastro({
       name: formData.name,
       email: formData.email,
       type: formData.type,
-      registrationType,
+      registrationType: registrationType!,
       message: formData.message,
     });
 
@@ -135,24 +155,24 @@ export const PreCadastroPage = () => {
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Nome Completo</label>
                   <Input
-                    required
                     type="text"
                     variant="dark"
                     value={formData.name}
                     onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="O seu nome"
                   />
+                  {fieldErrors.name && <p className="text-red-400 text-xs ml-2">{fieldErrors.name}</p>}
                 </div>
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">E-mail</label>
                   <Input
-                    required
                     type="email"
                     variant="dark"
                     value={formData.email}
                     onChange={(e: any) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="seu@email.com"
                   />
+                  {fieldErrors.email && <p className="text-red-400 text-xs ml-2">{fieldErrors.email}</p>}
                 </div>
               </div>
 
@@ -187,6 +207,7 @@ export const PreCadastroPage = () => {
                   className="w-full px-6 py-5 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-sand-400/50 focus:ring-1 focus:ring-sand-400/20 outline-none transition-all resize-none placeholder-white/20 text-lg text-white font-light"
                   placeholder="Conte-nos um pouco sobre o seu interesse..."
                 />
+                {fieldErrors.message && <p className="text-red-400 text-xs ml-2">{fieldErrors.message}</p>}
               </div>
 
               <Button
@@ -198,7 +219,10 @@ export const PreCadastroPage = () => {
                 {status === 'submitting' ? 'Enviando...' : 'Enviar Registo'}
               </Button>
 
-              {!registrationType && (
+              {fieldErrors.registrationType && (
+                <p className="text-center text-red-400 text-xs">{fieldErrors.registrationType}</p>
+              )}
+              {!registrationType && !fieldErrors.registrationType && (
                 <p className="text-center text-white/30 text-xs">Selecione um tipo de registo para continuar.</p>
               )}
             </form>

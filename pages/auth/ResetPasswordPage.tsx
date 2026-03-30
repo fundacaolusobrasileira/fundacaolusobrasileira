@@ -5,6 +5,7 @@ import { BrandLogo } from '../../components/domain';
 import { supabase } from '../../supabaseClient';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { ArrowLeft, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ResetPasswordSchema } from '../../validation/schemas';
 
 export const ResetPasswordPage = () => {
   usePageMeta("Redefinir Senha", "Crie uma nova senha para aceder ao portal.");
@@ -34,12 +35,10 @@ export const ResetPasswordPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) {
-      setMessage({ type: 'error', text: 'As senhas não coincidem.' });
-      return;
-    }
-    if (password.length < 8) {
-      setMessage({ type: 'error', text: 'A senha deve ter pelo menos 8 caracteres.' });
+
+    const parsed = ResetPasswordSchema.safeParse({ password, confirm });
+    if (!parsed.success) {
+      setMessage({ type: 'error', text: parsed.error.errors[0]?.message || 'Dados inválidos.' });
       return;
     }
 

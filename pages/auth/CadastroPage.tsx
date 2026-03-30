@@ -4,6 +4,7 @@ import { Card, Input, Button, PremiumLoader } from '../../components/ui';
 import { signUp } from '../../App';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import { CadastroSchema } from '../../validation/schemas';
 
 export const CadastroPage = () => {
   usePageMeta("Criar Conta – Fundacao Luso-Brasileira", "Crie sua conta e faca parte da nossa comunidade.");
@@ -11,6 +12,7 @@ export const CadastroPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -21,17 +23,27 @@ export const CadastroPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setFieldErrors({});
 
-    const result = await signUp(formData.email, formData.password, formData.name, formData.type);
+    const result = CadastroSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        if (err.path[0]) errors[String(err.path[0])] = err.message;
+      });
+      setFieldErrors(errors);
+      return;
+    }
 
+    setLoading(true);
+    const signUpResult = await signUp(formData.email, formData.password, formData.name, formData.type);
     setLoading(false);
 
-    if (result.ok) {
+    if (signUpResult.ok) {
       setSuccess(true);
     } else {
-      setError(result.error || 'Erro ao criar conta.');
+      setError(signUpResult.error || 'Erro ao criar conta.');
     }
   };
 
@@ -52,36 +64,36 @@ export const CadastroPage = () => {
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Nome Completo</label>
             <Input
               type="text"
-              required
               variant="dark"
               placeholder="Seu nome"
               value={formData.name}
               onChange={(e: any) => setFormData({...formData, name: e.target.value})}
             />
+            {fieldErrors.name && <p className="text-red-400 text-xs ml-2">{fieldErrors.name}</p>}
           </div>
 
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Email</label>
             <Input
               type="email"
-              required
               variant="dark"
               placeholder="seu@email.com"
               value={formData.email}
               onChange={(e: any) => setFormData({...formData, email: e.target.value})}
             />
+            {fieldErrors.email && <p className="text-red-400 text-xs ml-2">{fieldErrors.email}</p>}
           </div>
 
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Senha</label>
             <Input
               type="password"
-              required
               variant="dark"
-              placeholder="Criar senha"
+              placeholder="Mínimo 8 caracteres"
               value={formData.password}
               onChange={(e: any) => setFormData({...formData, password: e.target.value})}
             />
+            {fieldErrors.password && <p className="text-red-400 text-xs ml-2">{fieldErrors.password}</p>}
           </div>
 
           <div className="space-y-3">

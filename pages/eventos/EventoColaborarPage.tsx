@@ -7,6 +7,7 @@ import { saveMediaBlob } from '../../services/media.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Event } from '../../types';
 import { Upload, CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp } from 'lucide-react';
+import { ColaborarSchema } from '../../validation/schemas';
 
 export const EventoColaborarPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,14 +44,17 @@ export const EventoColaborarPage = () => {
     e.preventDefault();
     if (!event) return;
 
-    if (!formData.url) {
-        setError('Por favor, adicione uma imagem ou video.');
-        return;
-    }
+    const parsed = ColaborarSchema.safeParse({
+      authorName: formData.authorName,
+      email: formData.email,
+      url: formData.url,
+      message: formData.message || undefined,
+      agreedToTerms: formData.agreedToTerms || undefined,
+    });
 
-    if (!formData.agreedToTerms) {
-        setError('Voce precisa concordar com os termos para enviar sua memoria.');
-        return;
+    if (!parsed.success) {
+      setError(parsed.error.errors[0]?.message || 'Dados inválidos.');
+      return;
     }
 
     setError('');
