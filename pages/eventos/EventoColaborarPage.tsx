@@ -97,7 +97,7 @@ export const EventoColaborarPage = () => {
               setFormData(prev => ({ ...prev, url: publicUrl }));
               setError('');
           } catch (err) {
-              console.error(err);
+              if (import.meta.env.DEV) console.error(err);
               setError("Erro ao salvar arquivo. Tente novamente.");
           }
       }

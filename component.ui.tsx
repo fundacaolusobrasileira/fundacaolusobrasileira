@@ -189,7 +189,7 @@ export const Button = ({ children, variant = 'primary', className = '', isLoadin
 export const ShareActions = ({ title, url }: { title: string, url: string }) => {
     const handleShare = async () => {
         if (navigator.share) {
-            try { await navigator.share({ title, url }); } catch (err) { console.error(err); }
+            try { await navigator.share({ title, url }); } catch (err) { if (import.meta.env.DEV) console.error(err); }
         } else {
             navigator.clipboard.writeText(url);
             window.dispatchEvent(new CustomEvent(FLB_TOAST_EVENT, { detail: { message: 'Link copiado!', type: 'success' } }));
@@ -893,7 +893,7 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
             const publicUrl = await saveMediaBlob(file);
             setFormData({ ...formData, image: publicUrl });
         } catch (err) {
-            console.error('Upload error:', err);
+            if (import.meta.env.DEV) console.error('Upload error:', err);
         } finally {
             setUploading(false);
             e.target.value = '';

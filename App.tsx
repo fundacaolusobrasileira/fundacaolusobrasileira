@@ -255,7 +255,7 @@ export const saveMediaBlob = async (file: File): Promise<string> => {
     });
 
   if (error) {
-      console.error("Upload error:", error);
+      if (import.meta.env.DEV) console.error("Upload error:", error);
       throw error;
   }
 
@@ -274,7 +274,7 @@ export const deleteMediaBlob = async (url: string): Promise<void> => {
           await supabase.storage.from('media').remove([fileName]);
       }
   } catch (e) {
-    console.error("Error deleting media", e);
+    if (import.meta.env.DEV) console.error("Error deleting media", e);
   }
 };
 
@@ -359,7 +359,7 @@ const syncFromSupabase = async () => {
             ...e,
             coverImage: e.cover_image, // Snake_case mapping
             socialLinks: e.social_links || {},
-            gallery: typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || [])
+            gallery: (() => { try { return typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || []); } catch { return []; } })()
         }));
         EVENTS.push(...normalized);
     }
@@ -448,8 +448,8 @@ export const signUp = async (email: string, password: string, name: string, type
         return { ok: false, error: 'Todos os campos são obrigatórios.' };
     }
 
-    if (password.length < 6) {
-        return { ok: false, error: 'A senha deve ter pelo menos 6 caracteres.' };
+    if (password.length < 8) {
+        return { ok: false, error: 'A senha deve ter pelo menos 8 caracteres.' };
     }
 
     const { data, error } = await supabase.auth.signUp({
@@ -517,7 +517,7 @@ export const createPreCadastro = async (data: Partial<PreCadastro>) => {
         showToast('Enviado com sucesso!', 'success');
         return { success: true };
     } else {
-        console.error(error);
+        if (import.meta.env.DEV) console.error(error);
         showToast('Erro ao enviar.', 'error');
         return null;
     }
@@ -615,7 +615,7 @@ export const createEvent = async (data: Partial<Event>) => {
       showToast('Evento criado.', 'success');
       return normalized;
   } else {
-      console.error(error);
+      if (import.meta.env.DEV) console.error(error);
       showToast('Erro ao criar evento.', 'error');
       return null;
   }
@@ -645,7 +645,7 @@ export const updateEvent = async (id: string, patch: Partial<Event>, notify = tr
   if (!error) {
     if(notify) showToast('Evento salvo.', 'success');
   } else {
-    console.error('updateEvent error:', error);
+    if (import.meta.env.DEV) console.error('updateEvent error:', error);
     showToast('Erro ao salvar.', 'error');
   }
 };
@@ -760,7 +760,7 @@ export const addMediaToEvent = async (eventId: string, file: File) => {
             showToast('Imagem enviada.', 'success');
         }
     } catch (e) {
-        console.error("Failed to add media", e);
+        if (import.meta.env.DEV) console.error("Failed to add media", e);
         showToast('Erro no upload.', 'error');
     }
 };

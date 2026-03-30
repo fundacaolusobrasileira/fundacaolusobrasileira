@@ -7,7 +7,7 @@ const normalizeEvent = (e: any): Event => ({
   ...e,
   coverImage: e.cover_image,
   socialLinks: e.social_links || {},
-  gallery: typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || []),
+  gallery: (() => { try { return typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || []); } catch { return []; } })(),
 });
 
 export const syncEvents = async () => {

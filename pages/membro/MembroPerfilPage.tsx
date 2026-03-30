@@ -152,7 +152,7 @@ export const MembroEditarPage = () => {
         const publicUrl = await saveMediaBlob(file);
         setFormData((prev: any) => ({ ...prev, image: publicUrl }));
     } catch (err) {
-        console.error('Upload error:', err);
+        if (import.meta.env.DEV) console.error('Upload error:', err);
     } finally {
         setUploading(false);
         e.target.value = '';
