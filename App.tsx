@@ -6,6 +6,7 @@ import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
 import { syncEvents } from './services/events.service';
+import { syncActivityLog } from './services/activity-log.service';
 import { resolveUserRole } from './services/auth.service';
 import {
   AUTH_SESSION,
@@ -81,6 +82,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     syncFromSupabase();
     syncMembers();
     syncEvents();
+    syncActivityLog();
   } else if (event === 'INITIAL_SESSION' && !session) {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });
   } else if (event === 'SIGNED_OUT') {
