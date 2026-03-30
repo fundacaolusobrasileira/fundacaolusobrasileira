@@ -153,7 +153,7 @@ export type PendingMediaSubmission = {
 
 export type AuthSession = {
   isLoggedIn: boolean;
-  role: 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer';
   displayName?: string;
   lastLoginAt?: string;
   userId?: string;

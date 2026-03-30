@@ -16,7 +16,7 @@ import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
 import { syncEvents } from './services/events.service';
-import { setAuthSession } from './store/app.store';
+import { setAuthSession, isAdmin } from './store/app.store';
 import { MEMBERS_SEED } from './data/members.data';
 
 /**
@@ -188,7 +188,7 @@ export type PendingMediaSubmission = {
 // --- AUTH TYPES ---
 export type AuthSession = {
   isLoggedIn: boolean;
-  role: 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer';
   displayName?: string;
   lastLoginAt?: string;
   userId?: string;
@@ -416,7 +416,9 @@ export const loginAsEditor = async (email: string, password: string): Promise<{ 
             .eq('user_id', data.user.id)
             .single();
 
-        const userRole = (profile?.role === 'editor' || profile?.role === 'admin') ? 'editor' : 'viewer';
+        const userRole: 'admin' | 'editor' | 'viewer' =
+          profile?.role === 'admin' ? 'admin' :
+          profile?.role === 'editor' ? 'editor' : 'viewer';
 
         AUTH_SESSION = {
             isLoggedIn: true,
@@ -878,7 +880,9 @@ const initAuth = async () => {
       .eq('user_id', session.user.id)
       .single();
 
-    const userRole = (profile?.role === 'editor' || profile?.role === 'admin') ? 'editor' : 'viewer';
+    const userRole: 'admin' | 'editor' | 'viewer' =
+      profile?.role === 'admin' ? 'admin' :
+      profile?.role === 'editor' ? 'editor' : 'viewer';
 
     AUTH_SESSION = {
       isLoggedIn: true,
@@ -905,7 +909,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       .eq('user_id', session.user.id)
       .single();
 
-    const userRole = (profile?.role === 'editor' || profile?.role === 'admin') ? 'editor' : 'viewer';
+    const userRole: 'admin' | 'editor' | 'viewer' =
+      profile?.role === 'admin' ? 'admin' :
+      profile?.role === 'editor' ? 'editor' : 'viewer';
 
     AUTH_SESSION = {
       isLoggedIn: true,
@@ -928,6 +934,27 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     notifyState();
   }
 });
+
+// User management (admin only)
+export const fetchAllProfiles = async () => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, user_id, name, email, role, created_at')
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return data as { id: string; user_id: string; name: string; email: string; role: string; created_at: string }[];
+};
+
+export const updateUserRole = async (profileId: string, newRole: 'admin' | 'editor' | 'membro') => {
+  if (!isAdmin()) { showToast('Sem permissão.', 'error'); return false; }
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: newRole })
+    .eq('id', profileId);
+  if (error) { showToast('Erro ao atualizar permissão.', 'error'); return false; }
+  showToast('Permissão atualizada.', 'success');
+  return true;
+};
 
 export default function App() {
   return (

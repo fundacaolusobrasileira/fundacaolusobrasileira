@@ -38,7 +38,8 @@ export const logActivity = (action: string, target: string) => {
   if (ACTIVITY_LOG.length > 50) ACTIVITY_LOG.pop();
 };
 
-export const isEditor = () => AUTH_SESSION.isLoggedIn && AUTH_SESSION.role === 'editor';
+export const isAdmin = () => AUTH_SESSION.isLoggedIn && AUTH_SESSION.role === 'admin';
+export const isEditor = () => AUTH_SESSION.isLoggedIn && (AUTH_SESSION.role === 'editor' || AUTH_SESSION.role === 'admin');
 
 export const resolveGalleryItemSrc = (item: { srcType: string; url: string }) => item.url;
 

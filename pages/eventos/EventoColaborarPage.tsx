@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { SectionWrapper, Card, Input, Button, Badge, PremiumLoader } from '../../components/ui';
-import { EVENTS } from '../../store/app.store';
+import { LoginModal } from '../../components/ui';
+import { EVENTS, AUTH_SESSION } from '../../store/app.store';
 import { submitCommunityMedia, subscribeToNewsletter } from '../../App';
 import { saveMediaBlob } from '../../services/media.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Event } from '../../types';
-import { Upload, CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp } from 'lucide-react';
+import { Upload, CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp, Lock } from 'lucide-react';
 import { ColaborarSchema } from '../../validation/schemas';
 
 export const EventoColaborarPage = () => {
@@ -30,6 +31,8 @@ export const EventoColaborarPage = () => {
   });
 
   const [error, setError] = useState('');
+  const [showLogin, setShowLogin] = useState(false);
+  const isLoggedIn = AUTH_SESSION.isLoggedIn;
 
   useEffect(() => {
     setTimeout(() => {
@@ -127,6 +130,8 @@ export const EventoColaborarPage = () => {
           <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-black rounded-full blur-[120px] opacity-60"></div>
       </div>
 
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+
       <SectionWrapper className="relative z-10">
         <div className="mb-8 max-w-2xl mx-auto">
            <Button variant="ghost" onClick={() => navigate(`/eventos/${id}`)} className="pl-0 text-white/50 hover:text-white gap-2 hover:bg-transparent">
@@ -135,7 +140,28 @@ export const EventoColaborarPage = () => {
         </div>
 
         <div className="max-w-2xl mx-auto">
-           {success ? (
+          {/* Auth gate */}
+          {!isLoggedIn && (
+            <Card variant="dark" className="p-12 text-center border-white/10 mb-8 animate-fadeInUpSlow">
+              <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Lock size={28} className="text-sand-400" />
+              </div>
+              <h2 className="text-2xl font-light text-white mb-3 tracking-tight">Conta necessária</h2>
+              <p className="text-white/50 font-light mb-8 max-w-sm mx-auto leading-relaxed">
+                Para enviar a sua memória do evento, precisa de ter uma conta registada na plataforma.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button variant="gold" onClick={() => setShowLogin(true)} className="px-8 py-3 text-xs">
+                  Entrar na conta
+                </Button>
+                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8 py-3 text-xs" onClick={() => navigate('/cadastro')}>
+                  Criar conta grátis
+                </Button>
+              </div>
+            </Card>
+          )}
+
+           {isLoggedIn && success ? (
              <Card variant="dark" className="p-12 md:p-16 text-center animate-in zoom-in-95 duration-500 bg-brand-900/80 backdrop-blur-xl shadow-2xl relative overflow-hidden border-white/10">
                 <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border border-green-500/20">
                    <CheckCircle size={40} />
@@ -149,7 +175,7 @@ export const EventoColaborarPage = () => {
                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => { setSuccess(false); setFormData({...formData, url: '', message: ''}); setPreviewUrl(''); }}>Enviar outra</Button>
                 </div>
              </Card>
-           ) : (
+           ) : isLoggedIn ? (
              <>
                 <Card variant="dark" className="p-8 md:p-12 rounded-[2.5rem] shadow-2xl bg-white/5 backdrop-blur-xl relative overflow-hidden animate-fadeInUpSlow border-white/10 mb-8">
 
@@ -322,7 +348,7 @@ export const EventoColaborarPage = () => {
                     </Link>
                 </div>
              </>
-           )}
+           ) : null}
         </div>
       </SectionWrapper>
     </div>

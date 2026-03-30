@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { SectionWrapper, Card, Button, AccessDeniedModal, LoginModal, ConfirmDialog } from '../../components/ui';
 import { StatCard, ListRow, EventEditorModal, MemberEditorModal, ActivityFeed, UniversalListModal, SettingsModal, PremiumLoader, MediaManagerModal, PreCadastroManagerModal } from '../../component.ui';
 import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Edit2, Trash2, Settings, UserPlus, Loader2 } from 'lucide-react';
-import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, FLB_STATE_EVENT, isEditor } from '../../store/app.store';
+import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, FLB_STATE_EVENT, isEditor, isAdmin } from '../../store/app.store';
+import { UserManagerModal } from './UserManagerModal';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
@@ -33,6 +34,7 @@ export const DashboardPage = () => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [mediaManagerOpen, setMediaManagerOpen] = useState(false);
   const [preCadastroOpen, setPreCadastroOpen] = useState(false);
+  const [userManagerOpen, setUserManagerOpen] = useState(false);
 
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<Partner> | null>(null);
@@ -162,6 +164,11 @@ export const DashboardPage = () => {
                 <Button variant="white" onClick={() => { if(checkAuth()) setSettingsModalOpen(true) }} className="px-3 py-2.5 h-auto text-xs rounded-lg border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-sm hover:border-slate-300" title="Configuracoes">
                     <Settings size={14} />
                 </Button>
+                {isAdmin() && (
+                  <Button variant="white" onClick={() => setUserManagerOpen(true)} className="px-3 py-2.5 h-auto text-xs rounded-lg border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-sm hover:border-slate-300 flex items-center gap-2" title="Gerir Utilizadores">
+                    <Users size={14} /> Utilizadores
+                  </Button>
+                )}
              </div>
           </div>
         </div>
@@ -287,6 +294,8 @@ export const DashboardPage = () => {
         onConfirm={confirmDelete}
         onCancel={() => { setItemToDelete(null); setDeleteType(null); }}
       />
+
+      <UserManagerModal isOpen={userManagerOpen} onClose={() => setUserManagerOpen(false)} />
     </div>
   );
 };
