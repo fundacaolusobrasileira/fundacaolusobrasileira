@@ -2,11 +2,15 @@
 import { supabase } from '../supabaseClient';
 import { MEMBERS_SEED, getMemberByTier } from '../data/members.data';
 import { PARTNERS, notifyState, showToast, isEditor, generateId } from '../store/app.store';
-import type { Partner } from '../types';
+import type { Partner, SocialLinks } from '../types';
 
 export { getMemberByTier };
 
-const normalize = (p: any): Partner => ({
+type RawPartnerRow = Omit<Partner, 'socialLinks'> & {
+  social_links?: SocialLinks;
+};
+
+const normalize = (p: RawPartnerRow): Partner => ({
   ...p,
   type: p.type || 'pessoa',
   socialLinks: p.social_links || {},
@@ -30,14 +34,14 @@ export const syncMembers = async () => {
   // Merge: seed defines structure, Supabase overrides content
   const seedIds = MEMBERS_SEED.map(s => s.id);
   const merged: Partner[] = MEMBERS_SEED.map(seed => {
-    const live = data.find((d: any) => d.id === seed.id);
+    const live = data.find((d: RawPartnerRow) => d.id === seed.id);
     return live
       ? { ...seed, ...normalize(live) }
       : { ...seed, type: 'pessoa' as const, category: 'Governança' as const };
   });
 
   // Add Supabase partners not in seed
-  const extras = data.filter((d: any) => !seedIds.includes(d.id)).map(normalize);
+  const extras = data.filter((d: RawPartnerRow) => !seedIds.includes(d.id)).map(normalize);
 
   PARTNERS.length = 0;
   PARTNERS.push(...merged, ...extras);
@@ -60,7 +64,7 @@ export const createMember = async (notify = true): Promise<Partner | null> => {
 
 export const updateMember = async (id: string, patch: Partial<Partner>, notify = true) => {
   if (!isEditor()) return;
-  const payload: any = { ...patch };
+  const payload: Record<string, unknown> = { ...patch };
   if (patch.socialLinks) { payload.social_links = patch.socialLinks; delete payload.socialLinks; }
   delete payload.id;
   const idx = PARTNERS.findIndex(p => p.id === id);

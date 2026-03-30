@@ -38,8 +38,8 @@ export const ResetPasswordPage = () => {
       setMessage({ type: 'error', text: 'As senhas não coincidem.' });
       return;
     }
-    if (password.length < 6) {
-      setMessage({ type: 'error', text: 'A senha deve ter pelo menos 6 caracteres.' });
+    if (password.length < 8) {
+      setMessage({ type: 'error', text: 'A senha deve ter pelo menos 8 caracteres.' });
       return;
     }
 
@@ -149,7 +149,7 @@ export const ResetPasswordPage = () => {
                     type="password"
                     required
                     variant="dark"
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     value={password}
                     onChange={(e: any) => setPassword(e.target.value)}
                     className="pl-12 bg-white/5 border-white/10 focus:border-sand-400/50 focus:bg-white/10 transition-all h-14"

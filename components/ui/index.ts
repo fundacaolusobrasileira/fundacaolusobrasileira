@@ -9,3 +9,4 @@ export { Modal, ModalHeader, ModalBody, ModalFooter, LoginModal, AccessDeniedMod
 export { SectionWrapper, Card } from './Layout';
 export { Input } from './Forms';
 export { ExpandableText } from './ExpandableText';
+export { ErrorBoundary } from './ErrorBoundary';

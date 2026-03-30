@@ -3,7 +3,13 @@ import { supabase } from '../supabaseClient';
 import { EVENTS, PENDING_MEDIA_SUBMISSIONS, notifyState, showToast, logActivity, isEditor, generateId } from '../store/app.store';
 import type { Event, GalleryItem } from '../types';
 
-const normalizeEvent = (e: any): Event => ({
+type RawEventRow = Omit<Event, 'coverImage' | 'socialLinks' | 'gallery'> & {
+  cover_image?: string;
+  social_links?: Record<string, string>;
+  gallery?: string | GalleryItem[];
+};
+
+const normalizeEvent = (e: RawEventRow): Event => ({
   ...e,
   coverImage: e.cover_image,
   socialLinks: e.social_links || {},
@@ -45,7 +51,7 @@ export const createEvent = async (data: Partial<Event>): Promise<Event | null> =
 
 export const updateEvent = async (id: string, patch: Partial<Event>, notify = true) => {
   if (!isEditor()) return;
-  const payload: any = { ...patch };
+  const payload: Record<string, unknown> = { ...patch };
   if ('coverImage' in patch) { payload.cover_image = patch.coverImage; delete payload.coverImage; }
   if ('socialLinks' in patch) { payload.social_links = patch.socialLinks; delete payload.socialLinks; }
   delete payload.id; delete payload.created_at; delete payload.updated_at;

@@ -9,6 +9,9 @@ export default defineConfig(() => {
         host: 'localhost',
       },
       plugins: [react()],
+      css: {
+        postcss: './postcss.config.ts',
+      },
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
