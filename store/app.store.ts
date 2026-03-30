@@ -30,6 +30,7 @@ export const generateId = (prefix: string) =>
     : `${prefix}-${Date.now()}`;
 
 export const logActivity = (action: string, target: string) => {
+  // Immediate in-memory log for UI
   ACTIVITY_LOG.unshift({
     id: generateId('log'),
     action,
@@ -38,6 +39,13 @@ export const logActivity = (action: string, target: string) => {
     user: AUTH_SESSION.displayName || 'Editor',
   });
   if (ACTIVITY_LOG.length > 50) ACTIVITY_LOG.pop();
+
+  // Persist to Supabase (fire-and-forget — don't block the caller)
+  if (AUTH_SESSION.isLoggedIn) {
+    import('../services/activity-log.service').then(({ persistLogEntry }) => {
+      persistLogEntry(action, target).catch(() => {});
+    });
+  }
 };
 
 export const isAdmin = () => AUTH_SESSION.isLoggedIn && AUTH_SESSION.role === 'admin';

@@ -159,7 +159,26 @@ Community-submitted media for events (pending approval).
 }
 ```
 
+### activity_logs
+Audit trail for admin actions. Persisted to survive page reloads.
+
+| Column | Type | Nullable | Default | Constraint |
+|--------|------|----------|---------|------------|
+| id | uuid | NO | uuid_generate_v4() | PK |
+| action | text | NO | — | e.g. 'Criou evento', 'Login' |
+| target | text | NO | — | e.g. event title, email |
+| user_name | text | YES | — | Display name at time of action |
+| user_id | uuid | YES | — | Auth user ID |
+| created_at | timestamptz | NO | now() | |
+
+**RLS:** Authenticated read + insert.
+
+**camelCase mapping:** `user_name` → `user`, `created_at` → `timestamp`
+
+---
+
 ## Changed: 2026-03-30
 - Initial schema documentation from live database inspection
 - Fixed partners.category DEFAULT from 'Parceiro' to 'Parceiro Silver'
 - Added user_id to community_media_submissions payload
+- Added activity_logs table for persistent audit trail
