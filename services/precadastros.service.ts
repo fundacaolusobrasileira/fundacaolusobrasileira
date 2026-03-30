@@ -1,7 +1,16 @@
 import { supabase } from '../supabaseClient';
+import { z } from 'zod';
 import { PRECADASTROS, notifyState, showToast, logActivity, isEditor, generateId } from '../store/app.store';
 import { createMember, updateMember } from './members.service';
 import type { PreCadastro } from '../types';
+
+const CreatePreCadastroSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email(),
+  type: z.string().min(1).optional(),
+  registrationType: z.string().optional().nullable(),
+  message: z.string().max(1000).optional(),
+});
 
 const normalizePreCadastro = (p: any): PreCadastro => {
   const normalized: any = { ...p };
@@ -19,6 +28,12 @@ export const syncPreCadastros = async () => {
 };
 
 export const createPreCadastro = async (data: Partial<PreCadastro>) => {
+  const parsed = CreatePreCadastroSchema.safeParse(data);
+  if (!parsed.success) {
+    showToast(parsed.error.message || 'Dados inválidos.', 'error');
+    return null;
+  }
+
   const payload = {
     name: data.name,
     email: data.email,
