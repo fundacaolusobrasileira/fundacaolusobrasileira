@@ -9,7 +9,7 @@ import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
-import { generateTestActivity } from '../../App';
+import { generateTestActivity } from '../../store/app.store';
 import type { Event, Partner } from '../../types';
 
 export const DashboardPage = () => {

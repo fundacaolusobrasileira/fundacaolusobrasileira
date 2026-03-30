@@ -11,7 +11,7 @@ import {
 import {
   SearchResults
 } from '../../components/domain';
-import { searchFoundation } from '../../App';
+import { searchFoundation } from '../../services/search.service';
 import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';

@@ -1,6 +1,6 @@
 // data/content.data.ts
 import { BookOpen, Landmark, Cpu, Palette } from 'lucide-react';
-import type { Pillar } from '../types';
+import type { Pillar, Space } from '../types';
 
 export const MISSION = {
   summary:
@@ -69,5 +69,15 @@ export const PILLARS: Pillar[] = [
     description:
       'Preservamos e valorizamos o patrimônio histórico e cultural comum, reconhecendo o legado partilhado como fundamento da nossa identidade lusófona.',
     icon: Landmark,
+  },
+];
+
+export const SPACES: Space[] = [
+  {
+    id: 'sp1',
+    name: 'Auditório Vieira de Almeida',
+    location: 'Lisboa, Sede',
+    description: 'Espaço moderno para conferências com capacidade para 200 pessoas.',
+    image: 'https://picsum.photos/800/600?random=10',
   },
 ];
