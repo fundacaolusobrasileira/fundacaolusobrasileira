@@ -59,17 +59,22 @@ export const createMember = async (notify = true): Promise<Partner | null> => {
   return newMember;
 };
 
+// FIX SEC-004: Update Supabase FIRST, then store only on success
 export const updateMember = async (id: string, patch: Partial<Partner>, notify = true) => {
   if (!isEditor()) return;
   const payload: any = { ...patch };
   if (patch.socialLinks) { payload.social_links = patch.socialLinks; delete payload.socialLinks; }
   delete payload.id;
-  const idx = PARTNERS.findIndex(p => p.id === id);
-  if (idx !== -1) { PARTNERS[idx] = { ...PARTNERS[idx], ...patch }; notifyState(); }
+
   const { error } = await supabase.from('partners').update(payload).eq('id', id);
   if (!error) {
+    const idx = PARTNERS.findIndex(p => p.id === id);
+    if (idx !== -1) { PARTNERS[idx] = { ...PARTNERS[idx], ...patch }; }
     logActivity('Editou membro', PARTNERS.find(p => p.id === id)?.name || id);
+    notifyState();
     if (notify) showToast('Membro atualizado.', 'success');
+  } else {
+    showToast('Erro ao atualizar membro.', 'error');
   }
 };
 

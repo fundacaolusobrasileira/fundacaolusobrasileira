@@ -3,17 +3,30 @@ import { supabase } from '../supabaseClient';
 import { EVENTS, PENDING_MEDIA_SUBMISSIONS, notifyState, showToast, logActivity, isEditor, generateId } from '../store/app.store';
 import type { Event, GalleryItem } from '../types';
 
+// Validate URL is safe (prevents javascript:, data: XSS)
+const isValidUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const normalizeEvent = (e: any): Event => {
   const normalized: any = { ...e };
-  // snake_case → camelCase
   normalized.coverImage = e.cover_image;
   normalized.socialLinks = e.social_links || {};
   normalized.descriptionShort = e.description_short;
   normalized.endDate = e.end_date;
   normalized.endTime = e.end_time;
   normalized.cardImage = e.card_image;
-  normalized.gallery = typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || []);
-  // Remove snake_case duplicates
+  // FIX DATA-001: try-catch for gallery JSON.parse
+  try {
+    normalized.gallery = typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || []);
+  } catch {
+    normalized.gallery = [];
+  }
   delete normalized.cover_image;
   delete normalized.social_links;
   delete normalized.description_short;
@@ -71,10 +84,10 @@ export const createEvent = async (data: Partial<Event>): Promise<Event | null> =
   return newEvent;
 };
 
+// FIX SEC-003: Update Supabase FIRST, then update store only on success
 export const updateEvent = async (id: string, patch: Partial<Event>, notify = true) => {
   if (!isEditor()) return;
   const payload: any = { ...patch };
-  // camelCase → snake_case for all mapped fields
   const mappings: [string, string][] = [
     ['coverImage', 'cover_image'],
     ['socialLinks', 'social_links'],
@@ -87,12 +100,14 @@ export const updateEvent = async (id: string, patch: Partial<Event>, notify = tr
     if (camel in payload) { payload[snake] = payload[camel]; delete payload[camel]; }
   }
   delete payload.id; delete payload.created_at; delete payload.updated_at;
-  const idx = EVENTS.findIndex(e => e.id === id);
-  if (idx !== -1) { EVENTS[idx] = { ...EVENTS[idx], ...patch }; notifyState(); }
+
   const { error } = await supabase.from('events').update(payload).eq('id', id);
   if (!error) {
-    if (notify) showToast('Evento salvo.', 'success');
+    const idx = EVENTS.findIndex(e => e.id === id);
+    if (idx !== -1) { EVENTS[idx] = { ...EVENTS[idx], ...patch }; }
     logActivity('Editou evento', EVENTS.find(e => e.id === id)?.title || id);
+    notifyState();
+    if (notify) showToast('Evento salvo.', 'success');
   } else {
     showToast('Erro ao salvar.', 'error');
   }
@@ -113,7 +128,6 @@ export const deleteEvent = async (id: string) => {
   }
 };
 
-// Internal helper to add a gallery item to an event
 const addGalleryItem = async (eventId: string, item: Omit<GalleryItem, 'id' | 'createdAt' | 'order'>) => {
   const event = EVENTS.find(e => e.id === eventId);
   if (!event || !isEditor()) return;
@@ -128,7 +142,6 @@ const addGalleryItem = async (eventId: string, item: Omit<GalleryItem, 'id' | 'c
   notifyState();
 };
 
-// Upload a file and add it to the event gallery
 export const addMediaToEvent = async (eventId: string, file: File) => {
   if (!isEditor()) return;
   try {
@@ -148,9 +161,13 @@ export const addMediaToEvent = async (eventId: string, file: File) => {
   }
 };
 
-// Add a URL directly to the event gallery
+// FIX SEC-002: Validate URL before adding to gallery
 export const addUrlMediaToEvent = (eventId: string, url: string) => {
   if (!isEditor()) return;
+  if (!isValidUrl(url)) {
+    showToast('URL inválida. Use apenas HTTP ou HTTPS.', 'error');
+    return;
+  }
   addGalleryItem(eventId, {
     kind: 'image',
     srcType: 'url',
@@ -160,7 +177,6 @@ export const addUrlMediaToEvent = (eventId: string, url: string) => {
   });
 };
 
-// Upload multiple files to an event
 export const addEventImagesFromFiles = async (eventId: string, files: FileList | File[]) => {
   const fileList = files instanceof FileList ? Array.from(files) : files;
   let count = 0;

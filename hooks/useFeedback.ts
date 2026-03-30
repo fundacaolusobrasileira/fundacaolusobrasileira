@@ -1,8 +1,9 @@
 // hooks/useFeedback.ts
-// Note: imports from store/app.store which will be created in Chunk 2
+import { showToast } from '../store/app.store';
+
 export const useFeedback = () => ({
-  showSuccess: (msg: string) => { window.dispatchEvent(new CustomEvent('flb_toast_event', { detail: { message: msg, type: 'success' } })); },
-  showError: (msg: string) => { window.dispatchEvent(new CustomEvent('flb_toast_event', { detail: { message: msg, type: 'error' } })); },
-  showInfo: (msg: string) => { window.dispatchEvent(new CustomEvent('flb_toast_event', { detail: { message: msg, type: 'info' } })); },
-  showWarning: (msg: string) => { window.dispatchEvent(new CustomEvent('flb_toast_event', { detail: { message: msg, type: 'warning' } })); },
+  showSuccess: (msg: string) => showToast(msg, 'success'),
+  showError: (msg: string) => showToast(msg, 'error'),
+  showInfo: (msg: string) => showToast(msg, 'info'),
+  showWarning: (msg: string) => showToast(msg, 'warning'),
 });

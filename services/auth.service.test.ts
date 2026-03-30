@@ -123,7 +123,7 @@ describe('auth.service', () => {
       const result = await signUp('new@test.com', '123', 'Test', 'individual');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('6 caracteres');
+      expect(result.error).toContain('8 caracteres');
     });
   });
 });

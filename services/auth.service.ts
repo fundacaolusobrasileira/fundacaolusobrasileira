@@ -68,8 +68,8 @@ export const signUp = async (email: string, password: string, name: string, type
   if (!email || !password || !name) {
     return { ok: false, error: 'Todos os campos são obrigatórios.' };
   }
-  if (password.length < 6) {
-    return { ok: false, error: 'A senha deve ter pelo menos 6 caracteres.' };
+  if (password.length < 8) {
+    return { ok: false, error: 'A senha deve ter pelo menos 8 caracteres.' };
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -103,6 +103,7 @@ export const signUp = async (email: string, password: string, name: string, type
 
 // Admin-only user management
 export const fetchAllProfiles = async () => {
+  if (!isAdmin()) { showToast('Sem permissão.', 'error'); return []; }
   const { data, error } = await supabase
     .from('profiles')
     .select('id, user_id, name, email, role, created_at')

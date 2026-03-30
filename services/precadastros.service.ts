@@ -94,15 +94,23 @@ export const convertPreCadastroToMember = (id: string) => {
   if (pre) {
     createMember(false).then(async (newMember) => {
       if (newMember) {
-        await updateMember(newMember.id, {
-          name: pre.name,
-          category: pre.registrationType === 'parceiro' ? 'Parceiro Silver' : 'Outro Apoio',
-          bio: pre.message
-        }, false);
-        await updatePreCadastro(id, { status: 'convertido' });
-        logActivity('Converteu pré-cadastro em membro', pre.name);
-        showToast('Convertido em membro com sucesso.', 'success');
+        try {
+          await updateMember(newMember.id, {
+            name: pre.name,
+            category: pre.registrationType === 'parceiro' ? 'Parceiro Silver' : 'Outro Apoio',
+            bio: pre.message
+          }, false);
+          await updatePreCadastro(id, { status: 'convertido' });
+          logActivity('Converteu pré-cadastro em membro', pre.name);
+          showToast('Convertido em membro com sucesso.', 'success');
+        } catch (err) {
+          console.error('Conversion failed:', err);
+          showToast('Erro na conversão.', 'error');
+        }
       }
+    }).catch(err => {
+      console.error('Member creation failed:', err);
+      showToast('Erro ao criar membro.', 'error');
     });
   }
   return null;
