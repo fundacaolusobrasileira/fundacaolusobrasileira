@@ -95,7 +95,7 @@ describe('Layer 1 - PreCadastroSchema (page-level)', () => {
       const result = simulatePageSubmit({ registrationType: null, name: 'Joao Silva', email: 'j@e.com', type: 'individual', message: '' });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const paths = result.error.errors.map(e => e.path[0]);
+        const paths = result.error.issues.map(e => e.path[0]);
         expect(paths).toContain('registrationType');
       }
     });
@@ -134,7 +134,7 @@ describe('Layer 1 - PreCadastroSchema (page-level)', () => {
       const result = simulatePageSubmit({ registrationType: 'membro', name: '', email: 'j@e.com', type: 'individual', message: '' });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const paths = result.error.errors.map(e => e.path[0]);
+        const paths = result.error.issues.map(e => e.path[0]);
         expect(paths).toContain('name');
       }
     });
@@ -162,7 +162,7 @@ describe('Layer 1 - PreCadastroSchema (page-level)', () => {
       const result = simulatePageSubmit({ registrationType: 'membro', name: 'Joao Silva', email: '', type: 'individual', message: '' });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const paths = result.error.errors.map(e => e.path[0]);
+        const paths = result.error.issues.map(e => e.path[0]);
         expect(paths).toContain('email');
       }
     });
@@ -201,7 +201,7 @@ describe('Layer 1 - PreCadastroSchema (page-level)', () => {
       const result = simulatePageSubmit({ registrationType: 'membro', name: 'Joao', email: 'j@e.com', type: '', message: '' });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const paths = result.error.errors.map(e => e.path[0]);
+        const paths = result.error.issues.map(e => e.path[0]);
         expect(paths).toContain('type');
       }
     });
@@ -225,7 +225,7 @@ describe('Layer 1 - PreCadastroSchema (page-level)', () => {
       const result = simulatePageSubmit({ registrationType: 'membro', name: 'Joao', email: 'j@e.com', type: 'individual', message: msg });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const paths = result.error.errors.map(e => e.path[0]);
+        const paths = result.error.issues.map(e => e.path[0]);
         expect(paths).toContain('message');
       }
     });
