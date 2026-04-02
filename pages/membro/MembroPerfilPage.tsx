@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Upload, Loader2, User } from 'lucide-react';
 import { SectionWrapper, Card, Badge, Button, Input, AccessDeniedModal, LoginModal, PremiumLoader } from '../../components/ui';
 import { SocialIcons } from '../../components/ui';
-import { PARTNERS, FLB_STATE_EVENT, isEditor } from '../../store/app.store';
+import { PARTNERS, FLB_STATE_EVENT, isEditor, showToast, AUTH_LOADING, AUTH_SESSION } from '../../store/app.store';
 import { updateMember } from '../../services/members.service';
 import { saveMediaBlob } from '../../services/media.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
@@ -14,11 +14,17 @@ export const MembroPerfilPage = () => {
     const [member, setMember] = useState<any>(null);
 
     useEffect(() => {
-        const found = PARTNERS.find(p => p.id === id);
+        const slugify = (name: string) =>
+            name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+        const findMember = () =>
+            PARTNERS.find(p => p.id === id) ?? PARTNERS.find(p => slugify(p.name) === id);
+
+        const found = findMember();
         if(found) setMember(found);
 
         const handleUpdate = () => {
-            const updated = PARTNERS.find(p => p.id === id);
+            const updated = findMember();
             if(updated) setMember(updated);
         }
         window.addEventListener(FLB_STATE_EVENT, handleUpdate);
@@ -40,7 +46,11 @@ export const MembroPerfilPage = () => {
                     <div className="md:flex">
                         <div className="md:w-1/3 bg-slate-50 p-10 flex flex-col items-center justify-center border-r border-slate-100">
                             <div className="w-48 h-48 rounded-full bg-white p-2 shadow-lg mb-6">
-                                <img src={member.image} alt={member.name} className="w-full h-full rounded-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                                {/* BUG 7 FIX: fallback when image is missing */}
+                            {member.image
+                              ? <img src={member.image} alt={member.name} className="w-full h-full rounded-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                              : <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-4xl text-slate-400 font-serif">{member.name?.charAt(0)}</div>
+                            }
                             </div>
                             <h2 className="text-2xl font-serif text-brand-900 text-center mb-2">{member.name}</h2>
                             <Badge variant="gold">{member.role || member.category}</Badge>
@@ -59,7 +69,7 @@ export const MembroPerfilPage = () => {
                         <div className="md:w-2/3 p-10 md:p-14">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 pb-2">Biografia</h3>
                             <p className="text-slate-600 font-light leading-relaxed text-lg mb-10 whitespace-pre-wrap">
-                                {member.summary || member.bio || "Sem biografia disponivel."}
+                                {member.full || member.summary || member.bio || "Sem biografia disponivel."}
                             </p>
 
                             <div className="grid grid-cols-2 gap-8">
@@ -91,7 +101,7 @@ export const MembroPerfilPage = () => {
 export const MembroEditarPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({ name: '', role: '', bio: '', image: '', type: 'pessoa', category: '', country: '', website: '', socialLinks: {} });
+  const [formData, setFormData] = useState<any>({ name: '', role: '', summary: '', full: '', image: '', type: 'pessoa', category: '', country: '', website: '', socialLinks: {} });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -102,7 +112,10 @@ export const MembroEditarPage = () => {
   usePageMeta("Editar Perfil – Fundacao Luso-Brasileira", "Atualize as informacoes do seu perfil de membro.");
 
   useEffect(() => {
-     if (!isEditor()) {
+     const editor = isEditor();
+     console.log(`[EDIT_PAGE] mount id=${id} isEditor=${editor} AUTH_LOADING=${AUTH_LOADING} role=${AUTH_SESSION.role} isLoggedIn=${AUTH_SESSION.isLoggedIn}`);
+     if (!editor) {
+         console.warn(`[EDIT_PAGE] access denied on mount — role=${AUTH_SESSION.role} loading=${AUTH_LOADING}`);
          setShowAccessDenied(true);
      }
 
@@ -114,18 +127,23 @@ export const MembroEditarPage = () => {
      }
   }, [id]);
 
-  const handleSave = () => {
-    if (!isEditor()) {
+  // BUG 4 FIX: await updateMember and show error if it fails
+  const handleSave = async () => {
+    const editor = isEditor();
+    console.log(`[EDIT_PAGE] handleSave isEditor=${editor} role=${AUTH_SESSION.role}`);
+    if (!editor) {
+        console.warn(`[EDIT_PAGE] save blocked — role=${AUTH_SESSION.role}`);
         setShowAccessDenied(true);
         return;
     }
     if (id) {
         setLoading(true);
-        updateMember(id, formData);
-        setTimeout(() => {
-            setLoading(false);
-            navigate(-1);
-        }, 500);
+        await updateMember(id, formData);
+        setLoading(false);
+        // After save, slug IDs may have been replaced with UUIDs in PARTNERS.
+        // Find the member's current id to navigate to the correct profile URL.
+        const saved = PARTNERS.find(p => p.id === id) ?? PARTNERS.find(p => p.name === formData.name);
+        navigate(saved ? `/membro/${saved.id}` : '/administracao');
     }
   };
 
@@ -147,12 +165,15 @@ export const MembroEditarPage = () => {
     if (!e.target.files?.[0]) return;
     const file = e.target.files[0];
 
+    console.log(`[PERFIL_UPLOAD] file=${file.name} size=${file.size} type=${file.type}`);
     setUploading(true);
     try {
         const publicUrl = await saveMediaBlob(file);
+        console.log(`[PERFIL_UPLOAD] success url=${publicUrl}`);
         setFormData((prev: any) => ({ ...prev, image: publicUrl }));
-    } catch (err) {
-        if (import.meta.env.DEV) console.error('Upload error:', err);
+    } catch (err: any) {
+        console.error(`[PERFIL_UPLOAD] catch err=`, err);
+        showToast(`Erro no upload: ${err?.message || 'erro desconhecido'}`, 'error');
     } finally {
         setUploading(false);
         e.target.value = '';
@@ -334,12 +355,22 @@ export const MembroEditarPage = () => {
                  </div>
 
                  <div className="pt-4">
-                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Biografia</label>
+                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Resumo Curto</label>
                    <textarea
-                      rows={6}
+                      rows={3}
                       className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/60 focus:bg-white outline-none text-sm resize-none focus:border-sand-400 focus:ring-4 focus:ring-sand-400/10"
-                      value={formData.bio || ''}
-                      onChange={e => handleChange('bio', e.target.value)}
+                      value={formData.summary || ''}
+                      onChange={e => handleChange('summary', e.target.value)}
+                   />
+                 </div>
+
+                 <div className="pt-4">
+                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Biografia Completa</label>
+                   <textarea
+                      rows={8}
+                      className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/60 focus:bg-white outline-none text-sm resize-none focus:border-sand-400 focus:ring-4 focus:ring-sand-400/10"
+                      value={formData.full || ''}
+                      onChange={e => handleChange('full', e.target.value)}
                    />
                  </div>
 

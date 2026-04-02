@@ -16,7 +16,6 @@ import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
 import { MISSION } from '../../data/content.data';
-import { MEMBERS_SEED } from '../../data/members.data';
 import { PARTNERS_SEED } from '../../data/partners.data';
 
 export const NotFoundPage = () => {
@@ -124,10 +123,13 @@ export const HomePage = () => {
     return <PremiumLoader />;
   }
 
-  const presidente = MEMBERS_SEED.filter(m => m.tier === 'presidente');
-  const direcao = MEMBERS_SEED.filter(m => m.tier === 'direcao');
-  const secretarioGeral = MEMBERS_SEED.filter(m => m.tier === 'secretario-geral');
-  const vogais = MEMBERS_SEED.filter(m => m.tier === 'vogal');
+  // Use live data from DB (merged with seed in syncMembers). partnersTick ensures re-render.
+  void partnersTick;
+  const govMembers = PARTNERS.filter(p => p.category === 'Governança');
+  const presidente = govMembers.filter(m => m.tier === 'presidente');
+  const direcao = govMembers.filter(m => m.tier === 'direcao');
+  const secretarioGeral = govMembers.filter(m => m.tier === 'secretario-geral');
+  const vogais = govMembers.filter(m => m.tier === 'vogal');
 
   return (
     <main className="overflow-x-hidden bg-brand-900 text-white selection:bg-sand-400 selection:text-brand-900">

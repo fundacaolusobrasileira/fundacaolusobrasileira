@@ -1,7 +1,22 @@
 // router.tsx
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PremiumLoader } from './components/ui/Loaders';
+import { AUTH_SESSION, AUTH_LOADING, FLB_STATE_EVENT } from './store/app.store';
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  // Subscribe to auth state changes so the component re-renders reactively
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setTick(t => t + 1);
+    window.addEventListener(FLB_STATE_EVENT, handler);
+    return () => window.removeEventListener(FLB_STATE_EVENT, handler);
+  }, []);
+
+  if (AUTH_LOADING) return <PremiumLoader />;
+  if (!AUTH_SESSION.isLoggedIn) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
 const HomePage = lazy(() => import('./pages/home/HomePage').then(m => ({ default: m.HomePage })));
 const NotFoundPage = lazy(() => import('./pages/home/HomePage').then(m => ({ default: m.NotFoundPage })));
@@ -40,9 +55,9 @@ export const AppRouter = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/dashboard/eventos" element={<DashboardEventosPage />} />
-      <Route path="/dashboard/eventos/:id/midias" element={<DashboardMediaGerirPage />} />
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/dashboard/eventos" element={<ProtectedRoute><DashboardEventosPage /></ProtectedRoute>} />
+      <Route path="/dashboard/eventos/:id/midias" element={<ProtectedRoute><DashboardMediaGerirPage /></ProtectedRoute>} />
       <Route path="/privacidade" element={<PrivacyPage />} />
       <Route path="/termos" element={<TermsPage />} />
       <Route path="*" element={<NotFoundPage />} />

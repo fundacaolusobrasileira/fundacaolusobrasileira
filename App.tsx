@@ -69,9 +69,47 @@ syncEvents();
 
 // --- Auth Listener ---
 
+let authGeneration = 0;
+
 const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+  const generation = ++authGeneration;
+
+  console.log(`[AUTH] event=${event} gen=${generation} user=${session?.user?.email ?? 'none'}`);
+
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
+    // On SIGNED_IN (token refresh), skip re-resolving if we already have a non-viewer role
+    // for the same user — resolveUserRole can timeout and would downgrade the role to viewer.
+    // Skip DB role query on SIGNED_IN when:
+    // 1. Already have a non-viewer role for this user (token refresh), OR
+    // 2. No session yet (SIGNED_IN fired before INITIAL_SESSION — Supabase _recoverAndRefresh race)
+    //    In case 2, INITIAL_SESSION will arrive shortly and resolve the role correctly.
+    const alreadyResolved =
+      event === 'SIGNED_IN' && (
+        (AUTH_SESSION.isLoggedIn && AUTH_SESSION.userId === session.user.id && AUTH_SESSION.role !== 'viewer') ||
+        !AUTH_SESSION.isLoggedIn
+      );
+
+    if (alreadyResolved) {
+      console.log(`[AUTH] SIGNED_IN skipped — isLoggedIn=${AUTH_SESSION.isLoggedIn} role=${AUTH_SESSION.role}`);
+      notifyState();
+      return;
+    }
+
+    syncFromSupabase();
+    syncMembers();
+    syncEvents();
+    syncActivityLog();
+
+    console.log(`[AUTH] resolving role for user=${session.user.id} gen=${generation}`);
+    const t0 = Date.now();
     const userRole = await resolveUserRole(session.user.id);
+    console.log(`[AUTH] role resolved: role=${userRole} elapsed=${Date.now() - t0}ms gen=${generation} current=${authGeneration}`);
+
+    if (generation !== authGeneration) {
+      console.warn(`[AUTH] stale result discarded gen=${generation}`);
+      return;
+    }
+
     setAuthSession({
       isLoggedIn: true,
       role: userRole,
@@ -79,22 +117,21 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
       userId: session.user.id,
       lastLoginAt: new Date().toISOString(),
     });
-    syncFromSupabase();
-    syncMembers();
-    syncEvents();
-    syncActivityLog();
+    setAuthLoading(false);
+    console.log(`[AUTH] session ready role=${userRole}`);
   } else if (event === 'INITIAL_SESSION' && !session) {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });
+    setAuthLoading(false);
+    console.log(`[AUTH] no session, loading=false`);
   } else if (event === 'SIGNED_OUT') {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });
+    setAuthLoading(false);
+    console.log(`[AUTH] signed out`);
     syncFromSupabase();
     syncMembers();
     syncEvents();
   }
 
-  if (event === 'INITIAL_SESSION') {
-    setAuthLoading(false);
-  }
   notifyState();
 });
 

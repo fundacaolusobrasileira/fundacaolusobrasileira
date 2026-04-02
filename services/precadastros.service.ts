@@ -4,19 +4,18 @@ import { PRECADASTROS, notifyState, showToast, logActivity, isEditor, generateId
 import { createMember, updateMember } from './members.service';
 import type { PreCadastro } from '../types';
 
+// BUG 9 FIX: enum constraint on registrationType (matches DB CHECK constraint)
 const CreatePreCadastroSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   type: z.string().min(1).optional(),
-  registrationType: z.string().optional().nullable(),
+  registrationType: z.enum(['membro', 'parceiro', 'colaborador', 'embaixador']).optional().nullable(),
   message: z.string().max(1000).optional(),
 });
 
-const normalizePreCadastro = (p: any): PreCadastro => {
-  const normalized: any = { ...p };
-  normalized.createdAt = p.created_at;
-  delete normalized.created_at;
-  return normalized;
+const normalizePreCadastro = (p: Record<string, unknown>): PreCadastro => {
+  const { created_at, updated_at: _updated_at, ...rest } = p;
+  return { ...rest, createdAt: created_at as string } as PreCadastro;
 };
 
 export const syncPreCadastros = async () => {
@@ -30,7 +29,8 @@ export const syncPreCadastros = async () => {
 export const createPreCadastro = async (data: Partial<PreCadastro>) => {
   const parsed = CreatePreCadastroSchema.safeParse(data);
   if (!parsed.success) {
-    showToast(parsed.error.message || 'Dados inválidos.', 'error');
+    // BUG 2 FIX: use .issues[0]?.message instead of .message (Zod v4)
+    showToast(parsed.error.issues[0]?.message || 'Dados inválidos.', 'error');
     return null;
   }
 
@@ -74,9 +74,18 @@ export const subscribeToNewsletter = (email: string) => {
   });
 };
 
+// BUG 3 FIX: only send DB columns, strip camelCase fields (createdAt → created_at handled by DB default)
+const PRECADASTRO_DB_COLUMNS = new Set(['name', 'email', 'type', 'registrationType', 'message', 'status', 'note']);
+
 export const updatePreCadastro = async (id: string, patch: Partial<PreCadastro>) => {
   if (!isEditor()) return;
-  const { error } = await supabase.from('precadastros').update(patch).eq('id', id);
+
+  const payload: Partial<Record<string, unknown>> = {};
+  for (const key of Object.keys(patch) as Array<keyof PreCadastro>) {
+    if (PRECADASTRO_DB_COLUMNS.has(key)) payload[key] = patch[key];
+  }
+
+  const { error } = await supabase.from('precadastros').update(payload).eq('id', id);
   if (!error) {
     const idx = PRECADASTROS.findIndex(p => p.id === id);
     if (idx !== -1) {

@@ -1,28 +1,38 @@
 import { supabase } from '../supabaseClient';
-import { setAuthSession, setAuthLoading, AUTH_SESSION, isAdmin, notifyState, showToast, logActivity } from '../store/app.store';
+import { setAuthSession, AUTH_SESSION, isAdmin, notifyState, showToast, logActivity } from '../store/app.store';
 import { LoginSchema, CadastroSchema } from '../validation/schemas';
 
-const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'viewer'> => {
+const ROLE_TIMEOUT_MS = 3000;
+
+export const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'viewer'> => {
+  const queryPromise = supabase
+    .from('profiles')
+    .select('role')
+    .eq('user_id', userId)
+    .single()
+    .then(({ data: profile }) =>
+      profile?.role === 'admin' ? 'admin' as const :
+      profile?.role === 'editor' ? 'editor' as const : 'viewer' as const
+    );
+
+  const timeoutPromise = new Promise<'viewer'>((resolve) =>
+    setTimeout(() => {
+      console.warn(`[AUTH] resolveUserRole timed out after ${ROLE_TIMEOUT_MS}ms for user=${userId}`);
+      resolve('viewer');
+    }, ROLE_TIMEOUT_MS)
+  );
+
   try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    return profile?.role === 'admin' ? 'admin' :
-           profile?.role === 'editor' ? 'editor' : 'viewer';
-  } catch (err) {
-    console.error('resolveUserRole failed, defaulting to viewer:', err);
+    return await Promise.race([queryPromise, timeoutPromise]);
+  } catch {
     return 'viewer';
   }
 };
 
-export { resolveUserRole };
-
 export const loginAsEditor = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
   const parsed = LoginSchema.safeParse({ email, password });
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.message || 'Dados inválidos.' };
+    return { ok: false, error: parsed.error.issues[0]?.message || 'Dados inválidos.' };
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -38,18 +48,8 @@ export const loginAsEditor = async (email: string, password: string): Promise<{ 
   }
 
   if (data.session) {
-    const userRole = await resolveUserRole(data.user.id);
-
-    setAuthSession({
-      isLoggedIn: true,
-      role: userRole,
-      displayName: data.user.email || 'Editor',
-      userId: data.user.id,
-      lastLoginAt: new Date().toISOString()
-    });
-    setAuthLoading(false);
+    // onAuthStateChange handles session setup — role is read from JWT app_metadata
     logActivity('Login', data.user.email || email);
-    notifyState();
     showToast(`Bem-vindo, ${data.user.email}!`, 'success');
     return { ok: true };
   }
@@ -69,7 +69,7 @@ export const logout = async () => {
 export const signUp = async (email: string, password: string, name: string, type: string): Promise<{ ok: boolean; error?: string }> => {
   const parsed = CadastroSchema.safeParse({ email, password, name, type });
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.message || 'Dados inválidos.' };
+    return { ok: false, error: parsed.error.issues[0]?.message || 'Dados inválidos.' };
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -86,13 +86,18 @@ export const signUp = async (email: string, password: string, name: string, type
   }
 
   if (data.user) {
-    await supabase.from('profiles').insert({
+    // BUG 5 FIX: check profile INSERT error — if it fails, user has no role and resolves as viewer
+    const { error: profileError } = await supabase.from('profiles').insert({
       user_id: data.user.id,
       name,
       email,
       type,
       role: 'membro'
     });
+    if (profileError) {
+      console.error('signUp profile insert failed:', profileError);
+      return { ok: false, error: 'Conta criada mas erro ao configurar perfil. Contacte o suporte.' };
+    }
     logActivity('Novo cadastro', email);
     showToast('Conta criada com sucesso! Verifique seu email para confirmar.', 'success');
     return { ok: true };
