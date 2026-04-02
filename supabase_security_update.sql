@@ -137,6 +137,12 @@ DROP POLICY IF EXISTS "precadastros: exclusão autenticados"    ON public.precad
 DROP POLICY IF EXISTS "precadastros: atualização editores"     ON public.precadastros;
 DROP POLICY IF EXISTS "precadastros: exclusão editores"        ON public.precadastros;
 DROP POLICY IF EXISTS "precadastros: leitura autenticados"     ON public.precadastros;
+DROP POLICY IF EXISTS "precadastros: inserção pública"         ON public.precadastros;
+
+-- Public insert: anyone can submit a pre-registration (no auth required)
+CREATE POLICY "precadastros: inserção pública"
+  ON public.precadastros FOR INSERT
+  WITH CHECK (true);
 
 CREATE POLICY "precadastros: leitura editores"
   ON public.precadastros FOR SELECT

@@ -10,7 +10,7 @@ export const BrandLogo = ({
   return (
     <div className={`flex items-center select-none ${className}`} role="img" aria-label="Logo Fundação Luso-Brasileira">
       <img
-        src="/ICON + NOME FUNDAÇÃO LOGO.PNG"
+        src="/logo-flb-full.png"
         alt="Fundação Luso-Brasileira"
         className="h-10 md:h-11 w-auto object-contain"
         aria-hidden="true"
