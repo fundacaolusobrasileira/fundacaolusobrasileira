@@ -31,7 +31,8 @@
       "Bash(curl -L -o flag-portugal.png \"https://flagcdn.com/w1280/pt.png\")",
       "Bash(curl -L -o flag-brazil.png \"https://flagcdn.com/w1280/br.png\")",
       "Bash(cp \"C:/Users/Kasa/Downloads/Flag_of_Portugal_\\(official\\).svg\" H:/Workspace/fundacaolusobrasileira/public/flag-portugal.svg)",
-      "Bash(cp \"C:/Users/Kasa/Downloads/Flag_of_Brazil.svg\" H:/Workspace/fundacaolusobrasileira/public/flag-brazil.svg)"
+      "Bash(cp \"C:/Users/Kasa/Downloads/Flag_of_Brazil.svg\" H:/Workspace/fundacaolusobrasileira/public/flag-brazil.svg)",
+      "Bash(ls:*)"
     ]
   }
 }

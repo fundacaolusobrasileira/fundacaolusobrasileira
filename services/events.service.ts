@@ -84,10 +84,19 @@ export const createEvent = async (data: Partial<Event>): Promise<Event | null> =
   return newEvent;
 };
 
+// All editable columns in the events table (excludes id, created_at, updated_at)
+const EVENT_DB_COLUMNS = new Set([
+  'title', 'subtitle', 'description', 'description_short', 'objective', 'experience',
+  'sponsors', 'date', 'time', 'end_date', 'end_time', 'location', 'address', 'city',
+  'country', 'category', 'tags', 'image', 'cover_image', 'card_image', 'gallery',
+  'links', 'social_links', 'status', 'featured', 'notes',
+]);
+
 // FIX SEC-003: Update Supabase FIRST, then update store only on success
+// BUG 6 FIX: whitelist DB columns to prevent 400 from non-existent fields
 export const updateEvent = async (id: string, patch: Partial<Event>, notify = true) => {
   if (!isEditor()) return;
-  const payload: any = { ...patch };
+  const raw: any = { ...patch };
   const mappings: [string, string][] = [
     ['coverImage', 'cover_image'],
     ['socialLinks', 'social_links'],
@@ -97,9 +106,13 @@ export const updateEvent = async (id: string, patch: Partial<Event>, notify = tr
     ['cardImage', 'card_image'],
   ];
   for (const [camel, snake] of mappings) {
-    if (camel in payload) { payload[snake] = payload[camel]; delete payload[camel]; }
+    if (camel in raw) { raw[snake] = raw[camel]; delete raw[camel]; }
   }
-  delete payload.id; delete payload.created_at; delete payload.updated_at;
+
+  const payload: any = {};
+  for (const key of Object.keys(raw)) {
+    if (EVENT_DB_COLUMNS.has(key)) payload[key] = raw[key];
+  }
 
   const { error } = await supabase.from('events').update(payload).eq('id', id);
   if (!error) {

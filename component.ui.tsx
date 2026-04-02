@@ -889,6 +889,9 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                     if (newM) {
                         await updateMember(newM.id, formData, true);
                         onClose();
+                    } else {
+                        // BUG 8 FIX: createMember returned null — show error instead of hanging
+                        showToast('Erro ao criar membro.', 'error');
                     }
                 }
             } catch (err) {
@@ -904,12 +907,15 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
         if (!e.target.files?.[0]) return;
         const file = e.target.files[0];
 
+        console.log(`[MEMBER_UPLOAD] selected file=${file.name} size=${file.size} type=${file.type}`);
         setUploading(true);
         try {
             const publicUrl = await saveMediaBlob(file);
+            console.log(`[MEMBER_UPLOAD] success url=${publicUrl}`);
             setFormData({ ...formData, image: publicUrl });
-        } catch (err) {
-            if (import.meta.env.DEV) console.error('Upload error:', err);
+        } catch (err: any) {
+            console.error(`[MEMBER_UPLOAD] catch err=`, err);
+            showToast(`Erro no upload: ${err?.message || 'erro desconhecido'}`, 'error');
         } finally {
             setUploading(false);
             e.target.value = '';

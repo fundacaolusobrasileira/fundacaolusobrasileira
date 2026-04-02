@@ -17,7 +17,7 @@ import { PreCadastroSchema } from '../validation/schemas';
 import { z } from 'zod';
 
 // ---- Supabase mock -------------------------------------------------------
-const mockInsert = vi.fn<any>();
+const mockInsert = vi.fn<() => { select: () => Promise<{ data: null; error: null }> }>();
 
 vi.mock('../supabaseClient', () => ({
   supabase: {
@@ -33,9 +33,9 @@ vi.mock('../supabaseClient', () => ({
 }));
 
 vi.mock('../store/app.store', async () => {
-  const actual = await vi.importActual('../store/app.store');
+  const actual = await vi.importActual<typeof import('../store/app.store')>('../store/app.store');
   return {
-    ...actual as any,
+    ...actual,
     isEditor: vi.fn(() => false),
     showToast: vi.fn(),
     logActivity: vi.fn(),
