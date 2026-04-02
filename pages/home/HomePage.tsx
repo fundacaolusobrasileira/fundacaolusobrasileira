@@ -9,10 +9,12 @@ import {
   Reveal
 } from '../../components/ui';
 import {
-  SearchResults
+  SearchResults,
+  EventCard
 } from '../../components/domain';
 import { searchFoundation } from '../../services/search.service';
-import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
+import { PARTNERS, EVENTS, FLB_STATE_EVENT } from '../../store/app.store';
+import { EVENTS_SEED } from '../../data/events.data';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
 import { MISSION } from '../../data/content.data';
@@ -29,13 +31,13 @@ export const NotFoundPage = () => {
       <div className="relative z-10">
         <h1 className="text-[10rem] md:text-[15rem] font-bold text-white/5 leading-none select-none">404</h1>
         <div className="relative -mt-12 md:-mt-20">
-           <h2 className="text-3xl md:text-4xl font-light text-white mb-6">Pagina nao encontrada</h2>
+           <h2 className="text-3xl md:text-4xl font-light text-white mb-6">Página não encontrada</h2>
            <p className="text-white/80 text-base md:text-lg mb-10 max-w-md mx-auto font-light">
-             A pagina que voce procura nao existe ou foi movida.
+             A página que você procura não existe ou foi movida.
            </p>
            <Link to="/">
              <Button variant="gold" className="px-8 py-4 text-xs">
-                Voltar ao Inicio
+                Voltar ao Início
              </Button>
            </Link>
         </div>
@@ -45,7 +47,7 @@ export const NotFoundPage = () => {
 };
 
 export const HomePage = () => {
-  usePageMeta("Fundacao Luso-Brasileira", "Cultura, Conhecimento e Cooperacao.");
+  usePageMeta("Fundação Luso-Brasileira", "Cultura, Conhecimento e Cooperação.");
 
   const [loading, setLoading] = useState(true);
 
@@ -210,7 +212,7 @@ export const HomePage = () => {
                 />
                 <div className="inline-flex items-center gap-3">
                     <div className="h-px w-6 md:w-8 bg-sand-400/50"></div>
-                    <span className="text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase text-sand-400">Fundacao Luso-Brasileira</span>
+                    <span className="text-[9px] md:text-[10px] font-bold tracking-[0.3em] uppercase text-sand-400">Fundação Luso-Brasileira</span>
                     <div className="h-px w-6 md:w-8 bg-sand-400/50"></div>
                 </div>
             </div>
@@ -222,13 +224,13 @@ export const HomePage = () => {
                 <span className="font-script text-5xl sm:text-6xl md:text-9xl px-2 md:px-4 align-middle relative -top-1 md:-top-4 opacity-90 mx-1 md:mx-2 hover:scale-110 transition-transform duration-500 inline-block cursor-default text-sand-400" style={{ textShadow: '0 0 30px rgba(201,175,136,0.3)' }} aria-hidden="true">e</span>
                 <span className="sr-only"> e </span>
                 <br className="md:hidden" />
-                Cooperacao.
+                Cooperação.
             </h1>
           </Reveal>
 
           <Reveal delay={200}>
             <p className="text-base sm:text-lg md:text-2xl text-slate-200 font-light max-w-3xl mr-auto md:mx-auto mb-12 md:mb-16 leading-relaxed tracking-wide drop-shadow-md pr-4 md:pr-0">
-                Promovendo iniciativas culturais, educativas e tecnologicas que aproximam Portugal, Brasil e a lusofonia.
+                Promovendo iniciativas culturais, educativas e tecnológicas que aproximam Portugal, Brasil e a lusofonia.
             </p>
           </Reveal>
 
@@ -301,7 +303,7 @@ export const HomePage = () => {
             <div className="md:col-span-4">
                <Reveal>
                    <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-                     <span className="w-8 h-px bg-sand-400"></span> Proposito
+                     <span className="w-8 h-px bg-sand-400"></span> Propósito
                    </h2>
                </Reveal>
             </div>
@@ -314,12 +316,12 @@ export const HomePage = () => {
                <div className="grid md:grid-cols-2 gap-8">
                    <Reveal delay={200}>
                        <p className="text-base md:text-lg text-slate-600 font-light leading-relaxed">
-                         A Fundacao Luso-Brasileira tem por finalidade promover e apoiar iniciativas de caracter Cultural, Educativo, Tecnologico e Patrimonial a concretizar em Portugal, no Brasil e nos restantes paises e territorios de Lingua Portuguesa.
+                         A Fundação Luso-Brasileira tem por finalidade promover e apoiar iniciativas de carácter Cultural, Educativo, Tecnológico e Patrimonial a concretizar em Portugal, no Brasil e nos restantes países e territórios de Língua Portuguesa.
                        </p>
                    </Reveal>
                    <Reveal delay={300}>
                        <p className="text-base md:text-lg text-slate-600 font-light leading-relaxed">
-                         Esta ao servico das empresas e de todos os agentes que promovem a aproximacao economica, empresarial e cultural, em particular, entre <strong className="text-brand-900 font-medium">Portugal e o Brasil</strong> mas, tambem, entre estes dois paises e restantes membros da Comunidade de Paises de Lingua Oficial Portuguesa.
+                         Está ao serviço das empresas e de todos os agentes que promovem a aproximação económica, empresarial e cultural, em particular, entre <strong className="text-brand-900 font-medium">Portugal e o Brasil</strong> mas, também, entre estes dois países e restantes membros da Comunidade de Países de Língua Oficial Portuguesa.
                        </p>
                    </Reveal>
                </div>
@@ -327,7 +329,7 @@ export const HomePage = () => {
             <div className="md:col-span-8 mt-2">
               <Reveal delay={400}>
                 <Link to="/quem-somos" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-900 hover:text-sand-600 transition-colors">
-                  Conhecer a nossa missao completa <ArrowRight size={12} />
+                  Conhecer a nossa missão completa <ArrowRight size={12} />
                 </Link>
               </Reveal>
             </div>
@@ -351,19 +353,19 @@ export const HomePage = () => {
 
               {/* Conteudo */}
               <div className="md:col-span-7">
-                <Badge variant="light" className="mb-6 bg-slate-100 text-slate-600 border-slate-200">Presidencia</Badge>
+                <Badge variant="light" className="mb-6 bg-slate-100 text-slate-600 border-slate-200">Presidência</Badge>
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-brand-900 mb-8 leading-tight">
                   Construindo Pontes
                 </h2>
 
                 <blockquote className="text-base md:text-lg text-slate-600 font-light leading-relaxed mb-8 border-l-4 border-sand-400 pl-6 italic">
-                  "E uma honra e um privilegio presidir a esta Fundacao e uma enorme responsabilidade. A Lingua Portuguesa interliga muitos continentes, paises, personalidades, instituicoes e negocios, e por essa razao acredito que a Fundacao deve recuperar relacoes antigas e impulsionar novas parcerias. Entre Portugal e o Brasil nao podem existir entraves, temos de construir pontes que unam a nossa rica e diversificada cultura."
+                  "É uma honra e um privilégio presidir a esta Fundação e uma enorme responsabilidade. A Língua Portuguesa interliga muitos continentes, países, personalidades, instituições e negócios, e por essa razão acredito que a Fundação deve recuperar relações antigas e impulsionar novas parcerias. Entre Portugal e o Brasil não podem existir entraves, temos de construir pontes que unam a nossa rica e diversificada cultura."
                 </blockquote>
 
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-lg font-medium text-brand-900">Paulo Campos Costa</p>
-                    <p className="text-xs uppercase tracking-widest text-slate-400">Presidente da Fundacao</p>
+                    <p className="text-xs uppercase tracking-widest text-slate-400">Presidente da Fundação</p>
                     <p className="text-[10px] uppercase tracking-widest text-sand-500 mt-1">Ex-EDP Global</p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -371,7 +373,7 @@ export const HomePage = () => {
                       <span className="text-white font-serif font-bold text-lg">F</span>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-brand-900">Fundacao</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-brand-900">Fundação</p>
                       <p className="text-[9px] font-light uppercase tracking-wider text-slate-500">Luso-Brasileira</p>
                     </div>
                   </div>
@@ -536,6 +538,40 @@ export const HomePage = () => {
   </div>
 </section>
 
+      {/* 6. EVENTOS */}
+      <section className="relative py-20 md:py-28 overflow-hidden bg-[#f8f6f2] border-t border-slate-100">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+            <Reveal>
+              <div>
+                <Badge variant="light" className="mb-4 bg-slate-100 text-slate-600 border-slate-200">Agenda</Badge>
+                <h2 className="text-3xl md:text-4xl font-serif text-brand-900 leading-tight">
+                  Próximos <span className="italic text-sand-500">Eventos</span>
+                </h2>
+              </div>
+            </Reveal>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(EVENTS.length > 0 ? EVENTS : EVENTS_SEED as any[]).slice(0, 3).map((event, idx) => (
+              <Reveal key={event.id} delay={idx * 80}>
+                <EventCard event={event as any} />
+              </Reveal>
+            ))}
+          </div>
+
+          <div className="text-center mt-12 md:mt-16">
+            <Link
+              to="/eventos"
+              className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-900 border border-brand-900/20 px-8 py-4 rounded-full hover:bg-brand-900 hover:text-white transition-all duration-300 group"
+            >
+              Ver todos os eventos
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* 7. CHAMADA FINAL */}
       <section className="relative bg-brand-900 text-white overflow-hidden py-28 md:py-36 px-6 text-center group">
          <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -557,7 +593,7 @@ export const HomePage = () => {
 
             <Reveal delay={200}>
                 <p className="text-lg md:text-xl text-white/60 font-light mb-10 leading-relaxed max-w-xl mx-auto">
-                   Junte-se a nos para preservar a historia e impulsionar a inovacao entre nossas nacoes.
+                   Junte-se a nós para preservar a história e impulsionar a inovação entre as nossas nações.
                 </p>
             </Reveal>
 

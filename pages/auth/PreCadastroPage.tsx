@@ -88,21 +88,21 @@ export const PreCadastroPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-900 flex flex-col pt-32 relative overflow-hidden">
+    <div className="min-h-screen bg-brand-900 flex flex-col pt-24 md:pt-32 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[80vw] h-[80vw] bg-brand-800 rounded-full blur-[150px] opacity-40"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-black rounded-full blur-[120px] opacity-60"></div>
       </div>
 
       <div className="flex-grow flex items-center justify-center py-20 px-6 relative z-10">
-        <div className="bg-white/5 backdrop-blur-2xl w-full max-w-3xl rounded-[3rem] shadow-2xl border border-white/10 p-12 md:p-20 animate-fadeInUpSlow">
+        <div className="bg-white/5 backdrop-blur-2xl w-full max-w-3xl rounded-[3rem] shadow-2xl border border-white/10 p-6 sm:p-10 md:p-20 animate-fadeInUpSlow">
 
           <div className="mb-12">
             <Link to="/" className="inline-flex items-center gap-2 text-white/40 hover:text-white transition-colors mb-8 text-xs font-bold uppercase tracking-widest">
               <ArrowLeft size={14} /> Voltar ao Início
             </Link>
-            <h1 className="text-5xl font-light tracking-tighter text-white mb-4">Pré-Registo</h1>
-            <p className="text-xl text-white/50 font-light max-w-lg leading-relaxed">
+            <h1 className="text-3xl sm:text-5xl font-light tracking-tighter text-white mb-4">Pré-Registo</h1>
+            <p className="text-base sm:text-xl text-white/50 font-light max-w-lg leading-relaxed">
               Diga-nos como gostaria de fazer parte da nossa rede.
             </p>
           </div>
@@ -179,7 +179,7 @@ export const PreCadastroPage = () => {
               {/* PERFIL */}
               <div className="space-y-4">
                 <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Perfil</label>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[{ label: 'Individual', value: 'individual' }, { label: 'Empresarial', value: 'empresarial' }, { label: 'Académico', value: 'academico' }].map(t => (
                     <button
                       key={t.value}
@@ -225,6 +225,13 @@ export const PreCadastroPage = () => {
               {!registrationType && !fieldErrors.registrationType && (
                 <p className="text-center text-white/30 text-xs">Selecione um tipo de registo para continuar.</p>
               )}
+
+              <p className="text-center text-white/20 text-[10px] font-light">
+                Ao enviar, concorda com os nossos{' '}
+                <Link to="/termos" className="underline hover:text-white/40 transition-colors">Termos de Uso</Link>
+                {' '}e{' '}
+                <Link to="/privacidade" className="underline hover:text-white/40 transition-colors">Política de Privacidade</Link>
+              </p>
             </form>
           )}
         </div>

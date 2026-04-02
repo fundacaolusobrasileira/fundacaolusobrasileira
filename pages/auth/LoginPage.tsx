@@ -204,6 +204,13 @@ export const LoginPage = () => {
                   {loading ? 'Autenticando...' : 'Acessar Portal'}
                 </Button>
               </div>
+
+              <p className="text-center text-white/20 text-[10px] font-light mt-4">
+                Ao continuar, concorda com os nossos{' '}
+                <Link to="/termos" className="underline hover:text-white/40 transition-colors">Termos de Uso</Link>
+                {' '}e{' '}
+                <Link to="/privacidade" className="underline hover:text-white/40 transition-colors">Política de Privacidade</Link>
+              </p>
             </form>
 
             <div className="mt-12 text-center">
