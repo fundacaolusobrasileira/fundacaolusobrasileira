@@ -48,14 +48,14 @@ export const CadastroPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-900 flex items-center justify-center pt-32 pb-20 px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-brand-900 flex items-center justify-center pt-24 pb-16 md:pt-32 md:pb-20 px-6 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
           <div className="absolute bottom-[-20%] left-[-10%] w-[80vw] h-[80vw] bg-brand-800 rounded-full blur-[150px] opacity-40"></div>
       </div>
 
-      <Card variant="dark" className="w-full max-w-lg p-10 md:p-14 rounded-[2.5rem] shadow-2xl animate-fadeInUpSlow border-white/10">
+      <Card variant="dark" className="w-full max-w-lg p-7 sm:p-10 md:p-14 rounded-[2.5rem] shadow-2xl animate-fadeInUpSlow border-white/10">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-light text-white mb-2 tracking-tight">Criar Conta</h1>
+          <h1 className="text-2xl sm:text-3xl font-light text-white mb-2 tracking-tight">Criar Conta</h1>
           <p className="text-white/50 font-light text-sm">Junte-se a nossa comunidade</p>
         </div>
 
@@ -135,6 +135,13 @@ export const CadastroPage = () => {
               {loading ? 'Criando conta...' : success ? 'Conta Criada!' : 'Cadastrar'}
             </Button>
           </div>
+
+          <p className="text-center text-white/20 text-[10px] font-light mt-3">
+            Ao criar conta, concorda com os nossos{' '}
+            <Link to="/termos" className="underline hover:text-white/40 transition-colors">Termos de Uso</Link>
+            {' '}e{' '}
+            <Link to="/privacidade" className="underline hover:text-white/40 transition-colors">Política de Privacidade</Link>
+          </p>
         </form>
 
         <div className="mt-10 text-center border-t border-white/5 pt-8">
