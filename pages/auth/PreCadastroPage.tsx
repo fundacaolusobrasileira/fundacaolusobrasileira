@@ -61,7 +61,7 @@ export const PreCadastroPage = () => {
 
     if (!parsed.success) {
       const errors: Record<string, string> = {};
-      parsed.error.errors.forEach(err => {
+      parsed.error.issues.forEach(err => {
         if (err.path[0]) errors[String(err.path[0])] = err.message;
       });
       setFieldErrors(errors);
@@ -180,18 +180,18 @@ export const PreCadastroPage = () => {
               <div className="space-y-4">
                 <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Perfil</label>
                 <div className="grid grid-cols-3 gap-4">
-                  {['Individual', 'Empresarial', 'Académico'].map(t => (
+                  {[{ label: 'Individual', value: 'individual' }, { label: 'Empresarial', value: 'empresarial' }, { label: 'Académico', value: 'academico' }].map(t => (
                     <button
-                      key={t}
+                      key={t.value}
                       type="button"
-                      onClick={() => setFormData({ ...formData, type: t.toLowerCase() })}
+                      onClick={() => setFormData({ ...formData, type: t.value })}
                       className={`py-4 px-2 rounded-2xl text-sm font-medium border transition-all duration-500 ${
-                        formData.type === t.toLowerCase()
+                        formData.type === t.value
                           ? 'border-sand-400 bg-sand-400 text-brand-900 shadow-lg'
                           : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      {t}
+                      {t.label}
                     </button>
                   ))}
                 </div>

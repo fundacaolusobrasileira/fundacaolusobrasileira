@@ -38,7 +38,7 @@ export const ResetPasswordPage = () => {
 
     const parsed = ResetPasswordSchema.safeParse({ password, confirm });
     if (!parsed.success) {
-      setMessage({ type: 'error', text: parsed.error.errors[0]?.message || 'Dados inválidos.' });
+      setMessage({ type: 'error', text: parsed.error.issues[0]?.message || 'Dados inválidos.' });
       return;
     }
 

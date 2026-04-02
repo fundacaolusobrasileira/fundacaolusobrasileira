@@ -57,7 +57,7 @@ export const EventoColaborarPage = () => {
     });
 
     if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message || 'Dados inválidos.');
+      setError(parsed.error.issues[0]?.message || 'Dados inválidos.');
       return;
     }
 

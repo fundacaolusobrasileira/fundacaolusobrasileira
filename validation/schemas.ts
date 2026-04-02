@@ -29,7 +29,7 @@ export const ResetPasswordSchema = z.object({
 
 export const PreCadastroSchema = z.object({
   registrationType: z.enum(['membro', 'parceiro', 'colaborador', 'embaixador'], {
-    errorMap: () => ({ message: 'Selecione um tipo de registo' }),
+    message: 'Selecione um tipo de registo',
   }),
   name: z.string()
     .min(2, 'Nome deve ter pelo menos 2 caracteres')
@@ -47,7 +47,7 @@ export const ColaborarSchema = z.object({
   url: z.string().min(1, 'Adicione uma imagem ou vídeo'),
   message: z.string().max(500, 'Mensagem muito longa (máx. 500 caracteres)').optional(),
   agreedToTerms: z.literal(true, {
-    errorMap: () => ({ message: 'Você precisa concordar com os termos para continuar' }),
+    message: 'Você precisa concordar com os termos para continuar',
   }),
 });
 
