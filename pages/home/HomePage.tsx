@@ -149,7 +149,7 @@ export const HomePage = () => {
            <div
              className="absolute top-[-5%] md:top-[-20%] left-[-15%] md:left-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-screen opacity-15 md:opacity-20 blur-[60px] md:blur-[80px]"
              style={{
-               backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_Portugal.svg/1024px-Flag_of_Portugal.svg.png')`,
+               backgroundImage: `url('/flag-portugal.svg')`,
                transform: 'translateX(calc(var(--mouse-ratio) * -20px)) scale(1.1)'
              }}
            />
@@ -158,7 +158,7 @@ export const HomePage = () => {
            <div
              className="absolute top-[-5%] md:top-[-20%] right-[-15%] md:right-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-screen opacity-15 md:opacity-20 blur-[60px] md:blur-[80px]"
              style={{
-               backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/1024px-Flag_of_Brazil.svg.png')`,
+               backgroundImage: `url('/flag-brazil.svg')`,
                transform: 'translateX(calc((1 - var(--mouse-ratio)) * 20px)) scale(1.1)'
              }}
            />
@@ -180,7 +180,7 @@ export const HomePage = () => {
            <div
              className="absolute top-[-20%] left-[-5%] w-[60vw] h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
              style={{
-               backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_Portugal.svg/1024px-Flag_of_Portugal.svg.png')`,
+               backgroundImage: `url('/flag-portugal.svg')`,
                transform: 'translateX(calc(var(--mouse-ratio) * -40px)) scale(1.2)'
              }}
            />
@@ -189,7 +189,7 @@ export const HomePage = () => {
            <div
              className="absolute top-[-20%] right-[-5%] w-[60vw] h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
              style={{
-               backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/1024px-Flag_of_Brazil.svg.png')`,
+               backgroundImage: `url('/flag-brazil.svg')`,
                transform: 'translateX(calc((1 - var(--mouse-ratio)) * 40px)) scale(1.2)'
              }}
            />
