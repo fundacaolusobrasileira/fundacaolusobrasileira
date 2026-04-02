@@ -14,6 +14,7 @@ export const Header = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const navLinks = [
+    { name: 'Início', path: '/' },
     { name: 'A Fundação', path: '/quem-somos' },
     { name: 'Pessoas', path: '/administracao' },
     { name: 'Eventos', path: '/eventos' },
@@ -44,14 +45,14 @@ export const Header = () => {
                   to={link.path}
                   aria-current={location.pathname === link.path ? 'page' : undefined}
                   className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-all duration-500 relative group py-2 focus:outline-none focus:text-sand-400 ${
-                    location.pathname === link.path && link.path !== '/'
+                    location.pathname === link.path
                       ? 'text-sand-400'
                       : 'text-white hover:opacity-70'
                   }`}
                 >
                   {link.name}
                   <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-[1px] transition-all duration-700 ${
-                    location.pathname === link.path && link.path !== '/' ? 'w-full opacity-100 bg-current' : 'w-0 opacity-0 group-hover:w-4 group-hover:opacity-40 bg-current'
+                    location.pathname === link.path ? 'w-full opacity-100 bg-current' : 'w-0 opacity-0 group-hover:w-4 group-hover:opacity-40 bg-current'
                   }`}></span>
                 </Link>
               ))}

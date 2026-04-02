@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SectionWrapper, Card, Button, AccessDeniedModal, LoginModal, ConfirmDialog } from '../../components/ui';
 import { StatCard, ListRow, EventEditorModal, MemberEditorModal, ActivityFeed, UniversalListModal, SettingsModal, PremiumLoader, MediaManagerModal, PreCadastroManagerModal } from '../../component.ui';
-import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Edit2, Trash2, Settings, UserPlus, Loader2 } from 'lucide-react';
+import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Edit2, Trash2, Settings, UserPlus, Loader2, Mail, Copy, Check } from 'lucide-react';
 import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, FLB_STATE_EVENT, isEditor, isAdmin } from '../../store/app.store';
 import { UserManagerModal } from './UserManagerModal';
 import { deleteEvent } from '../../services/events.service';
@@ -13,7 +13,7 @@ import { generateTestActivity } from '../../store/app.store';
 import type { Event, Partner } from '../../types';
 
 export const DashboardPage = () => {
-  usePageMeta("Dashboard – Fundacao Luso-Brasileira", "Visao geral da sua conta e estatisticas.");
+  usePageMeta("Dashboard – Fundação Luso-Brasileira", "Visão geral da sua conta e estatísticas.");
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -36,6 +36,7 @@ export const DashboardPage = () => {
   const [preCadastroOpen, setPreCadastroOpen] = useState(false);
   const [userManagerOpen, setUserManagerOpen] = useState(false);
 
+  const [newsletterCopied, setNewsletterCopied] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<Partner> | null>(null);
 
@@ -55,6 +56,15 @@ export const DashboardPage = () => {
 
   const totalPendingMedia = PENDING_MEDIA_SUBMISSIONS.length;
   const newPreCadastros = PRECADASTROS.filter(p => p.status === 'novo').length;
+  const newsletterSubscribers = PRECADASTROS.filter(p => p.type === 'newsletter');
+
+  const copyNewsletterEmails = () => {
+    const emails = newsletterSubscribers.map(p => p.email).join(', ');
+    navigator.clipboard.writeText(emails).then(() => {
+      setNewsletterCopied(true);
+      setTimeout(() => setNewsletterCopied(false), 2000);
+    });
+  };
 
   const checkAuth = () => {
       if (isEditor()) return true;
@@ -105,7 +115,7 @@ export const DashboardPage = () => {
             <div className="bg-brand-900 text-white w-10 h-10 rounded-lg flex items-center justify-center"><BarChart3 size={20} /></div>
             <div>
                 <h1 className="text-2xl font-light text-brand-900 tracking-tight leading-none">Dashboard</h1>
-                <p className="text-slate-500 text-xs mt-1 font-medium uppercase tracking-wider">Visao Geral &bull; Admin</p>
+                <p className="text-slate-500 text-xs mt-1 font-medium uppercase tracking-wider">Visão Geral &bull; Admin</p>
             </div>
           </div>
 
@@ -158,10 +168,10 @@ export const DashboardPage = () => {
 
              <div className="flex gap-2">
                 <Button onClick={() => { if(checkAuth()) setMediaManagerOpen(true) }} variant="white" className="px-3 py-2.5 h-auto text-xs bg-white hover:bg-slate-50 text-slate-600 shadow-sm flex items-center gap-2 rounded-lg border-slate-200 hover:border-slate-300">
-                    <Image size={14} /> Midia
+                    <Image size={14} /> Mídia
                     {totalPendingMedia > 0 && <span className="bg-red-500 text-white text-[9px] px-1.5 rounded-full font-bold animate-pulse">{totalPendingMedia}</span>}
                 </Button>
-                <Button variant="white" onClick={() => { if(checkAuth()) setSettingsModalOpen(true) }} className="px-3 py-2.5 h-auto text-xs rounded-lg border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-sm hover:border-slate-300" title="Configuracoes">
+                <Button variant="white" onClick={() => { if(checkAuth()) setSettingsModalOpen(true) }} className="px-3 py-2.5 h-auto text-xs rounded-lg border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-sm hover:border-slate-300" title="Configurações">
                     <Settings size={14} />
                 </Button>
                 {isAdmin() && (
@@ -184,7 +194,7 @@ export const DashboardPage = () => {
                 </div>
                 <div>
                     <div className="text-2xl font-light text-slate-900">{PRECADASTROS.length}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Pre-Cadastros</div>
+                    <div className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Pré-Cadastros</div>
                 </div>
             </div>
 
@@ -252,6 +262,53 @@ export const DashboardPage = () => {
                 </div>
             </Card>
         </div>
+        {/* Newsletter Section */}
+        <div className="mt-6 animate-fadeInUpSlow delay-300">
+          <Card className="bg-white shadow-sm border-slate-200 overflow-hidden">
+            <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
+              <h3 className="font-medium text-brand-900 flex items-center gap-2">
+                <Mail size={16} /> Subscritores Newsletter
+                <span className="ml-1 bg-sand-100 text-sand-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">{newsletterSubscribers.length}</span>
+              </h3>
+              {newsletterSubscribers.length > 0 && (
+                <button
+                  onClick={copyNewsletterEmails}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-brand-900 uppercase tracking-widest transition-colors"
+                >
+                  {newsletterCopied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                  {newsletterCopied ? 'Copiado!' : 'Copiar todos os emails'}
+                </button>
+              )}
+            </div>
+            <div className="p-3">
+              {newsletterSubscribers.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                  {newsletterSubscribers.map(sub => (
+                    <div key={sub.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-400">
+                        <Mail size={12} />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <p className="text-sm text-slate-700 truncate font-medium">{sub.email}</p>
+                        <p className="text-[10px] text-slate-400">{sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('pt-PT') : '—'}</p>
+                      </div>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(sub.email)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-brand-900 transition-all"
+                        title="Copiar email"
+                      >
+                        <Copy size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-slate-400 text-xs">Nenhum subscritor de newsletter ainda.</div>
+              )}
+            </div>
+          </Card>
+        </div>
+
       </SectionWrapper>
 
       {/* Modals - Absolute Masters */}
@@ -288,8 +345,8 @@ export const DashboardPage = () => {
 
       <ConfirmDialog
         isOpen={!!itemToDelete}
-        title="Confirmar exclusao"
-        description="Esta acao e permanente e nao pode ser desfeita."
+        title="Confirmar exclusão"
+        description="Esta ação é permanente e não pode ser desfeita."
         confirmLabel="Excluir definitivamente"
         onConfirm={confirmDelete}
         onCancel={() => { setItemToDelete(null); setDeleteType(null); }}

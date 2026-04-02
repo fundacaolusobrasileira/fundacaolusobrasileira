@@ -22,9 +22,9 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => (
           <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         </div>
       )}
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-4 sm:p-5 flex flex-col flex-grow">
         <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500 mb-2">{event.category}</p>
-        <h3 className="text-lg font-serif text-brand-900 group-hover:text-sand-600 transition-colors mb-3 leading-snug">
+        <h3 className="text-base sm:text-lg font-serif text-brand-900 group-hover:text-sand-600 transition-colors mb-3 leading-snug">
           {event.title}
         </h3>
         {event.descriptionShort && (
