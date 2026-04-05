@@ -168,9 +168,9 @@ export const addMediaToEvent = async (eventId: string, file: File) => {
       status: 'published',
     });
     showToast('Imagem enviada.', 'success');
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to add media', e);
-    showToast('Erro no upload.', 'error');
+    showToast(`Erro no upload: ${e?.message || 'erro desconhecido'}`, 'error');
   }
 };
 
@@ -192,12 +192,9 @@ export const addUrlMediaToEvent = (eventId: string, url: string) => {
 
 export const addEventImagesFromFiles = async (eventId: string, files: FileList | File[]) => {
   const fileList = files instanceof FileList ? Array.from(files) : files;
-  let count = 0;
   for (const file of fileList) {
     await addMediaToEvent(eventId, file);
-    count++;
   }
-  if (count > 0) showToast(`${count} arquivos processados.`, 'success');
 };
 
 export const approveCommunityMedia = async (eventId: string, submissionId: string) => {
