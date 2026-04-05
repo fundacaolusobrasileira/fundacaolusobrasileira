@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Link as LinkIcon, Link2, Share2, Loader2, Image as ImageIcon, Check, Lock, Trash2, Edit, Plus, ExternalLink, Search, Star, Upload, Mail, Settings, User, AlertTriangle, CheckCircle, Info, AlertCircle as AlertIcon } from 'lucide-react';
 import type { GalleryItem, SocialLinks, Partner, Event, PreCadastro, ActivityLogItem } from './types';
 import { EVENTS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
-import { resolveGalleryItemSrc, saveMediaBlob } from './services/media.service';
+import { resolveGalleryItemSrc, saveMediaBlob, uploadSingleImage } from './services/media.service';
 import { loginAsEditor } from './services/auth.service';
 import { createEvent, updateEvent, deleteEvent, addMediaToEvent, addUrlMediaToEvent, addEventImagesFromFiles, approveCommunityMedia, rejectCommunityMedia } from './services/events.service';
 import { createMember, updateMember } from './services/members.service';
@@ -565,6 +565,10 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [newImageUrl, setNewImageUrl] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const coverInputRef = useRef<HTMLInputElement>(null);
+    const cardInputRef = useRef<HTMLInputElement>(null);
+    const autoDraftIdRef = useRef<string | null>(null);
     
     // Sync when the modal opens or event prop changes
     useEffect(() => { 
@@ -632,6 +636,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                 const draft = await createEvent({ ...formData, status: 'draft', title: formData.title || 'Rascunho' });
                 if(draft) {
                     targetId = draft.id;
+                    autoDraftIdRef.current = draft.id; // Track for cleanup if user cancels
                     setFormData(draft); // Update local form to track this ID
                 } else {
                     setUploading(false);
@@ -642,12 +647,29 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
             if(targetId) {
                 await addEventImagesFromFiles(targetId, e.target.files);
                 // Refresh from global store
-                const updated = EVENTS.find(e => e.id === targetId);
+                const updated = EVENTS.find(ev => ev.id === targetId);
                 if(updated) setFormData({...updated});
             }
         } finally {
             setUploading(false);
-            e.target.value = '';
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleSingleImageUpload = async (
+        field: 'image' | 'cardImage',
+        ref: React.RefObject<HTMLInputElement>,
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const url = await uploadSingleImage(file);
+            if (url) setFormData(prev => ({ ...prev, [field]: url }));
+        } finally {
+            setUploading(false);
+            if (ref.current) ref.current.value = '';
         }
     };
 
@@ -680,8 +702,14 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
     // Close Handler - prevent closing while uploading
     const handleClose = () => {
         if (uploading) return; // Block close during upload
-        if (formData.id && formData.status === 'draft' && formData.title === 'Rascunho') {
-             deleteEvent(formData.id);
+        // Clean up auto-created draft if user cancels without saving
+        const draftIdToDelete = autoDraftIdRef.current;
+        if (draftIdToDelete) {
+            const draftEvent = EVENTS.find(ev => ev.id === draftIdToDelete);
+            if (draftEvent && draftEvent.status === 'draft' && draftEvent.title === 'Rascunho') {
+                deleteEvent(draftIdToDelete);
+            }
+            autoDraftIdRef.current = null;
         }
         onClose();
     }
@@ -712,14 +740,34 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Título</label>
                                 <Input value={formData.title || ''} onChange={(e: any) => setFormData({...formData, title: e.target.value})} placeholder="Título do Evento" />
                             </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Subtítulo</label>
+                                <Input value={formData.subtitle || ''} onChange={(e: any) => setFormData({...formData, subtitle: e.target.value})} placeholder="Subtítulo ou tema do evento" />
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data</label>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data Início</label>
                                     <Input value={formData.date || ''} onChange={(e: any) => setFormData({...formData, date: e.target.value})} placeholder="DD MMM AAAA" />
                                 </div>
                                 <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Hora Início</label>
+                                    <Input value={formData.time || ''} onChange={(e: any) => setFormData({...formData, time: e.target.value})} placeholder="HH:MM" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data Fim</label>
+                                    <Input value={formData.endDate || ''} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} placeholder="Data fim (opcional)" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Hora Fim</label>
+                                    <Input value={formData.endTime || ''} onChange={(e: any) => setFormData({...formData, endTime: e.target.value})} placeholder="Hora fim (opcional)" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Categoria</label>
-                                    <select 
+                                    <select
                                         className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
                                         value={formData.category}
                                         onChange={(e) => setFormData({...formData, category: e.target.value as any})}
@@ -730,37 +778,126 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                         <option value="Embaixada">Embaixada</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Local / Venue</label>
+                                    <Input value={formData.location || ''} onChange={(e: any) => setFormData({...formData, location: e.target.value})} placeholder="Nome do local" />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Local</label>
-                                <Input value={formData.location || ''} onChange={(e: any) => setFormData({...formData, location: e.target.value})} placeholder="Localização" />
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Morada</label>
+                                <Input value={formData.address || ''} onChange={(e: any) => setFormData({...formData, address: e.target.value})} placeholder="Morada completa" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Cidade</label>
+                                    <Input value={formData.city || ''} onChange={(e: any) => setFormData({...formData, city: e.target.value})} placeholder="Cidade" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">País</label>
+                                    <Input value={formData.country || ''} onChange={(e: any) => setFormData({...formData, country: e.target.value})} placeholder="País do evento" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Descrição Curta</label>
+                                <Input value={formData.descriptionShort || ''} onChange={(e: any) => setFormData({...formData, descriptionShort: e.target.value})} placeholder="Descrição curta para cards e listagens" />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Descrição</label>
-                                <textarea 
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white min-h-[120px]" 
-                                    rows={4} 
-                                    placeholder="Descrição detalhada do evento..." 
-                                    value={formData.description || ''} 
-                                    onChange={(e: any) => setFormData({...formData, description: e.target.value})} 
+                                <textarea
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white min-h-[100px]"
+                                    rows={3}
+                                    placeholder="Descrição detalhada do evento..."
+                                    value={formData.description || ''}
+                                    onChange={(e: any) => setFormData({...formData, description: e.target.value})}
                                 />
                             </div>
+                        </div>
+
+                        {/* Status & Config */}
+                        <div className="pt-6 border-t border-slate-100">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <Settings size={14}/> Configurações
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Status</label>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({...prev, status: prev.status === 'published' ? 'draft' : 'published'}))}
+                                            className={`relative w-10 h-5 rounded-full transition-colors ${formData.status === 'published' ? 'bg-green-500' : 'bg-slate-300'}`}
+                                        >
+                                            <span className={`absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform ${formData.status === 'published' ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        </button>
+                                        <span className="text-xs font-medium text-slate-700">{formData.status === 'published' ? 'Publicado' : 'Rascunho'}</span>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Destaque</label>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({...prev, featured: !prev.featured}))}
+                                            className={`relative w-10 h-5 rounded-full transition-colors ${formData.featured ? 'bg-sand-400' : 'bg-slate-300'}`}
+                                        >
+                                            <span className={`absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform ${formData.featured ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        </button>
+                                        <span className="text-xs font-medium text-slate-700">{formData.featured ? 'Sim' : 'Não'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Extra Details */}
+                        <div className="pt-6 border-t border-slate-100">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <AlertIcon size={14}/> Detalhes Extras
+                            </h3>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Objetivo</label>
+                                    <textarea className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" rows={2} placeholder="Objetivo do evento" value={formData.objective || ''} onChange={(e: any) => setFormData({...formData, objective: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Experiência</label>
+                                    <textarea className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" rows={2} placeholder="Experiência proporcionada" value={formData.experience || ''} onChange={(e: any) => setFormData({...formData, experience: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Patrocinadores</label>
+                                    <Input value={formData.sponsors || ''} onChange={(e: any) => setFormData({...formData, sponsors: e.target.value})} placeholder="Patrocinadores do evento" className="text-xs" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Notas Internas</label>
+                                    <textarea className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" rows={2} placeholder="Notas e observações internas" value={formData.notes || ''} onChange={(e: any) => setFormData({...formData, notes: e.target.value})} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-100">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Imagem Capa (URL)</label>
-                                <div className="flex gap-3">
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Imagem Capa</label>
+                                <div className="flex gap-3 items-center">
                                     <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                                         {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={16}/></div>}
                                     </div>
                                     <Input value={formData.image || ''} onChange={(e: any) => setFormData({...formData, image: e.target.value})} placeholder="https://..." className="flex-grow" />
+                                    <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleImageUpload('image', coverInputRef, e)} />
+                                    <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploading} className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-black transition-colors disabled:opacity-50">
+                                        <Upload size={11}/> Upload
+                                    </button>
                                 </div>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Imagem Card (estilo story, 9:16)</label>
-                                <div className="flex gap-3">
+                                <div className="flex gap-3 items-center">
                                     <div className="w-8 h-14 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                                         {formData.cardImage ? <img src={formData.cardImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={12}/></div>}
                                     </div>
                                     <Input value={formData.cardImage || ''} onChange={(e: any) => setFormData({...formData, cardImage: e.target.value})} placeholder="https://... (opcional, formato vertical)" className="flex-grow" />
+                                    <input ref={cardInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleImageUpload('cardImage', cardInputRef, e)} />
+                                    <button type="button" onClick={() => cardInputRef.current?.click()} disabled={uploading} className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-black transition-colors disabled:opacity-50">
+                                        <Upload size={11}/> Upload
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -803,8 +940,8 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                 <ImageIcon size={14}/> Galeria ({formData.gallery?.length || 0})
                             </h3>
                             <div className="relative">
-                                <input type="file" id="modal-upload" multiple accept="image/*" className="hidden" onChange={handleFileUpload} />
-                                <label htmlFor="modal-upload" className="cursor-pointer flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider bg-brand-900 text-white px-3 py-1.5 rounded-lg hover:bg-black transition-colors">
+                                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileUpload} />
+                                <label onClick={() => fileInputRef.current?.click()} className="cursor-pointer flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider bg-brand-900 text-white px-3 py-1.5 rounded-lg hover:bg-black transition-colors">
                                     <Upload size={12}/> Upload
                                 </label>
                             </div>
@@ -994,13 +1131,33 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Biografia</label>
-                                <textarea 
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white min-h-[180px]" 
-                                    rows={6}
-                                    placeholder="Biografia detalhada..." 
-                                    value={formData.bio || ''} 
-                                    onChange={(e: any) => setFormData({...formData, bio: e.target.value})} 
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Resumo Curto</label>
+                                <textarea
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
+                                    rows={2}
+                                    placeholder="Resumo curto para exibição em cards..."
+                                    value={formData.summary || ''}
+                                    onChange={(e: any) => setFormData({...formData, summary: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Biografia Completa</label>
+                                <textarea
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white min-h-[120px]"
+                                    rows={4}
+                                    placeholder="Biografia completa detalhada..."
+                                    value={formData.full || ''}
+                                    onChange={(e: any) => setFormData({...formData, full: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Bio (curta, para listagens)</label>
+                                <textarea
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
+                                    rows={2}
+                                    placeholder="Biografia detalhada..."
+                                    value={formData.bio || ''}
+                                    onChange={(e: any) => setFormData({...formData, bio: e.target.value})}
                                 />
                             </div>
                         </div>
@@ -1115,11 +1272,17 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                     <Input placeholder="Twitter URL" value={formData.socialLinks?.twitter || ''} onChange={(e: any) => handleSocialChange('twitter', e.target.value)} className="text-xs bg-white" />
                                     <Input placeholder="Facebook URL" value={formData.socialLinks?.facebook || ''} onChange={(e: any) => handleSocialChange('facebook', e.target.value)} className="text-xs bg-white" />
                                 </div>
-                                <div className="mt-2">
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Website</label>
-                                    <div className="relative">
-                                        <Input value={formData.website || ''} onChange={(e: any) => setFormData({...formData, website: e.target.value})} placeholder="https://..." className="bg-white pl-8" />
-                                        <ExternalLink size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                                <div className="mt-2 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">País</label>
+                                        <Input value={formData.country || ''} onChange={(e: any) => setFormData({...formData, country: e.target.value})} placeholder="País..." className="bg-white text-xs" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Website</label>
+                                        <div className="relative">
+                                            <Input value={formData.website || ''} onChange={(e: any) => setFormData({...formData, website: e.target.value})} placeholder="https://..." className="bg-white pl-8 text-xs" />
+                                            <ExternalLink size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

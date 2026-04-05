@@ -355,6 +355,16 @@ export const MembroEditarPage = () => {
                  </div>
 
                  <div className="pt-4">
+                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Bio (curta, para listagens)</label>
+                   <textarea
+                      rows={2}
+                      className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/60 focus:bg-white outline-none text-sm resize-none focus:border-sand-400 focus:ring-4 focus:ring-sand-400/10"
+                      value={formData.bio || ''}
+                      onChange={e => handleChange('bio', e.target.value)}
+                   />
+                 </div>
+
+                 <div className="pt-4">
                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Resumo Curto</label>
                    <textarea
                       rows={3}
@@ -372,6 +382,47 @@ export const MembroEditarPage = () => {
                       value={formData.full || ''}
                       onChange={e => handleChange('full', e.target.value)}
                    />
+                 </div>
+
+                 <div className="pt-4 border-t border-slate-100">
+                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-4 block">Configurações</label>
+                   <div className="grid grid-cols-3 gap-4">
+                     <div className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-2">
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Status</label>
+                       <div className="flex items-center gap-2">
+                         <button
+                           type="button"
+                           onClick={() => setFormData((prev: any) => ({ ...prev, active: !(prev.active !== false) }))}
+                           className={`relative w-10 h-5 rounded-full transition-colors ${formData.active !== false ? 'bg-green-500' : 'bg-slate-300'}`}
+                         >
+                           <span className={`absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform ${formData.active !== false ? 'translate-x-5' : 'translate-x-0'}`} />
+                         </button>
+                         <span className="text-xs font-medium text-slate-700">{formData.active !== false ? 'Ativo' : 'Inativo'}</span>
+                       </div>
+                     </div>
+                     <div className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-2">
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Destaque</label>
+                       <div className="flex items-center gap-2">
+                         <button
+                           type="button"
+                           onClick={() => setFormData((prev: any) => ({ ...prev, featured: !prev.featured }))}
+                           className={`relative w-10 h-5 rounded-full transition-colors ${formData.featured ? 'bg-sand-400' : 'bg-slate-300'}`}
+                         >
+                           <span className={`absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform ${formData.featured ? 'translate-x-5' : 'translate-x-0'}`} />
+                         </button>
+                         <span className="text-xs font-medium text-slate-700">{formData.featured ? 'Sim' : 'Não'}</span>
+                       </div>
+                     </div>
+                     <div className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-2">
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Ordem</label>
+                       <input
+                         type="number"
+                         className="w-full px-2 py-1 rounded-lg border border-slate-200 text-sm outline-none focus:border-sand-400"
+                         value={formData.order ?? 0}
+                         onChange={e => setFormData((prev: any) => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
+                       />
+                     </div>
+                   </div>
                  </div>
 
                  <div className="pt-6">
