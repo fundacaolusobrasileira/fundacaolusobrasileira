@@ -135,3 +135,120 @@ describe('MemberEditorModal - handleSave', () => {
     }, { timeout: 3000 });
   });
 });
+
+describe('MemberEditorModal — field completeness', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('renders a field for summary (resumo curto)', async () => {
+    const { MemberEditorModal } = await import('./component.ui');
+    render(<MemberEditorModal isOpen={true} onClose={vi.fn()} member={{ id: 'x', name: 'Test', type: 'pessoa', category: 'Governança' }} />);
+    // Should have a textarea or input for "resumo" / "summary"
+    expect(screen.getByPlaceholderText(/resumo/i)).toBeTruthy();
+  });
+
+  it('renders a field for full biography', async () => {
+    const { MemberEditorModal } = await import('./component.ui');
+    render(<MemberEditorModal isOpen={true} onClose={vi.fn()} member={{ id: 'x', name: 'Test', type: 'pessoa', category: 'Governança' }} />);
+    expect(screen.getByPlaceholderText(/biografia completa/i)).toBeTruthy();
+  });
+
+  it('renders a field for country (país)', async () => {
+    const { MemberEditorModal } = await import('./component.ui');
+    render(<MemberEditorModal isOpen={true} onClose={vi.fn()} member={{ id: 'x', name: 'Test', type: 'pessoa', category: 'Governança' }} />);
+    expect(screen.getByPlaceholderText(/país/i)).toBeTruthy();
+  });
+});
+
+describe('EventEditorModal — field completeness', () => {
+  const baseEvent = { id: 'ev-1', title: 'Festa', category: 'Outros', gallery: [], socialLinks: {} };
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('renders subtitle field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/subtítulo/i)).toBeTruthy();
+  });
+
+  it('renders start time field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/hora.*início|HH:MM/i)).toBeTruthy();
+  });
+
+  it('renders end date field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/data.*fim|fim.*data/i)).toBeTruthy();
+  });
+
+  it('renders end time field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/hora.*fim|fim.*hora/i)).toBeTruthy();
+  });
+
+  it('renders address field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/morada|endereço|address/i)).toBeTruthy();
+  });
+
+  it('renders city field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/cidade/i)).toBeTruthy();
+  });
+
+  it('renders country field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/país.*evento|país/i)).toBeTruthy();
+  });
+
+  it('renders descriptionShort field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/descrição curta|resumo/i)).toBeTruthy();
+  });
+
+  it('renders status toggle (draft/published)', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByText(/publicado|rascunho|draft/i)).toBeTruthy();
+  });
+
+  it('renders featured toggle', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByText(/destaque/i)).toBeTruthy();
+  });
+
+  it('renders objective field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/objetivo/i)).toBeTruthy();
+  });
+
+  it('renders experience field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/experiência/i)).toBeTruthy();
+  });
+
+  it('renders sponsors field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/patrocinadores/i)).toBeTruthy();
+  });
+
+  it('renders notes field', async () => {
+    const { EventEditorModal } = await import('./component.ui');
+    render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
+    expect(screen.getByPlaceholderText(/notas|observações/i)).toBeTruthy();
+  });
+});
