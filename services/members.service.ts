@@ -13,11 +13,10 @@ const PARTNER_DB_COLUMNS = new Set([
   'tier', 'since', 'active', 'featured', 'order',
 ]);
 
-const normalize = (p: any): Partner => ({
-  ...p,
-  type: p.type || 'pessoa',
-  socialLinks: p.social_links || {},
-});
+const normalize = (p: any): Partner => {
+  const { social_links, ...rest } = p;
+  return { ...rest, type: p.type || 'pessoa', socialLinks: social_links || {} };
+};
 
 export const syncMembers = async () => {
   const { data, error } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
