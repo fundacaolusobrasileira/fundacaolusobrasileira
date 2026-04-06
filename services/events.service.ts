@@ -53,8 +53,7 @@ export const syncEvents = async () => {
   notifyState();
 };
 
-export const getPublicEvents = (): Event[] =>
-  EVENTS.filter(e => e.status === 'published');
+export const getPublicEvents = (): Event[] => [...EVENTS];
 
 export const createEvent = async (data: Partial<Event>): Promise<Event | null> => {
   if (!isEditor()) return null;
