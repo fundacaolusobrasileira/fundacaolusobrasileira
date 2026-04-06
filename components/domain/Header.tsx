@@ -4,14 +4,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowRight, LogOut } from 'lucide-react';
 import { AUTH_SESSION, FLB_STATE_EVENT } from '../../store/app.store';
 import { logout } from '../../services/auth.service';
-import { LoginModal } from '../ui/Modals';
 import { BrandLogo } from './BrandLogo';
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const [authTick, setAuthTick] = useState(0);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -75,12 +73,12 @@ export const Header = () => {
                     >
                       Pré-Registo
                     </Link>
-                    <button
-                      onClick={() => setIsLoginModalOpen(true)}
+                    <Link
+                      to="/login"
                       className="px-6 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-white/10 border-white/20 text-white hover:bg-white hover:text-brand-900 focus:ring-white/50"
                     >
                       Entrar
-                    </button>
+                    </Link>
                   </>
                 )}
               </div>
@@ -134,16 +132,15 @@ export const Header = () => {
                 <Link to="/precadastro" onClick={() => setIsOpen(false)} className="text-lg text-white/70 font-medium block hover:text-white transition-colors">
                   Pré-Registo
                 </Link>
-                <button onClick={() => { setIsOpen(false); setIsLoginModalOpen(true); }} className="text-lg text-sand-400 font-medium flex items-center gap-3">
+                <Link to="/login" onClick={() => setIsOpen(false)} className="text-lg text-sand-400 font-medium flex items-center gap-3">
                   Entrar como Editor <ArrowRight size={16} />
-                </button>
+                </Link>
               </div>
             )}
           </nav>
         </div>
       )}
 
-      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </>
   );
 };

@@ -13,11 +13,6 @@ vi.mock('../../services/auth.service', () => ({
   logout: vi.fn(),
 }));
 
-// Mock Modals to keep test minimal
-vi.mock('../ui/Modals', () => ({
-  LoginModal: () => null,
-}));
-
 // Mock BrandLogo
 vi.mock('./BrandLogo', () => ({
   BrandLogo: () => <div data-testid="brand-logo" />,
