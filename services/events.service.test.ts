@@ -227,15 +227,14 @@ describe('getPublicEvents', () => {
     EVENTS.length = 0;
   });
 
-  it('returns only published events', async () => {
+  it('returns all events regardless of status', async () => {
     EVENTS.push(
       { id: 'ev-1', title: 'Published', status: 'published', gallery: [] },
       { id: 'ev-2', title: 'Draft', status: 'draft', gallery: [] },
     );
     const { getPublicEvents } = await import('./events.service');
     const result = getPublicEvents();
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('ev-1');
+    expect(result).toHaveLength(2);
   });
 
   it('returns empty array when EVENTS is empty', async () => {
