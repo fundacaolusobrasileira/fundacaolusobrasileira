@@ -27,6 +27,14 @@ const normalizeEvent = (e: any): Event => {
   } catch {
     normalized.gallery = [];
   }
+  try {
+    normalized.sponsorIds = typeof e.sponsors === 'string' && e.sponsors.startsWith('[')
+      ? JSON.parse(e.sponsors)
+      : [];
+  } catch {
+    normalized.sponsorIds = [];
+  }
+  delete normalized.sponsors;
   delete normalized.cover_image;
   delete normalized.social_links;
   delete normalized.description_short;
@@ -82,7 +90,7 @@ export const createEvent = async (data: Partial<Event>): Promise<Event | null> =
     featured: data.featured || false,
     objective: data.objective,
     experience: data.experience,
-    sponsors: data.sponsors,
+    sponsors: data.sponsorIds ? JSON.stringify(data.sponsorIds) : null,
     notes: data.notes,
   };
   const { data: res, error } = await supabase.from('events').insert([payload]).select();
@@ -108,6 +116,10 @@ const EVENT_DB_COLUMNS = new Set([
 export const updateEvent = async (id: string, patch: Partial<Event>, notify = true) => {
   if (!isEditor()) return;
   const raw: any = { ...patch };
+  if ('sponsorIds' in raw) {
+    raw['sponsors'] = JSON.stringify(raw.sponsorIds);
+    delete raw.sponsorIds;
+  }
   const mappings: [string, string][] = [
     ['coverImage', 'cover_image'],
     ['socialLinks', 'social_links'],

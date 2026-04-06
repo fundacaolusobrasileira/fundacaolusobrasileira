@@ -112,7 +112,7 @@ export interface Event {
   description: string;
   objective?: string;
   experience?: string;
-  sponsors?: string;
+  sponsorIds?: string[];
   tags?: string[];
   image: string;
   coverImage?: string;

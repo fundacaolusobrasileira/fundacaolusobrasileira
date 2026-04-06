@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { SectionWrapper, Card, Button, AccessDeniedModal, LoginModal, ConfirmDialog, PremiumLoader } from '../../components/ui';
 import { Lightbox, AsyncImage, ShareActions, SocialIcons } from '../../component.ui';
 import { EventDetailHeader, GallerySection } from '../../component.domain';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { EventEditorModal } from '../../component.ui';
-import { EVENTS, FLB_STATE_EVENT, isEditor, resolveGalleryItemSrc } from '../../store/app.store';
+import { EVENTS, PARTNERS, FLB_STATE_EVENT, isEditor, resolveGalleryItemSrc } from '../../store/app.store';
 import { deleteEvent } from '../../services/events.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import type { Event } from '../../types';
+import type { Event, Partner } from '../../types';
 import { Camera, Upload, Image as ImageIcon, Edit, Trash2, ArrowLeft, Plus } from 'lucide-react';
 
 export const EventoDetalhePage = () => {
@@ -202,14 +202,28 @@ export const EventoDetalhePage = () => {
                 </div>
               )}
               {/* Sponsors */}
-              {(event as any).sponsors && (
-                <div className="mb-10">
-                  <h2 className="text-[10px] font-bold uppercase tracking-widest text-sand-500 mb-4 flex items-center gap-2">
-                    <span className="w-4 h-px bg-sand-400"></span> Patrocinadores
-                  </h2>
-                  <p className="text-base text-slate-600 font-light leading-relaxed">{(event as any).sponsors}</p>
-                </div>
-              )}
+              {(() => {
+                const ids: string[] = (event as any).sponsorIds || [];
+                const sponsors = ids.map((id: string) => PARTNERS.find(p => p.id === id)).filter(Boolean) as Partner[];
+                if (sponsors.length === 0) return null;
+                return (
+                  <div className="mb-10">
+                    <h2 className="text-[10px] font-bold uppercase tracking-widest text-sand-500 mb-4 flex items-center gap-2">
+                      <span className="w-4 h-px bg-sand-400"></span> Patrocinadores
+                    </h2>
+                    <div className="flex flex-wrap gap-3">
+                      {sponsors.map(p => (
+                        <Link key={p.id} to={`/membro/${p.id}`}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white hover:border-sand-400/60 hover:shadow-sm transition-all text-xs text-slate-600 hover:text-brand-900"
+                        >
+                          {p.image && <img src={p.image} alt="" className="w-5 h-5 object-contain grayscale opacity-60 hover:grayscale-0" />}
+                          {p.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Gallery placeholder */}
               <div className="mt-12 p-8 border border-dashed border-slate-200 rounded-2xl text-center">
                 <p className="text-xs text-slate-400 uppercase tracking-wider">Galeria de imagens - Em breve</p>

@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Link as LinkIcon, Link2, Share2, Loader2, Image as ImageIcon, Check, Lock, Trash2, Edit, Plus, ExternalLink, Search, Star, Upload, Mail, Settings, User, AlertTriangle, CheckCircle, Info, AlertCircle as AlertIcon } from 'lucide-react';
 import type { GalleryItem, SocialLinks, Partner, Event, PreCadastro, ActivityLogItem } from './types';
-import { EVENTS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
+import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
 import { resolveGalleryItemSrc, saveMediaBlob, uploadSingleImage } from './services/media.service';
 import { loginAsEditor } from './services/auth.service';
 import { createEvent, updateEvent, deleteEvent, addMediaToEvent, addUrlMediaToEvent, addEventImagesFromFiles, approveCommunityMedia, rejectCommunityMedia } from './services/events.service';
@@ -864,7 +864,27 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Patrocinadores</label>
-                                    <Input value={formData.sponsors || ''} onChange={(e: any) => setFormData({...formData, sponsors: e.target.value})} placeholder="Patrocinadores do evento" className="text-xs" />
+                                    <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-slate-300 bg-white min-h-[44px]">
+                                      {PARTNERS.filter(p => p.category !== 'Governança').map(p => {
+                                        const selected = (formData.sponsorIds || []).includes(p.id);
+                                        return (
+                                          <button key={p.id} type="button"
+                                            onClick={() => {
+                                              const ids = formData.sponsorIds || [];
+                                              setFormData({...formData, sponsorIds: selected
+                                                ? ids.filter((id: string) => id !== p.id)
+                                                : [...ids, p.id]
+                                              });
+                                            }}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors
+                                              ${selected ? 'bg-brand-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                                          >
+                                            {p.image && <img src={p.image} className="w-4 h-4 object-contain rounded-full" alt="" />}
+                                            {p.name}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Notas Internas</label>
