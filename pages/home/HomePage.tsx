@@ -13,8 +13,8 @@ import {
   EventCard
 } from '../../components/domain';
 import { searchFoundation } from '../../services/search.service';
-import { PARTNERS, EVENTS, FLB_STATE_EVENT } from '../../store/app.store';
-import { EVENTS_SEED } from '../../data/events.data';
+import { PARTNERS, EVENTS, EVENTS_LOADING, EVENTS_ERROR, FLB_STATE_EVENT } from '../../store/app.store';
+import { getPublicEvents } from '../../services/events.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
 import { MISSION } from '../../data/content.data';
@@ -49,7 +49,7 @@ export const NotFoundPage = () => {
 export const HomePage = () => {
   usePageMeta("Fundação Luso-Brasileira", "Cultura, Conhecimento e Cooperação.");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(EVENTS_LOADING);
 
   // Search State
   const [searchInputValue, setSearchInputValue] = useState('');
@@ -81,14 +81,12 @@ export const HomePage = () => {
       setIsSearching(false);
   }, [debouncedSearchQuery]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
-
   const [partnersTick, setPartnersTick] = useState(0);
   useEffect(() => {
-    const update = () => setPartnersTick(t => t + 1);
+    const update = () => {
+      setPartnersTick(t => t + 1);
+      setLoading(EVENTS_LOADING);
+    };
     window.addEventListener(FLB_STATE_EVENT, update);
     return () => window.removeEventListener(FLB_STATE_EVENT, update);
   }, []);
@@ -553,11 +551,24 @@ export const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(EVENTS.length > 0 ? EVENTS : EVENTS_SEED as any[]).slice(0, 3).map((event, idx) => (
-              <Reveal key={event.id} delay={idx * 80}>
-                <EventCard event={event as any} />
-              </Reveal>
-            ))}
+            {(() => {
+              const publicEvents = getPublicEvents().slice(0, 3);
+              if (EVENTS_ERROR) return (
+                <div className="col-span-3 text-center py-12 text-slate-400 font-light">
+                  Não foi possível carregar os eventos.
+                </div>
+              );
+              if (publicEvents.length === 0) return (
+                <div className="col-span-3 text-center py-12 text-slate-400 font-light italic">
+                  Sem eventos publicados de momento.
+                </div>
+              );
+              return publicEvents.map((event, idx) => (
+                <Reveal key={event.id} delay={idx * 80}>
+                  <EventCard event={event as any} />
+                </Reveal>
+              ));
+            })()}
           </div>
 
           <div className="text-center mt-12 md:mt-16">

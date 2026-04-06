@@ -20,6 +20,8 @@ vi.mock('../supabaseClient', () => ({ supabase: { from: mockFrom } }));
 const mockShowToast = vi.fn();
 const mockNotifyState = vi.fn();
 const mockLogActivity = vi.fn();
+const mockSetEventsLoading = vi.fn();
+const mockSetEventsError = vi.fn();
 const EVENTS: any[] = [];
 vi.mock('../store/app.store', async () => {
   const actual = await vi.importActual('../store/app.store');
@@ -32,6 +34,8 @@ vi.mock('../store/app.store', async () => {
     EVENTS,
     generateId: vi.fn(() => 'gen-id'),
     PENDING_MEDIA_SUBMISSIONS: [],
+    setEventsLoading: mockSetEventsLoading,
+    setEventsError: mockSetEventsError,
   };
 });
 
@@ -195,6 +199,48 @@ describe('syncEvents', () => {
     const { syncEvents } = await import('./events.service');
     await syncEvents();
     expect(EVENTS).toHaveLength(0);
+  });
+
+  it('sets EVENTS_LOADING to false on success', async () => {
+    mockOrder.mockResolvedValue({ data: [DB_EVENT], error: null });
+    const { syncEvents } = await import('./events.service');
+    await syncEvents();
+    expect(mockSetEventsLoading).toHaveBeenLastCalledWith(false);
+  });
+
+  it('sets EVENTS_ERROR and EVENTS_LOADING=false on supabase error', async () => {
+    mockOrder.mockResolvedValue({ data: null, error: { message: 'Network failure' } });
+    const { syncEvents } = await import('./events.service');
+    await syncEvents();
+    expect(mockSetEventsError).toHaveBeenCalledWith('Network failure');
+    expect(mockSetEventsLoading).toHaveBeenLastCalledWith(false);
+  });
+});
+
+// ============================================================================
+// getPublicEvents
+// ============================================================================
+describe('getPublicEvents', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    EVENTS.length = 0;
+  });
+
+  it('returns only published events', async () => {
+    EVENTS.push(
+      { id: 'ev-1', title: 'Published', status: 'published', gallery: [] },
+      { id: 'ev-2', title: 'Draft', status: 'draft', gallery: [] },
+    );
+    const { getPublicEvents } = await import('./events.service');
+    const result = getPublicEvents();
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('ev-1');
+  });
+
+  it('returns empty array when EVENTS is empty', async () => {
+    const { getPublicEvents } = await import('./events.service');
+    expect(getPublicEvents()).toEqual([]);
   });
 });
 
