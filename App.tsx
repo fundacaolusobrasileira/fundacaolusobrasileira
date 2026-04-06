@@ -9,7 +9,7 @@ import { syncEvents } from './services/events.service';
 import { syncActivityLog } from './services/activity-log.service';
 import { resolveUserRole } from './services/auth.service';
 import {
-  AUTH_SESSION,
+  AUTH_SESSION, AUTH_LOADING,
   PARTNERS, PRECADASTROS,
   setAuthSession, setAuthLoading, notifyState,
 } from './store/app.store';
@@ -69,7 +69,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     const alreadyResolved =
       event === 'SIGNED_IN' && (
         (AUTH_SESSION.isLoggedIn && AUTH_SESSION.userId === session.user.id && AUTH_SESSION.role !== 'viewer') ||
-        !AUTH_SESSION.isLoggedIn
+        AUTH_LOADING  // INITIAL_SESSION hasn't fired yet — it will handle this SIGNED_IN
       );
 
     if (alreadyResolved) {
