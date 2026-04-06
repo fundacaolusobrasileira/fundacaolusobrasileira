@@ -18,7 +18,6 @@ import { getPublicEvents } from '../../services/events.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
 import { MISSION } from '../../data/content.data';
-import { PARTNERS_SEED } from '../../data/partners.data';
 
 export const NotFoundPage = () => {
   return (
@@ -498,29 +497,26 @@ export const HomePage = () => {
     </div>
 
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-      {(PARTNERS.length > 0 ? PARTNERS.filter(p => ['Parceiro Platinum', 'Parceiro Gold'].includes(p.category)) : PARTNERS_SEED.filter(p => ['Parceiro Platinum', 'Parceiro Gold'].includes(p.category))).map((partner, idx) => (
+      {PARTNERS.filter(p => p.category !== 'Governança').map((partner, idx) => (
         <Reveal key={partner.id} delay={idx * 60} className="h-full">
-          <a
-            href={partner.website || '#'}
-            target={partner.website ? '_blank' : undefined}
-            rel="noopener noreferrer"
+          <Link
+            to={`/membro/${partner.id}`}
             className="group h-full block focus:outline-none focus:ring-2 focus:ring-sand-400 rounded-2xl"
-            aria-label={`Parceiro fundador: ${partner.name}`}
+            aria-label={`Parceiro: ${partner.name}`}
           >
             <div className="h-full bg-white rounded-2xl p-5 flex flex-col items-center text-center transition-all duration-500 border border-slate-200/80 hover:border-sand-400/50 hover:shadow-xl hover:-translate-y-1">
               <div className="text-[9px] font-medium text-slate-400 uppercase tracking-wider self-end mb-2">
-                Est. {partner.since || '1998'}
+                {partner.since ? `Est. ${partner.since}` : partner.category}
               </div>
               <div className="h-20 w-full flex items-center justify-center mb-4">
-                <img
-                  src={partner.image}
-                  alt=""
-                  className="max-h-full max-w-[80%] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
-                />
+                {partner.image
+                  ? <img src={partner.image} alt="" className="max-h-full max-w-[80%] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                  : <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-2xl font-serif text-brand-900/40">{partner.name.charAt(0)}</div>
+                }
               </div>
               <h3 className="text-sm font-serif text-brand-900 group-hover:text-sand-600 transition-colors">{partner.name}</h3>
             </div>
-          </a>
+          </Link>
         </Reveal>
       ))}
     </div>
