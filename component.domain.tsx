@@ -557,7 +557,7 @@ export const EventDetailHeader = ({ event }: { event: Event }) => {
         <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
             <div className="absolute inset-0">
                 {(event.coverImage || event.image) && <img src={event.coverImage || event.image} alt={event.title} className="w-full h-full object-cover" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-page via-brand-900/60 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 via-brand-900/50 to-transparent"></div>
             </div>
             
             <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 pb-16 md:pb-24">

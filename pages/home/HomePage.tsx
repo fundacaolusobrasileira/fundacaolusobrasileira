@@ -366,15 +366,6 @@ export const HomePage = () => {
                     <p className="text-xs uppercase tracking-widest text-slate-400">Presidente da Fundação</p>
                     <p className="text-[10px] uppercase tracking-widest text-sand-500 mt-1">Ex-EDP Global</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-brand-900 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-serif font-bold text-lg">F</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-brand-900">Fundação</p>
-                      <p className="text-[9px] font-light uppercase tracking-wider text-slate-500">Luso-Brasileira</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

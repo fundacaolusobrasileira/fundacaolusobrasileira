@@ -99,7 +99,7 @@ export const Header = () => {
       </header>
 
       {isOpen && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-brand-900/98 backdrop-blur-xl flex flex-col animate-in slide-in-from-right duration-700 text-white">
+        <div className="md:hidden fixed inset-0 z-[60] bg-brand-900/85 backdrop-blur-xl flex flex-col animate-in slide-in-from-right duration-700 text-white">
           <div className="flex justify-end p-6">
             <button onClick={() => setIsOpen(false)} className="p-2 text-white/80 hover:text-white" aria-label="Fechar menu">
               <X size={24} />
