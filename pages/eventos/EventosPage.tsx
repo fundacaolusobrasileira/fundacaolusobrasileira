@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SectionWrapper, AsyncContent, Badge, Button, AccessDeniedModal, LoginModal, ConfirmDialog, PremiumLoader } from '../../components/ui';
 import { EventEditorModal } from '../../component.ui';
-import { EVENTS, FLB_STATE_EVENT, isEditor } from '../../store/app.store';
-import { deleteEvent } from '../../services/events.service';
+import { EVENTS, EVENTS_LOADING, EVENTS_ERROR, FLB_STATE_EVENT, isEditor } from '../../store/app.store';
+import { deleteEvent, getPublicEvents } from '../../services/events.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { Plus, Edit2, Trash2, Calendar, Clock } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -88,11 +88,11 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const events = eventsProp ?? EVENTS;
-
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(EVENTS_LOADING);
+  const [eventsError, setEventsError] = useState<string | null>(EVENTS_ERROR);
+  const sourceEvents = eventsProp ?? (isEditor() ? EVENTS : getPublicEvents());
   const [filter, setFilter] = useState<string>('Todos');
-  const [localEvents, setLocalEvents] = useState<Event[]>(events);
+  const [localEvents, setLocalEvents] = useState<Event[]>(sourceEvents);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -101,7 +101,6 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const timer = setTimeout(() => setLoading(false), 600);
 
     const searchParams = new URLSearchParams(location.search);
     const createMode = searchParams.get('create');
@@ -127,16 +126,18 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
       }
     }
 
-    const handleUpdate = () => setLocalEvents([...EVENTS]);
+    const handleUpdate = () => {
+      setLoading(EVENTS_LOADING);
+      setEventsError(EVENTS_ERROR);
+      const updated = eventsProp ?? (isEditor() ? EVENTS : getPublicEvents());
+      setLocalEvents([...updated]);
+    };
     window.addEventListener(FLB_STATE_EVENT, handleUpdate);
 
     return () => {
-      clearTimeout(timer);
       window.removeEventListener(FLB_STATE_EVENT, handleUpdate);
     };
   }, [location.search, isModalOpen]);
-
-  useEffect(() => { setLocalEvents(events); }, [events]);
 
   const categories = ['Todos', '33 Anos', 'Fundacao', 'Embaixada', 'Outros'];
 
@@ -225,7 +226,12 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
           </div>
 
           <AsyncContent loading={loading} fallback={<PremiumLoader />}>
-            {filteredEvents.length === 0 ? (
+            {eventsError ? (
+              <div className="text-center py-32">
+                <div className="text-4xl text-slate-200 font-serif mb-4 italic">Erro</div>
+                <p className="text-slate-400 font-light mb-8">{eventsError}</p>
+              </div>
+            ) : filteredEvents.length === 0 ? (
               <div className="text-center py-32">
                 <div className="text-4xl text-slate-200 font-serif mb-4 italic">Sem eventos</div>
                 <p className="text-slate-400 font-light mb-8">Nenhuma atividade encontrada nesta categoria.</p>

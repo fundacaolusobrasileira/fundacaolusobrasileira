@@ -1,6 +1,6 @@
 // services/events.service.ts
 import { supabase } from '../supabaseClient';
-import { EVENTS, PENDING_MEDIA_SUBMISSIONS, notifyState, showToast, logActivity, isEditor, generateId } from '../store/app.store';
+import { EVENTS, PENDING_MEDIA_SUBMISSIONS, notifyState, showToast, logActivity, isEditor, generateId, setEventsLoading, setEventsError } from '../store/app.store';
 import type { Event, GalleryItem } from '../types';
 
 // Validate URL is safe (prevents javascript:, data: XSS)
@@ -37,12 +37,24 @@ const normalizeEvent = (e: any): Event => {
 };
 
 export const syncEvents = async () => {
+  setEventsLoading(true);
+  setEventsError(null);
+  notifyState();
   const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false });
-  if (error || !data) return;
+  if (error || !data) {
+    setEventsError(error?.message ?? 'Erro ao carregar eventos.');
+    setEventsLoading(false);
+    notifyState();
+    return;
+  }
   EVENTS.length = 0;
   EVENTS.push(...data.map(normalizeEvent));
+  setEventsLoading(false);
   notifyState();
 };
+
+export const getPublicEvents = (): Event[] =>
+  EVENTS.filter(e => e.status === 'published');
 
 export const createEvent = async (data: Partial<Event>): Promise<Event | null> => {
   if (!isEditor()) return null;

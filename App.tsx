@@ -10,7 +10,7 @@ import { syncActivityLog } from './services/activity-log.service';
 import { resolveUserRole } from './services/auth.service';
 import {
   AUTH_SESSION,
-  EVENTS, PARTNERS, PRECADASTROS,
+  PARTNERS, PRECADASTROS,
   setAuthSession, setAuthLoading, notifyState,
 } from './store/app.store';
 
@@ -26,23 +26,6 @@ const syncFromSupabase = async () => {
       ...p,
       type: p.type || (p.category === 'Governança' ? 'pessoa' : 'empresa'),
       socialLinks: p.social_links || {},
-    })));
-  }
-
-  // Events
-  const { data: events, error: eError } = await supabase
-    .from('events').select('*').order('created_at', { ascending: false });
-  if (events && !eError) {
-    EVENTS.length = 0;
-    EVENTS.push(...events.map((e: any) => ({
-      ...e,
-      coverImage: e.cover_image,
-      socialLinks: e.social_links || {},
-      descriptionShort: e.description_short,
-      endDate: e.end_date,
-      endTime: e.end_time,
-      cardImage: e.card_image,
-      gallery: (() => { try { return typeof e.gallery === 'string' ? JSON.parse(e.gallery) : (e.gallery || []); } catch { return []; } })(),
     })));
   }
 

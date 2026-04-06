@@ -11,6 +11,10 @@ export const PENDING_MEDIA_SUBMISSIONS: PendingMediaSubmission[] = [];
 export const ACTIVITY_LOG: ActivityLogItem[] = [];
 export let AUTH_SESSION: AuthSession = { isLoggedIn: false, role: 'viewer' };
 export let AUTH_LOADING = true;
+export let EVENTS_LOADING = true;
+export let EVENTS_ERROR: string | null = null;
+export const setEventsLoading = (loading: boolean) => { EVENTS_LOADING = loading; };
+export const setEventsError = (err: string | null) => { EVENTS_ERROR = err; };
 
 export const setAuthSession = (session: AuthSession) => { AUTH_SESSION = session; };
 export const setAuthLoading = (loading: boolean) => { AUTH_LOADING = loading; };
