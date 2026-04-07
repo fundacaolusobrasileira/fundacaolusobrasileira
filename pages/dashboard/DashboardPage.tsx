@@ -38,7 +38,7 @@ export const DashboardPage = () => {
   const [preCadastroOpen, setPreCadastroOpen] = useState(false);
   const [userManagerOpen, setUserManagerOpen] = useState(false);
 
-  const [membersTab, setMembersTab] = useState<'todos' | 'governanca'>('todos');
+  const [membersTab, setMembersTab] = useState<'todos' | 'governanca' | 'inativos'>('todos');
   const [newsletterCopied, setNewsletterCopied] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<Partner> | null>(null);
@@ -258,10 +258,15 @@ export const DashboardPage = () => {
                 <div className="flex border-b border-slate-100">
                     <button onClick={() => setMembersTab('todos')} className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${membersTab === 'todos' ? 'text-brand-900 border-b-2 border-sand-400' : 'text-slate-400 hover:text-brand-900'}`}>Todos</button>
                     <button onClick={() => setMembersTab('governanca')} className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${membersTab === 'governanca' ? 'text-brand-900 border-b-2 border-sand-400' : 'text-slate-400 hover:text-brand-900'}`}>Governança</button>
+                    <button onClick={() => setMembersTab('inativos')} className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${membersTab === 'inativos' ? 'text-red-500 border-b-2 border-red-400' : 'text-slate-400 hover:text-red-400'}`}>Inativos{PARTNERS.filter(p => p.active === false).length > 0 && <span className="ml-1 bg-red-100 text-red-500 text-[9px] px-1.5 py-0.5 rounded-full">{PARTNERS.filter(p => p.active === false).length}</span>}</button>
                 </div>
                 <div className="p-3 space-y-1 flex-grow overflow-y-auto max-h-[400px] custom-scrollbar">
                     {(() => {
-                        const list = PARTNERS.filter(p => membersTab === 'governanca' ? p.category === 'Governança' : p.category !== 'Governança');
+                        const list = PARTNERS.filter(p =>
+                            membersTab === 'inativos' ? p.active === false :
+                            membersTab === 'governanca' ? p.category === 'Governança' && p.active !== false :
+                            p.category !== 'Governança' && p.active !== false
+                        );
                         return list.length > 0 ? list.slice(0, 6).map(member => (
                             <ListRow
                                 key={member.id}
