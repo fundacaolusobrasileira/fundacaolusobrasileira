@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { HashRouter } from 'react-router-dom';
-import { Header, Footer, SmartInviteModal } from './components/domain';
+import { Header, Footer } from './components/domain';
 import { ToastContainer } from './components/ui';
+
+const SmartInviteModal = lazy(() =>
+  import('./components/domain').then(m => ({ default: m.SmartInviteModal }))
+);
 import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
@@ -137,7 +141,9 @@ export default function App() {
           <AppRouter />
         </div>
         <Footer />
-        <SmartInviteModal />
+        <Suspense fallback={null}>
+          <SmartInviteModal />
+        </Suspense>
         <ToastContainer />
       </div>
     </HashRouter>
