@@ -4,6 +4,19 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { PremiumLoader } from './components/ui/Loaders';
 import { AUTH_SESSION, AUTH_LOADING, FLB_STATE_EVENT } from './store/app.store';
 
+class ChunkErrorBoundary extends React.Component<{ children: React.ReactNode }, { errored: boolean }> {
+  state = { errored: false };
+  static getDerivedStateFromError() { return { errored: true }; }
+  componentDidCatch(error: Error) {
+    const isChunkError = error.message.includes('dynamically imported module') || error.message.includes('Loading chunk');
+    if (isChunkError && !sessionStorage.getItem('chunk_reload')) {
+      sessionStorage.setItem('chunk_reload', '1');
+      window.location.reload();
+    }
+  }
+  render() { return this.state.errored ? null : this.props.children; }
+}
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // Subscribe to auth state changes so the component re-renders reactively
   const [, setTick] = useState(0);
@@ -42,6 +55,7 @@ const LegaltechSpacePage = lazy(() => import('./pages/legaltech-space/LegaltechS
 const ParceiroPerfilPage = lazy(() => import('./pages/parceiros/ParceiroPerfilPage').then(m => ({ default: m.ParceiroPerfilPage })));
 
 export const AppRouter = () => (
+  <ChunkErrorBoundary>
   <Suspense fallback={<PremiumLoader />}>
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -69,4 +83,5 @@ export const AppRouter = () => (
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   </Suspense>
+  </ChunkErrorBoundary>
 );
