@@ -29,7 +29,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, size = 'medium',
           ${size === 'large' ? 'w-20 h-20' : size === 'medium' ? 'w-14 h-14' : 'w-11 h-11'}
         `}>
           {(member.image || member.avatar) ? (
-            <img src={member.image || member.avatar} alt={member.name} className="w-full h-full object-cover" />
+            <img src={member.image || member.avatar} alt={member.name} width={200} height={200} loading="lazy" className="w-full h-full object-cover" />
           ) : (
             <User size={size === 'large' ? 28 : 20} className="text-slate-400" />
           )}

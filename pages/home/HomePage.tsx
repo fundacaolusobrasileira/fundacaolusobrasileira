@@ -200,11 +200,14 @@ export const HomePage = () => {
         </div>
 
         <div className="max-w-[1600px] mx-auto relative z-20 text-left md:text-center w-full">
-          <Reveal>
+          <Reveal immediate>
             <div className="flex flex-col items-start md:items-center mb-8 md:mb-10">
                 <img
-                  src="/logo-flb.png"
+                  src="/logo-flb.webp"
                   alt="Logo Fundacao Luso-Brasileira"
+                  width={224}
+                  height={224}
+                  fetchPriority="high"
                   className="h-32 md:h-44 lg:h-56 w-auto object-contain mb-6 drop-shadow-2xl"
                 />
                 <div className="inline-flex items-center gap-3">

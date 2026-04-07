@@ -6,9 +6,11 @@ interface RevealProps {
   className?: string;
   delay?: number;
   threshold?: number;
+  immediate?: boolean;
 }
 
-export const Reveal: React.FC<RevealProps> = ({ children, className = '', delay = 0, threshold = 0.15 }) => {
+export const Reveal: React.FC<RevealProps> = ({ children, className = '', delay = 0, threshold = 0.15, immediate = false }) => {
+  if (immediate) return <div className={className}>{children}</div>;
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 

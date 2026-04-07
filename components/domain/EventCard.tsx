@@ -19,7 +19,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => (
     <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-sand-400/50 hover:shadow-lg transition-all duration-500 hover:-translate-y-0.5 flex flex-col h-full">
       {event.image && (
         <div className="aspect-[16/9] overflow-hidden bg-slate-100">
-          <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <img src={event.image} alt={event.title} width={800} height={450} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         </div>
       )}
       <div className="p-4 sm:p-5 flex flex-col flex-grow">

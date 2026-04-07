@@ -25,7 +25,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
       <div className="flex items-start gap-4 mb-4">
         <div className="h-14 w-20 flex items-center justify-center shrink-0 bg-slate-50 rounded-xl p-2">
           {partner.image
-            ? <img src={partner.image} alt="" className="max-h-full max-w-full object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+            ? <img src={partner.image} alt="" width={80} height={56} loading="lazy" className="max-h-full max-w-full object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
             : <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl font-serif text-brand-900/40">{partner.name.charAt(0)}</div>
           }
         </div>

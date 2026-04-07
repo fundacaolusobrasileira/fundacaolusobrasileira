@@ -109,7 +109,7 @@ export const QuemSomosPage = () => {
             <div className="md:col-span-5">
               <Reveal>
                 <div className="aspect-[4/5] overflow-hidden rounded-2xl shadow-lg">
-                  <img src="/presidente.webp" alt="Paulo Campos Costa" className="w-full h-full object-cover grayscale" />
+                  <img src="/presidente.webp" alt="Paulo Campos Costa" width={400} height={500} className="w-full h-full object-cover grayscale" />
                 </div>
               </Reveal>
             </div>
