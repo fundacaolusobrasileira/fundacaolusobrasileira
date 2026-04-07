@@ -28,13 +28,23 @@ export const MembroPerfilPage = () => {
 
         const found = findMember();
         if(found) {
+            if (found.active === false && !isEditor()) {
+                navigate('/parceiros', { replace: true });
+                return;
+            }
             setMember(found);
             fetchBenefitsByPartner(found.id).then(data => setBenefits(data.filter(b => b.active)));
         }
 
         const handleUpdate = () => {
             const updated = findMember();
-            if(updated) setMember(updated);
+            if(updated) {
+                if (updated.active === false && !isEditor()) {
+                    navigate('/parceiros', { replace: true });
+                    return;
+                }
+                setMember(updated);
+            }
         }
         window.addEventListener(FLB_STATE_EVENT, handleUpdate);
         return () => window.removeEventListener(FLB_STATE_EVENT, handleUpdate);

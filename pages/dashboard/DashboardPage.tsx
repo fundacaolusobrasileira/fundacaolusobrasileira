@@ -154,7 +154,7 @@ export const DashboardPage = () => {
                             <div className="p-1 border-t border-slate-50">
                                 <div className="text-[10px] font-bold uppercase text-slate-400 px-3 py-1.5 bg-slate-50">Membros</div>
                                 {filteredMembers.map(m => (
-                                    <button key={m.id} onClick={() => openMemberModal(m)} className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg text-sm flex items-center gap-2 group transition-colors">
+                                    <button key={m.id} onClick={() => { navigate(`/membro/${m.id}/editar`); setShowSearchResults(false); }} className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg text-sm flex items-center gap-2 group transition-colors">
                                         <div className="w-6 h-6 rounded-full bg-slate-200 overflow-hidden shrink-0"><img src={m.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"/></div>
                                         <span className="truncate flex-grow text-slate-700 font-medium group-hover:text-brand-900">{m.name}</span><Edit2 size={12} className="opacity-0 group-hover:opacity-50 text-slate-400" />
                                     </button>
@@ -245,10 +245,10 @@ export const DashboardPage = () => {
                             <ListRow
                                 key={member.id}
                                 title={member.name}
-                                subtitle={member.role || member.category}
+                                subtitle={`${member.role || member.category}${member.active === false ? ' · Inativo' : ''}`}
                                 image={member.image}
-                                onClick={() => openMemberModal(member)}
-                                actions={<><button onClick={(e) => { e.stopPropagation(); openMemberModal(member); }} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-brand-900 transition-colors"><Edit2 size={14}/></button><button onClick={(e) => { e.stopPropagation(); handleDelete('member', member.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={14}/></button></>}
+                                onClick={() => navigate(`/membro/${member.id}/editar`)}
+                                actions={<><button onClick={(e) => { e.stopPropagation(); navigate(`/membro/${member.id}/editar`); }} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-brand-900 transition-colors"><Edit2 size={14}/></button><button onClick={(e) => { e.stopPropagation(); handleDelete('member', member.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={14}/></button></>}
                             />
                         )) : <div className="py-10 text-center text-slate-400 text-xs">Nenhum membro registrado.</div>;
                     })()}
@@ -349,7 +349,7 @@ export const DashboardPage = () => {
         onClose={() => setViewAllMembersOpen(false)}
         title="Todos os Membros"
         items={PARTNERS}
-        onEdit={(item: any) => { setViewAllMembersOpen(false); openMemberModal(item); }}
+        onEdit={(item: any) => { setViewAllMembersOpen(false); navigate(`/membro/${item.id}/editar`); }}
         onDelete={(id: string) => handleDelete('member', id)}
         onCreate={() => { setViewAllMembersOpen(false); openMemberModal(); }}
       />

@@ -55,7 +55,7 @@ export const AdminPage = () => {
 
   const byTier = (tier: MemberTier) =>
     PARTNERS
-      .filter((p: Partner) => p.tier === tier)
+      .filter((p: Partner) => p.tier === tier && p.active !== false)
       .sort((a: Partner, b: Partner) => (a.order || 99) - (b.order || 99));
 
   const presidente = byTier('presidente');

@@ -42,10 +42,12 @@ export const ParceirosPage = () => {
 
   // Use live Supabase data when available, otherwise fall back to seed data.
   // Merge pageRoute from seed so custom pages (e.g. /legaltech-space) are preserved.
-  const source = useMemo(() => (PARTNERS.length > 0 ? PARTNERS : PARTNERS_SEED).map(p => ({
-    ...p,
-    pageRoute: (p as any).pageRoute ?? PARTNERS_SEED.find(s => s.id === p.id)?.pageRoute,
-  })), [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const source = useMemo(() => (PARTNERS.length > 0 ? PARTNERS : PARTNERS_SEED)
+    .filter(p => p.active !== false)
+    .map(p => ({
+      ...p,
+      pageRoute: (p as any).pageRoute ?? PARTNERS_SEED.find(s => s.id === p.id)?.pageRoute,
+    })), [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     if (!search.trim()) return source;

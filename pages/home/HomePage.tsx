@@ -124,7 +124,7 @@ export const HomePage = () => {
 
   // Use live data from DB (merged with seed in syncMembers). partnersTick ensures re-render.
   void partnersTick;
-  const govMembers = PARTNERS.filter(p => p.category === 'Governança');
+  const govMembers = PARTNERS.filter(p => p.category === 'Governança' && p.active !== false);
   const presidente = govMembers.filter(m => m.tier === 'presidente');
   const direcao = govMembers.filter(m => m.tier === 'direcao');
   const secretarioGeral = govMembers.filter(m => m.tier === 'secretario-geral');
