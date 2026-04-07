@@ -36,6 +36,7 @@ export const DashboardPage = () => {
   const [preCadastroOpen, setPreCadastroOpen] = useState(false);
   const [userManagerOpen, setUserManagerOpen] = useState(false);
 
+  const [membersTab, setMembersTab] = useState<'todos' | 'governanca'>('todos');
   const [newsletterCopied, setNewsletterCopied] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<Partner> | null>(null);
@@ -229,20 +230,27 @@ export const DashboardPage = () => {
 
             <Card className="flex flex-col h-full bg-white shadow-sm border-slate-200 overflow-hidden">
                 <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-                    <h3 className="font-medium text-brand-900 flex items-center gap-2"><Users size={16} /> Membros Destaque</h3>
+                    <h3 className="font-medium text-brand-900 flex items-center gap-2"><Users size={16} /> Membros</h3>
                     <button onClick={() => setViewAllMembersOpen(true)} className="text-[10px] font-bold text-slate-400 hover:text-brand-900 uppercase tracking-widest transition-colors">Ver todos</button>
                 </div>
+                <div className="flex border-b border-slate-100">
+                    <button onClick={() => setMembersTab('todos')} className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${membersTab === 'todos' ? 'text-brand-900 border-b-2 border-sand-400' : 'text-slate-400 hover:text-brand-900'}`}>Todos</button>
+                    <button onClick={() => setMembersTab('governanca')} className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${membersTab === 'governanca' ? 'text-brand-900 border-b-2 border-sand-400' : 'text-slate-400 hover:text-brand-900'}`}>Governança</button>
+                </div>
                 <div className="p-3 space-y-1 flex-grow overflow-y-auto max-h-[400px] custom-scrollbar">
-                    {PARTNERS.length > 0 ? PARTNERS.slice(0, 6).map(member => (
-                        <ListRow
-                            key={member.id}
-                            title={member.name}
-                            subtitle={member.role || member.category}
-                            image={member.image}
-                            onClick={() => openMemberModal(member)}
-                            actions={<><button onClick={(e) => { e.stopPropagation(); openMemberModal(member); }} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-brand-900 transition-colors"><Edit2 size={14}/></button><button onClick={(e) => { e.stopPropagation(); handleDelete('member', member.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={14}/></button></>}
-                        />
-                    )) : <div className="py-10 text-center text-slate-400 text-xs">Nenhum membro registrado.</div>}
+                    {(() => {
+                        const list = PARTNERS.filter(p => membersTab === 'governanca' ? p.category === 'Governança' : p.category !== 'Governança');
+                        return list.length > 0 ? list.slice(0, 6).map(member => (
+                            <ListRow
+                                key={member.id}
+                                title={member.name}
+                                subtitle={member.role || member.category}
+                                image={member.image}
+                                onClick={() => openMemberModal(member)}
+                                actions={<><button onClick={(e) => { e.stopPropagation(); openMemberModal(member); }} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-brand-900 transition-colors"><Edit2 size={14}/></button><button onClick={(e) => { e.stopPropagation(); handleDelete('member', member.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={14}/></button></>}
+                            />
+                        )) : <div className="py-10 text-center text-slate-400 text-xs">Nenhum membro registrado.</div>;
+                    })()}
                 </div>
             </Card>
 

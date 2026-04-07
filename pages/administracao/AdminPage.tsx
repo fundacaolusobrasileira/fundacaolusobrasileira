@@ -55,12 +55,8 @@ export const AdminPage = () => {
 
   const byTier = (tier: MemberTier) =>
     PARTNERS
-      .filter((p: Partner) => p.tier === tier && p.category !== 'Governança')
+      .filter((p: Partner) => p.tier === tier)
       .sort((a: Partner, b: Partner) => (a.order || 99) - (b.order || 99));
-
-  const governanca = PARTNERS
-    .filter((p: Partner) => p.category === 'Governança')
-    .sort((a: Partner, b: Partner) => (a.order || 99) - (b.order || 99));
 
   const presidente = byTier('presidente');
   const direcao = byTier('direcao');
@@ -108,20 +104,7 @@ export const AdminPage = () => {
           cols="sm:grid-cols-2 lg:grid-cols-4"
         />
 
-        {/* Divisor visual */}
-        {governanca.length > 0 && (presidente.length > 0 || direcao.length > 0 || vogais.length > 0) && (
-          <div className="my-4 border-t border-white/10" />
-        )}
-
-        <TierSection
-          title="Governança"
-          subtitle="Entidades e representantes com papel institucional na Fundação"
-          members={governanca}
-          size="medium"
-          cols="sm:grid-cols-2 lg:grid-cols-3"
-        />
-
-        {!presidente.length && !direcao.length && !secretario.length && !vogais.length && !governanca.length && (
+        {!presidente.length && !direcao.length && !secretario.length && !vogais.length && (
           <div className="py-20 text-center border border-dashed border-white/10 rounded-3xl">
             <p className="text-white/40 text-sm">A sincronizar membros...</p>
           </div>
