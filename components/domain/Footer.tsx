@@ -90,7 +90,13 @@ export const Footer = () => {
 
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/20 font-light">
           <p>&copy; {new Date().getFullYear()} Fundação Luso-Brasileira. Todos os direitos reservados.</p>
-          <p className="text-center">Plataforma desenvolvida por <span className="text-white/40 font-medium">LEGALTECH SPACE GROUP</span> — Parceira Tecnológica</p>
+          <p className="text-center">
+            Plataforma desenvolvida por{' '}
+            <Link to="/legaltech-space" className="text-white/40 font-medium hover:text-sand-400 transition-colors">
+              LEGALTECH SPACE GROUP
+            </Link>{' '}
+            — Parceira Tecnológica
+          </p>
           <p>Lisboa &bull; Brasília</p>
         </div>
       </div>

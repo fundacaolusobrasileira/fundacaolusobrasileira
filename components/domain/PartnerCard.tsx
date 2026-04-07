@@ -8,8 +8,8 @@ interface PartnerCardProps {
   partner: PartnerSeed;
 }
 
-export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => (
-  <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-sand-400/50 hover:shadow-lg transition-all duration-500 flex flex-col">
+const CardInner: React.FC<PartnerCardProps> = ({ partner }) => (
+  <>
     <div className="flex items-start gap-4 mb-4">
       <div className="h-14 w-20 flex items-center justify-center shrink-0 bg-slate-50 rounded-xl p-2">
         <img
@@ -18,7 +18,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => (
           className="max-h-full max-w-full object-contain filter grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
         />
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500 mb-0.5">
           {partner.category}{partner.since ? ` \u00B7 Est. ${partner.since}` : ''}
         </p>
@@ -31,14 +31,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => (
       previewLines={3}
       textClassName="text-sm text-slate-500 font-light leading-relaxed"
     />
-    {partner.pageRoute ? (
-      <Link
-        to={partner.pageRoute}
-        className="inline-flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-sand-500 hover:text-brand-900 transition-colors"
-      >
-        Ver página &rarr;
-      </Link>
-    ) : partner.website && (
+    {!partner.pageRoute && partner.website && (
       <a
         href={partner.website}
         target="_blank"
@@ -48,5 +41,24 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => (
         Site oficial &rarr;
       </a>
     )}
-  </div>
+  </>
 );
+
+export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
+  const cardClass =
+    'bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-sand-400/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-500 flex flex-col h-full';
+
+  if (partner.pageRoute) {
+    return (
+      <Link to={partner.pageRoute} className={`${cardClass} cursor-pointer`}>
+        <CardInner partner={partner} />
+      </Link>
+    );
+  }
+
+  return (
+    <div className={cardClass}>
+      <CardInner partner={partner} />
+    </div>
+  );
+};

@@ -114,12 +114,9 @@ const SERVICES = [
   },
 ];
 
-const METRICS = [
-  { value: '1', label: 'plataforma construída de raiz' },
-  { value: '6+', label: 'módulos funcionais entregues' },
-  { value: '100+', label: 'perfis de membros conectados' },
-  { value: '∞', label: 'capacidade de escala' },
-];
+// Initials avatar for Sandro Sanches (replace src with real photo base64 when available)
+const SANDRO_PHOTO =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23C9AF88'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia,serif' font-size='24' fill='%23162040'%3ESS%3C/text%3E%3C/svg%3E";
 
 export const LegaltechSpacePage = () => {
   usePageMeta(
@@ -130,14 +127,14 @@ export const LegaltechSpacePage = () => {
   return (
     <main className="bg-white text-slate-900 overflow-hidden">
       {/* ── HERO ── */}
-      <section className="bg-brand-900 pt-40 pb-24 px-6 relative overflow-hidden">
+      <section className="bg-brand-900 pt-40 pb-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(201,175,136,0.08),transparent_60%)] pointer-events-none" />
         {/* decorative blob */}
         <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-sand-400/5 blur-3xl pointer-events-none" />
         <div className="max-w-4xl mx-auto relative z-10">
           <Reveal>
             <Badge variant="dark" className="mb-6">Parceiro Tecnológico</Badge>
-            <h1 className="text-5xl md:text-7xl font-light text-white tracking-tight mb-6 leading-[1.05]">
+            <h1 className="text-4xl md:text-7xl font-light text-white tracking-tight mb-6 leading-[1.05]">
               Tecnologia, Design{' '}
               <span className="font-serif italic text-sand-400">e Estratégia</span>
               <br />
@@ -264,21 +261,38 @@ export const LegaltechSpacePage = () => {
                 <p className="text-3xl md:text-4xl font-light text-white leading-tight tracking-tight mb-8">
                   Onde eventos, hospitalidade, estratégia e tecnologia se encontram.
                 </p>
-                <p className="text-base text-white/60 font-light leading-relaxed mb-12">
+                <p className="text-base text-white/60 font-light leading-relaxed mb-10">
                   A Legaltech Space não é só uma empresa de tecnologia. Tem bagagem real em
                   organização de eventos, gestão de espaços e hotelaria, estratégia de negócios
                   e operação de plataformas com utilizadores reais. Isso significa que entendemos
                   o problema antes de escrever uma linha de código.
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-                  {METRICS.map((m, idx) => (
-                    <Reveal key={m.label} delay={idx * 80}>
-                      <div>
-                        <p className="text-4xl font-light text-sand-400 mb-1">{m.value}</p>
-                        <p className="text-xs text-white/50 font-light leading-snug">{m.label}</p>
-                      </div>
-                    </Reveal>
-                  ))}
+
+                {/* Perfil do fundador */}
+                <div className="flex items-start gap-5 p-6 bg-white/5 rounded-2xl border border-white/10">
+                  <img
+                    src={SANDRO_PHOTO}
+                    alt="Sandro Sanches"
+                    className="w-16 h-16 rounded-full object-cover shrink-0 ring-2 ring-sand-400/40"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-base font-medium text-white mb-0.5">Sandro Sanches</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-sand-400 mb-3">
+                      Fundador · Legaltech Space Group
+                    </p>
+                    <p className="text-sm text-white/60 font-light leading-relaxed mb-4">
+                      Empreendedor com experiência em tecnologia, estratégia digital e gestão de negócios.
+                      Responsável pela visão e execução da infraestrutura digital da Fundação Luso-Brasileira.
+                    </p>
+                    <a
+                      href="https://br.linkedin.com/in/sandrosanches"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-sand-400 hover:text-white transition-colors"
+                    >
+                      LinkedIn →
+                    </a>
+                  </div>
                 </div>
               </Reveal>
             </div>
