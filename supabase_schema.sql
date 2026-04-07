@@ -554,3 +554,9 @@ DO $$ BEGIN
       USING (auth.role() = 'authenticated');
   END IF;
 END $$;
+
+
+-- Migration: add optional user_id to community_media_submissions
+-- Allows linking submissions to authenticated users when available.
+ALTER TABLE public.community_media_submissions
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;

@@ -47,7 +47,6 @@ export const submitCommunityMedia = async (
     url: submission.url,
     type: submission.type,
     message: submission.message,
-    user_id: AUTH_SESSION.userId || null,
   };
 
   const { data: res, error } = await supabase

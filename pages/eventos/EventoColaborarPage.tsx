@@ -46,7 +46,7 @@ export const EventoColaborarPage = () => {
 
   usePageMeta("Colaborar – Fundacao Luso-Brasileira", event ? `Enviar memoria do evento ${event.title}` : "Enviar memoria");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event) return;
 
@@ -79,18 +79,20 @@ export const EventoColaborarPage = () => {
       subscribeToNewsletter(formData.email);
     }
 
-    setTimeout(() => {
-      submitCommunityMedia({
-        eventId: event.id,
-        authorName: formData.authorName,
-        email: formData.email,
-        url: formData.url,
-        type: formData.type,
-        message: formData.message
-      });
-      setSubmitting(false);
+    const result = await submitCommunityMedia({
+      eventId: event.id,
+      authorName: formData.authorName,
+      email: formData.email,
+      url: formData.url,
+      type: formData.type,
+      message: formData.message
+    });
+    setSubmitting(false);
+    if (result) {
       setSuccess(true);
-    }, 1500);
+    } else {
+      setError('Erro ao enviar memória. Tente novamente.');
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

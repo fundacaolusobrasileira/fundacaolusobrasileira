@@ -87,17 +87,20 @@ export const signUp = async (email: string, password: string, name: string, type
   }
 
   if (data.user) {
-    // BUG 5 FIX: check profile INSERT error — if it fails, user has no role and resolves as viewer
-    const { error: profileError } = await supabase.from('profiles').insert({
-      user_id: data.user.id,
-      name,
-      email,
-      type,
-      role: 'membro'
-    });
-    if (profileError) {
-      console.error('signUp profile insert failed:', profileError);
-      return { ok: false, error: 'Conta criada mas erro ao configurar perfil. Contacte o suporte.' };
+    // Only upsert profile if there's an active session (email confirmation disabled).
+    // When session is null, the trigger handle_new_user creates the profile automatically
+    // after the user confirms their email — a manual INSERT here would fail with 401.
+    if (data.session) {
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        user_id: data.user.id,
+        name,
+        email,
+        type,
+        role: 'membro'
+      }, { onConflict: 'user_id' });
+      if (profileError) {
+        console.error('signUp profile upsert failed:', profileError);
+      }
     }
     logActivity('Novo cadastro', email);
     showToast('Conta criada com sucesso! Verifique seu email para confirmar.', 'success');
