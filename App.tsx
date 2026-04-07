@@ -105,6 +105,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
   } else if (event === 'INITIAL_SESSION' && !session) {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });
     setAuthLoading(false);
+    syncEvents();   // garante sync após auth context estabelecido para utilizadores anónimos
     console.log(`[AUTH] no session, loading=false`);
   } else if (event === 'SIGNED_OUT') {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });

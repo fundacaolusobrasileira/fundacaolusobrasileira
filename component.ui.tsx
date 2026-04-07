@@ -747,21 +747,21 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data Início</label>
-                                    <Input value={formData.date || ''} onChange={(e: any) => setFormData({...formData, date: e.target.value})} placeholder="DD MMM AAAA" />
+                                    <input type="date" value={formData.date || ''} onChange={(e: any) => setFormData({...formData, date: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Hora Início</label>
-                                    <Input value={formData.time || ''} onChange={(e: any) => setFormData({...formData, time: e.target.value})} placeholder="HH:MM" />
+                                    <input type="time" value={formData.time || ''} onChange={(e: any) => setFormData({...formData, time: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data Fim</label>
-                                    <Input value={formData.endDate || ''} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} placeholder="Data fim (opcional)" />
+                                    <input type="date" value={formData.endDate || ''} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Hora Fim</label>
-                                    <Input value={formData.endTime || ''} onChange={(e: any) => setFormData({...formData, endTime: e.target.value})} placeholder="Hora fim (opcional)" />
+                                    <input type="time" value={formData.endTime || ''} onChange={(e: any) => setFormData({...formData, endTime: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -895,7 +895,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
 
                         <div className="pt-6 border-t border-slate-100">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Imagem Capa</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Capa Horizontal (topo do evento)</label>
                                 <div className="flex gap-3 items-center">
                                     <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                                         {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={16}/></div>}
@@ -908,7 +908,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Imagem Card (estilo story, 9:16)</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Capa Vertical (9:16)</label>
                                 <div className="flex gap-3 items-center">
                                     <div className="w-8 h-14 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                                         {formData.cardImage ? <img src={formData.cardImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={12}/></div>}

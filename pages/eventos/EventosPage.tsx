@@ -8,6 +8,12 @@ import { Plus, Edit2, Trash2, Calendar, Clock } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import type { Event } from '../../types';
 
+const formatEventDate = (d: string) => {
+  if (!d) return '';
+  const p = new Date(d + 'T00:00:00');
+  return isNaN(p.getTime()) ? d : p.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 const isUpcoming = (event: Event) => {
   if (!event.date) return false;
   const today = new Date();
@@ -50,7 +56,7 @@ const EventCard: React.FC<{
           <div className="p-6 flex flex-col flex-grow">
             <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-sand-600 mb-2">
               <Calendar size={10} />
-              {event.date}
+              {formatEventDate(event.date)}
               {event.time && <span className="text-slate-400 font-normal normal-case tracking-normal">· {event.time}</span>}
             </div>
             <h3 className="text-xl font-light text-brand-900 mb-2">{event.title}</h3>

@@ -552,6 +552,12 @@ export const PillarsGrid = ({ pillars, variant = 'dark' }: { pillars: Pillar[], 
     );
 };
 
+const formatEventDate = (d: string) => {
+  if (!d) return '';
+  const p = new Date(d + 'T00:00:00');
+  return isNaN(p.getTime()) ? d : p.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 export const EventDetailHeader = ({ event }: { event: Event }) => {
     return (
         <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
@@ -570,7 +576,7 @@ export const EventDetailHeader = ({ event }: { event: Event }) => {
                     <div className="flex flex-wrap gap-6 text-white/90">
                          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                              <Calendar size={18} className="text-sand-400" />
-                             <span className="text-sm font-medium">{event.date} {event.time && `• ${event.time}`}</span>
+                             <span className="text-sm font-medium">{formatEventDate(event.date)} {event.time && `• ${event.time}`}</span>
                          </div>
                          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                              <MapPin size={18} className="text-sand-400" />
