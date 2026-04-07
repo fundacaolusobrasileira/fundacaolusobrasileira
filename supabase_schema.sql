@@ -479,3 +479,78 @@ DO $$ BEGIN
       );
   END IF;
 END $$;
+
+
+-- ============================================================
+-- MIGRAÇÃO: 2026-04-06 — Track C: gallery + albums em partners
+-- Track D: tabela benefits
+-- Executar no Supabase SQL Editor.
+-- ============================================================
+
+-- Track C: colunas gallery e albums nos parceiros
+ALTER TABLE public.partners ADD COLUMN IF NOT EXISTS gallery JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE public.partners ADD COLUMN IF NOT EXISTS albums  JSONB DEFAULT '[]'::JSONB;
+
+-- Track A: política RLS para admin inserir profiles (pré-cadastro → conta)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'profiles: inserção admin'
+  ) THEN
+    CREATE POLICY "profiles: inserção admin"
+      ON public.profiles FOR INSERT
+      WITH CHECK (public.is_admin());
+  END IF;
+END $$;
+
+-- Track D: tabela benefits
+CREATE TABLE IF NOT EXISTS public.benefits (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  partner_id  UUID NOT NULL REFERENCES public.partners(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT,
+  category    TEXT NOT NULL DEFAULT 'outro',
+  link        TEXT,
+  active      BOOLEAN NOT NULL DEFAULT TRUE,
+  "order"     INTEGER DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS benefits_partner_id_idx ON public.benefits(partner_id);
+CREATE INDEX IF NOT EXISTS benefits_active_idx     ON public.benefits(active);
+ALTER TABLE public.benefits ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: leitura pública'
+  ) THEN
+    CREATE POLICY "benefits: leitura pública"
+      ON public.benefits FOR SELECT
+      USING (active = TRUE OR auth.role() = 'authenticated');
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: escrita autenticados'
+  ) THEN
+    CREATE POLICY "benefits: escrita autenticados"
+      ON public.benefits FOR INSERT
+      WITH CHECK (auth.role() = 'authenticated');
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: atualização autenticados'
+  ) THEN
+    CREATE POLICY "benefits: atualização autenticados"
+      ON public.benefits FOR UPDATE
+      USING (auth.role() = 'authenticated');
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: exclusão autenticados'
+  ) THEN
+    CREATE POLICY "benefits: exclusão autenticados"
+      ON public.benefits FOR DELETE
+      USING (auth.role() = 'authenticated');
+  END IF;
+END $$;

@@ -10,12 +10,18 @@ export { getMemberByTier };
 const PARTNER_DB_COLUMNS = new Set([
   'name', 'type', 'category', 'role', 'bio', 'summary', 'full',
   'image', 'avatar', 'country', 'website', 'social_links', 'tags',
-  'tier', 'since', 'active', 'featured', 'order',
+  'tier', 'since', 'active', 'featured', 'order', 'gallery', 'albums',
 ]);
 
 const normalize = (p: any): Partner => {
   const { social_links, ...rest } = p;
-  return { ...rest, type: p.type || 'pessoa', socialLinks: social_links || {} };
+  return {
+    ...rest,
+    type: p.type || 'pessoa',
+    socialLinks: social_links || {},
+    gallery: p.gallery || [],
+    albums: p.albums || [],
+  };
 };
 
 export const syncMembers = async () => {

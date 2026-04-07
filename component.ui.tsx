@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Download, Link as LinkIcon, Link2, Share2, Loader2, Image as ImageIcon, Check, Lock, Trash2, Edit, Plus, ExternalLink, Search, Star, Upload, Mail, Settings, User, AlertTriangle, CheckCircle, Info, AlertCircle as AlertIcon } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Download, Link as LinkIcon, Link2, Share2, Loader2, Image as ImageIcon, Check, Lock, Trash2, Edit, Plus, ExternalLink, Search, Star, Upload, Mail, Settings, User, AlertTriangle, CheckCircle, Info, AlertCircle as AlertIcon, Crown, Shield, ChevronDown } from 'lucide-react';
 import type { GalleryItem, SocialLinks, Partner, Event, PreCadastro, ActivityLogItem } from './types';
 import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
 import { resolveGalleryItemSrc, saveMediaBlob, uploadSingleImage } from './services/media.service';
-import { loginAsEditor } from './services/auth.service';
+import { loginAsEditor, convertPreCadastroToAccount } from './services/auth.service';
 import { createEvent, updateEvent, deleteEvent, addMediaToEvent, addUrlMediaToEvent, addEventImagesFromFiles, approveCommunityMedia, rejectCommunityMedia } from './services/events.service';
 import { createMember, updateMember } from './services/members.service';
 import { updatePreCadastro, deletePreCadastro, convertPreCadastroToMember } from './services/precadastros.service';
@@ -1500,9 +1500,190 @@ const STATUS_META: Record<string, { label: string; dot: string }> = {
     convertido: { label: 'Convertido', dot: 'bg-slate-400' },
 };
 
+// --- CONVERT PRE-CADASTRO TO ACCOUNT DIALOG ---
+const ROLE_OPTIONS = [
+  { value: 'membro' as const,  label: 'Membro',  icon: User,   desc: 'Acesso de visualização apenas.' },
+  { value: 'editor' as const,  label: 'Editor',  icon: Shield, desc: 'Pode criar e editar eventos e membros.' },
+];
+
+const ConvertToAccountDialog = ({
+  isOpen, onClose, precadastro, onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  precadastro: PreCadastro | null;
+  onSuccess: (id: string) => void;
+}) => {
+  const [role, setRole] = React.useState<'membro' | 'editor'>('membro');
+  const [partnerId, setPartnerId] = React.useState<string | null>(null);
+  const [partnerSearch, setPartnerSearch] = React.useState('');
+  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const pickerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (isOpen) { setRole('membro'); setPartnerId(null); setPartnerSearch(''); setPickerOpen(false); }
+  }, [isOpen, precadastro?.id]);
+
+  React.useEffect(() => {
+    if (!pickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [pickerOpen]);
+
+  if (!isOpen || !precadastro) return null;
+
+  const filteredPartners = PARTNERS.filter(p =>
+    p.name.toLowerCase().includes(partnerSearch.toLowerCase())
+  );
+  const selectedPartner = partnerId ? PARTNERS.find(p => p.id === partnerId) : null;
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    const result = await convertPreCadastroToAccount({
+      name: precadastro.name,
+      email: precadastro.email,
+      type: precadastro.type || 'individual',
+      role,
+      partnerId,
+    });
+    if (result.ok) {
+      await updatePreCadastro(precadastro.id, { status: 'convertido' });
+      onSuccess(precadastro.id);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md z-[9999]">
+      <ModalHeader onClose={onClose}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-brand-900 rounded-lg flex items-center justify-center shrink-0">
+            <Crown size={16} className="text-sand-400" />
+          </div>
+          <div>
+            <div className="font-semibold text-brand-900 text-base">Criar Conta</div>
+            <div className="text-xs text-slate-400 font-normal">Converter pré-cadastro em utilizador</div>
+          </div>
+        </div>
+      </ModalHeader>
+
+      <div className="p-6 space-y-6">
+        {/* Resumo do pré-cadastro */}
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+          <p className="font-semibold text-slate-900 text-sm">{precadastro.name}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{precadastro.email}</p>
+          {precadastro.message && (
+            <p className="text-xs text-slate-400 mt-2 italic border-t border-slate-100 pt-2">"{precadastro.message}"</p>
+          )}
+        </div>
+
+        {/* Role */}
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 block">Permissão</label>
+          <div className="flex gap-3">
+            {ROLE_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setRole(value)}
+                className={`flex-1 py-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${
+                  role === value
+                    ? value === 'editor'
+                      ? 'border-brand-700 bg-brand-50 text-brand-900'
+                      : 'border-slate-300 bg-slate-100 text-slate-700'
+                    : 'border-slate-200 text-slate-300 hover:border-slate-300 hover:text-slate-500'
+                }`}
+              >
+                <Icon size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-2 ml-1">
+            {ROLE_OPTIONS.find(r => r.value === role)?.desc}
+          </p>
+        </div>
+
+        {/* Partner picker */}
+        <div>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 block">Vincular a Perfil (opcional)</label>
+          <div ref={pickerRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(v => !v)}
+              className="w-full flex items-center justify-between px-3 py-2.5 border border-slate-200 rounded-xl text-sm hover:border-brand-700 transition-colors bg-white"
+            >
+              <span className={selectedPartner ? 'text-slate-900' : 'text-slate-400'}>
+                {selectedPartner ? selectedPartner.name : 'Selecionar perfil...'}
+              </span>
+              <ChevronDown size={14} className="text-slate-400 shrink-0" />
+            </button>
+            {pickerOpen && (
+              <div className="absolute z-50 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                <div className="p-2 border-b border-slate-100">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={partnerSearch}
+                    onChange={e => setPartnerSearch(e.target.value)}
+                    placeholder="Pesquisar membro..."
+                    className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg outline-none focus:border-brand-700"
+                  />
+                </div>
+                <ul className="max-h-48 overflow-y-auto">
+                  <li>
+                    <button onClick={() => { setPartnerId(null); setPickerOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-xs text-slate-400 hover:bg-slate-50 italic">
+                      Sem vínculo
+                    </button>
+                  </li>
+                  {filteredPartners.map(p => (
+                    <li key={p.id}>
+                      <button
+                        onClick={() => { setPartnerId(p.id); setPickerOpen(false); setPartnerSearch(''); }}
+                        className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        {p.name}
+                      </button>
+                    </li>
+                  ))}
+                  {filteredPartners.length === 0 && (
+                    <li className="px-3 py-2 text-xs text-slate-400 italic">Nenhum resultado</li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="text-[10px] text-slate-400 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">
+          O utilizador receberá um email de confirmação. Após confirmar, define a sua password em <strong>"Esqueci a password"</strong>.
+        </p>
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={onClose} disabled={loading}
+            className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50">
+            Cancelar
+          </button>
+          <button onClick={handleConfirm} disabled={loading}
+            className="flex-1 py-2.5 rounded-xl bg-brand-900 text-white text-sm font-semibold hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <Crown size={14} />}
+            {loading ? 'Criando...' : 'Criar Conta'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
     const [filter, setFilter] = React.useState<string>('todos');
     const [tick, setTick] = React.useState(0);
+    const [convertTarget, setConvertTarget] = React.useState<PreCadastro | null>(null);
 
     React.useEffect(() => {
         const update = () => setTick(t => t + 1);
@@ -1550,6 +1731,13 @@ export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
                     </button>
                 ))}
             </div>
+
+            <ConvertToAccountDialog
+                isOpen={!!convertTarget}
+                onClose={() => setConvertTarget(null)}
+                precadastro={convertTarget}
+                onSuccess={() => setConvertTarget(null)}
+            />
 
             <div className="flex-grow overflow-y-auto p-4 bg-slate-50 custom-scrollbar">
                 <div className="space-y-3">
@@ -1620,17 +1808,18 @@ export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
                                         </button>
                                     )}
                                     {pre.status !== 'convertido' && (
-                                        <button onClick={() => convertPreCadastroToMember(pre.id)} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-brand-900 text-white hover:bg-brand-800 transition-colors">
+                                        <button onClick={() => convertPreCadastroToMember(pre.id)} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors">
                                             Converter em {pre.registrationType === 'parceiro' ? 'Parceiro' : 'Membro'}
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => handleCopyEmail(pre.email)}
-                                        className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors"
-                                        title="Copia o e-mail para criar conta no Supabase"
-                                    >
-                                        Conceder Acesso
-                                    </button>
+                                    {pre.status !== 'convertido' && (
+                                        <button
+                                            onClick={() => setConvertTarget(pre)}
+                                            className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-brand-900 text-white hover:bg-black transition-colors flex items-center gap-1.5"
+                                        >
+                                            <Crown size={10} /> Criar Conta
+                                        </button>
+                                    )}
                                     <button onClick={() => deletePreCadastro(pre.id)} className="ml-auto text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
                                         Eliminar
                                     </button>

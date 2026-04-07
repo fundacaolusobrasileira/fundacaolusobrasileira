@@ -47,6 +47,8 @@ export interface Partner {
   tier?: MemberTier;
   summary?: string;
   full?: string;
+  gallery?: GalleryItem[];
+  albums?: PartnerAlbum[];
 }
 
 export interface ContentBlock {
@@ -87,6 +89,15 @@ export interface GalleryItem {
   status: MediaStatus;
   createdAt: string;
   order: number;
+  album?: string;
+}
+
+export interface PartnerAlbum {
+  id: string;
+  title: string;
+  description?: string;
+  coverImage?: string;
+  createdAt: string;
 }
 
 export interface EventLinks {
@@ -152,6 +163,33 @@ export type PendingMediaSubmission = {
   userId?: string;
   createdAt: string;
 };
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  type: string;          // 'individual' | 'institucional'
+  role: string;          // 'membro' | 'editor' | 'admin'
+  phone?: string | null;
+  partner_id?: string | null;
+  partner?: { id: string; name: string } | null;
+  created_at: string;
+}
+
+export type BenefitCategory = 'desconto' | 'acesso' | 'serviço' | 'outro';
+
+export interface Benefit {
+  id: string;
+  partner_id: string;
+  title: string;
+  description?: string;
+  category: BenefitCategory;
+  link?: string;
+  active: boolean;
+  order: number;
+  created_at: string;
+}
 
 export type AuthSession = {
   isLoggedIn: boolean;

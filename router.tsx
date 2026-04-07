@@ -37,6 +37,7 @@ const DashboardEventosPage = lazy(() => import('./pages/dashboard/DashboardMedia
 const DashboardMediaGerirPage = lazy(() => import('./pages/dashboard/DashboardMediaPage').then(m => ({ default: m.DashboardMediaGerirPage })));
 const PrivacyPage = lazy(() => import('./pages/legal/LegalPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./pages/legal/LegalPage').then(m => ({ default: m.TermsPage })));
+const BeneficiosPage = lazy(() => import('./pages/beneficios/BeneficiosPage').then(m => ({ default: m.BeneficiosPage })));
 
 export const AppRouter = () => (
   <Suspense fallback={<PremiumLoader />}>
@@ -58,6 +59,7 @@ export const AppRouter = () => (
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/dashboard/eventos" element={<ProtectedRoute><DashboardEventosPage /></ProtectedRoute>} />
       <Route path="/dashboard/eventos/:id/midias" element={<ProtectedRoute><DashboardMediaGerirPage /></ProtectedRoute>} />
+      <Route path="/beneficios" element={<BeneficiosPage />} />
       <Route path="/privacidade" element={<PrivacyPage />} />
       <Route path="/termos" element={<TermsPage />} />
       <Route path="*" element={<NotFoundPage />} />

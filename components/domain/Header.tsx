@@ -17,6 +17,7 @@ export const Header = () => {
     { name: 'Pessoas', path: '/administracao' },
     { name: 'Eventos', path: '/eventos' },
     { name: 'Parceiros', path: '/parceiros' },
+    { name: 'Benefícios', path: '/beneficios' },
   ];
 
   useEffect(() => {

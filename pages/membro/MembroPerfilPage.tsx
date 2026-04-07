@@ -1,17 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Upload, Loader2, User } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Upload, Loader2, User, Images, Gift } from 'lucide-react';
 import { SectionWrapper, Card, Badge, Button, Input, AccessDeniedModal, LoginModal, PremiumLoader } from '../../components/ui';
 import { SocialIcons } from '../../components/ui';
 import { PARTNERS, FLB_STATE_EVENT, isEditor, showToast, AUTH_LOADING, AUTH_SESSION } from '../../store/app.store';
 import { updateMember } from '../../services/members.service';
 import { saveMediaBlob } from '../../services/media.service';
+import { fetchBenefitsByPartner } from '../../services/benefits.service';
+import { PartnerGalleryEditor } from './PartnerGalleryEditor';
+import { BenefitEditorSection } from './BenefitEditorSection';
 import { usePageMeta } from '../../hooks/usePageMeta';
+import type { Benefit } from '../../types';
 
 export const MembroPerfilPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [member, setMember] = useState<any>(null);
+    const [benefits, setBenefits] = useState<Benefit[]>([]);
 
     useEffect(() => {
         const slugify = (name: string) =>
@@ -21,7 +26,10 @@ export const MembroPerfilPage = () => {
             PARTNERS.find(p => p.id === id) ?? PARTNERS.find(p => slugify(p.name) === id);
 
         const found = findMember();
-        if(found) setMember(found);
+        if(found) {
+            setMember(found);
+            fetchBenefitsByPartner(found.id).then(data => setBenefits(data.filter(b => b.active)));
+        }
 
         const handleUpdate = () => {
             const updated = findMember();
@@ -93,6 +101,63 @@ export const MembroPerfilPage = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Gallery section */}
+                {member.gallery && member.gallery.filter((g: any) => g.status === 'published').length > 0 && (
+                    <div className="mt-10 animate-fadeInUpSlow delay-200">
+                        <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden p-10 md:p-14">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 pb-2 flex items-center gap-2">
+                                <Images size={13} /> Galeria
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {member.gallery
+                                    .filter((g: any) => g.status === 'published')
+                                    .map((item: any) => (
+                                        <div key={item.id} className="rounded-xl overflow-hidden aspect-square">
+                                            <img
+                                                src={item.url}
+                                                alt={item.caption || ''}
+                                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                            />
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Benefits section */}
+                {benefits.length > 0 && (
+                    <div className="mt-10 animate-fadeInUpSlow delay-300">
+                        <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden p-10 md:p-14">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 pb-2 flex items-center gap-2">
+                                <Gift size={13} /> Benefícios
+                            </h3>
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {benefits.map(b => (
+                                    <div key={b.id} className="bg-slate-50 rounded-2xl border border-slate-100 p-5">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border mb-3 ${
+                                            b.category === 'desconto' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                            b.category === 'acesso'   ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                            b.category === 'serviço'  ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                                                                        'bg-slate-100 text-slate-500 border-slate-200'
+                                        }`}>
+                                            {b.category.charAt(0).toUpperCase() + b.category.slice(1)}
+                                        </span>
+                                        <h4 className="font-semibold text-slate-900 text-sm mb-1">{b.title}</h4>
+                                        {b.description && <p className="text-xs text-slate-500 leading-relaxed mb-3">{b.description}</p>}
+                                        {b.link && (
+                                            <a href={b.link} target="_blank" rel="noreferrer" className="text-xs font-medium text-brand-700 hover:underline flex items-center gap-1">
+                                                Saber mais <ExternalLink size={10} />
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </SectionWrapper>
         </div>
     );
@@ -101,12 +166,13 @@ export const MembroPerfilPage = () => {
 export const MembroEditarPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({ name: '', role: '', summary: '', full: '', image: '', type: 'pessoa', category: '', country: '', website: '', socialLinks: {} });
+  const [formData, setFormData] = useState<any>({ name: '', role: '', summary: '', full: '', image: '', type: 'pessoa', category: '', country: '', website: '', socialLinks: {}, gallery: [], albums: [] });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'galeria' | 'beneficios'>('info');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   usePageMeta("Editar Perfil – Fundacao Luso-Brasileira", "Atualize as informacoes do seu perfil de membro.");
@@ -221,12 +287,45 @@ export const MembroEditarPage = () => {
             <Card className="p-8 md:p-12 lusobrasil-border relative overflow-hidden bg-white/80 backdrop-blur-md">
                <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-brand-900/15 to-sand-400/15" />
 
-               <div className="text-center mb-10">
+               <div className="text-center mb-8">
                  <h1 className="text-3xl font-light text-slate-900 mb-2">Editar Perfil</h1>
                  <p className="text-slate-500 font-light">Atualize as informacoes do membro.</p>
                </div>
 
-               <div className="space-y-6">
+               {/* Tabs */}
+               <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-8">
+                 {([
+                   { key: 'info',      label: 'Informação', icon: User },
+                   { key: 'galeria',   label: 'Galeria',    icon: Images },
+                   { key: 'beneficios', label: 'Benefícios', icon: Gift },
+                 ] as const).map(({ key, label, icon: Icon }) => (
+                   <button
+                     key={key}
+                     onClick={() => setActiveTab(key)}
+                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                       activeTab === key
+                         ? 'bg-white text-brand-900 shadow-sm'
+                         : 'text-slate-500 hover:text-slate-700'
+                     }`}
+                   >
+                     <Icon size={13} /> {label}
+                   </button>
+                 ))}
+               </div>
+
+               {activeTab === 'galeria' && id && (
+                 <PartnerGalleryEditor
+                   gallery={formData.gallery || []}
+                   albums={formData.albums || []}
+                   onChange={(gallery, albums) => setFormData((prev: any) => ({ ...prev, gallery, albums }))}
+                 />
+               )}
+
+               {activeTab === 'beneficios' && id && (
+                 <BenefitEditorSection partnerId={id} />
+               )}
+
+               <div className={activeTab === 'info' ? 'space-y-6' : 'hidden'}>
                  <div>
                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nome de Exibicao</label>
                    <Input value={formData.name || ''} onChange={(e: any) => handleChange('name', e.target.value)} />
@@ -425,12 +524,16 @@ export const MembroEditarPage = () => {
                    </div>
                  </div>
 
+               </div>
+
+               {/* Save button: visible for info and galeria tabs */}
+               {activeTab !== 'beneficios' && (
                  <div className="pt-6">
                     <Button onClick={handleSave} className="w-full text-xs py-4" disabled={loading}>
                        {loading ? 'Salvando...' : 'Salvar Alteracoes'}
                     </Button>
                  </div>
-               </div>
+               )}
             </Card>
          </div>
       </SectionWrapper>
