@@ -540,7 +540,7 @@ export const HomePage = () => {
             {(() => {
               const publicEvents = getPublicEvents()
                 .slice()
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .slice(0, 3);
               if (EVENTS_ERROR) return (
                 <div className="col-span-3 text-center py-12 text-slate-400 font-light">
