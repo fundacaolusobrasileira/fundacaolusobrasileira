@@ -5,6 +5,7 @@ import { StatCard, ListRow, EventEditorModal, MemberEditorModal, ActivityFeed, U
 import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Edit2, Trash2, Settings, UserPlus, Loader2, Mail, Copy, Check } from 'lucide-react';
 import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, FLB_STATE_EVENT, isEditor, isAdmin } from '../../store/app.store';
 import { UserManagerModal } from './UserManagerModal';
+import { BenefitsManagerSection } from './BenefitsManagerSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
@@ -316,6 +317,8 @@ export const DashboardPage = () => {
             </div>
           </Card>
         </div>
+
+        <BenefitsManagerSection />
 
       </SectionWrapper>
 

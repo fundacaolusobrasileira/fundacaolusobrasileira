@@ -128,7 +128,7 @@ export const MembroPerfilPage = () => {
                 )}
 
                 {/* Legaltech Space special area */}
-                {member.id === 'legaltech-space' && (
+                {(member.id === 'legaltech-space' || member.name === 'Legaltech Space Group') && (
                     <div className="mt-10 animate-fadeInUpSlow delay-200">
                         <div className="bg-brand-900 rounded-[2.5rem] shadow-xl overflow-hidden p-10 md:p-14 relative">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(201,175,136,0.12),transparent_60%)] pointer-events-none" />
