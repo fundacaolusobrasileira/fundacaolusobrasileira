@@ -1,6 +1,7 @@
 // pages/parceiros/ParceiroPerfilPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { safeUrl } from '../../utils/url';
 import { ArrowLeft, ExternalLink, Tag } from 'lucide-react';
 import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
 import { PARTNERS_SEED } from '../../data/partners.data';
@@ -137,7 +138,7 @@ export const ParceiroPerfilPage = () => {
                     Website
                   </h3>
                   <a
-                    href={partner.website}
+                    href={safeUrl(partner.website)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-brand-900 font-medium hover:text-sand-600 transition-colors"

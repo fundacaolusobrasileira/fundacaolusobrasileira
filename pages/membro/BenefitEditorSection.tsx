@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2, Plus, Loader2, ExternalLink, Check } from 'lucide-react';
+import { safeUrl } from '../../utils/url';
 import {
   fetchBenefitsByPartner,
   createBenefit,
@@ -189,7 +190,7 @@ export const BenefitEditorSection = ({ partnerId }: { partnerId: string }) => {
                   <p className="text-sm font-medium text-slate-800 truncate">{b.title}</p>
                   {b.description && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{b.description}</p>}
                   {b.link && (
-                    <a href={b.link} target="_blank" rel="noreferrer" className="text-[11px] text-brand-700 hover:underline flex items-center gap-1 mt-0.5">
+                    <a href={safeUrl(b.link)} target="_blank" rel="noreferrer" className="text-[11px] text-brand-700 hover:underline flex items-center gap-1 mt-0.5">
                       <ExternalLink size={10} /> {b.link.replace(/^https?:\/\//, '').split('/')[0]}
                     </a>
                   )}

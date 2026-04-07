@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { safeUrl } from '../../utils/url';
 import { ArrowLeft, ExternalLink, Upload, Loader2, User, Images, Gift, ArrowRight } from 'lucide-react';
 import { SectionWrapper, Card, Badge, Button, Input, AccessDeniedModal, LoginModal, PremiumLoader } from '../../components/ui';
 import { SocialIcons } from '../../components/ui';
@@ -91,8 +92,8 @@ export const MembroPerfilPage = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Website</h4>
-                                    {member.website ? (
-                                        <a href={member.website} target="_blank" rel="noreferrer" className="text-sand-500 hover:underline flex items-center gap-1">
+                                    {safeUrl(member.website) ? (
+                                        <a href={safeUrl(member.website)} target="_blank" rel="noreferrer" className="text-sand-500 hover:underline flex items-center gap-1">
                                             {member.website.replace(/^https?:\/\//, '')} <ExternalLink size={12} />
                                         </a>
                                     ) : <span className="text-slate-400">-</span>}
@@ -171,8 +172,8 @@ export const MembroPerfilPage = () => {
                                         </span>
                                         <h4 className="font-semibold text-slate-900 text-sm mb-1">{b.title}</h4>
                                         {b.description && <p className="text-xs text-slate-500 leading-relaxed mb-3">{b.description}</p>}
-                                        {b.link && (
-                                            <a href={b.link} target="_blank" rel="noreferrer" className="text-xs font-medium text-brand-700 hover:underline flex items-center gap-1">
+                                        {safeUrl(b.link) && (
+                                            <a href={safeUrl(b.link)} target="_blank" rel="noreferrer" className="text-xs font-medium text-brand-700 hover:underline flex items-center gap-1">
                                                 Saber mais <ExternalLink size={10} />
                                             </a>
                                         )}

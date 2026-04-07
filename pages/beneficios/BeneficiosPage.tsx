@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { safeUrl } from '../../utils/url';
 import { ExternalLink, Loader2, Gift } from 'lucide-react';
 import { SectionWrapper } from '../../components/ui/Layout';
 import { Reveal } from '../../components/ui/Reveal';
@@ -130,7 +131,7 @@ export const BeneficiosPage = () => {
                           )}
                           {b.link && (
                             <a
-                              href={b.link}
+                              href={safeUrl(b.link)}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-900 transition-colors"
