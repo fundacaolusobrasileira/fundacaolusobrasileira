@@ -12,9 +12,25 @@ export interface PartnerSeed {
   since?: string;
   country?: string;
   tags?: string[];
+  pageRoute?: string;
 }
 
 export const PARTNERS_SEED: PartnerSeed[] = [
+  // PARCEIROS PLATINUM
+  {
+    id: 'legaltech-space',
+    name: 'Legaltech Space Group',
+    type: 'empresa',
+    category: 'Parceiro Platinum',
+    image: 'https://placehold.co/400x200/0f1729/c9af88?text=Legaltech+Space',
+    bio: 'Responsável pela infraestrutura digital da plataforma da Fundação Luso-Brasileira.',
+    bioFull: `A Legaltech Space Group é a empresa por detrás de toda a infraestrutura digital da Fundação Luso-Brasileira. Desde a arquitetura da plataforma ao design de cada componente, a equipa da Legaltech Space construiu de raiz o ecossistema digital que suporta membros, eventos, parceiros e experiências.
+
+Com uma abordagem que combina tecnologia de ponta, design cuidado e estratégia de negócio, a Legaltech Space é mais do que um parceiro tecnológico — é a força criativa por detrás da identidade digital da Fundação.`,
+    pageRoute: '/legaltech-space',
+    tags: ['Tecnologia', 'Design', 'Estratégia', 'Web'],
+  },
+
   // PARCEIROS GOLD
   {
     id: 'edp',

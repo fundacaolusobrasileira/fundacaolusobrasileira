@@ -1,5 +1,6 @@
 // components/domain/PartnerCard.tsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ExpandableText } from '../ui/ExpandableText';
 import type { PartnerSeed } from '../../data/partners.data';
 
@@ -30,7 +31,14 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => (
       previewLines={3}
       textClassName="text-sm text-slate-500 font-light leading-relaxed"
     />
-    {partner.website && (
+    {partner.pageRoute ? (
+      <Link
+        to={partner.pageRoute}
+        className="inline-flex items-center gap-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-sand-500 hover:text-brand-900 transition-colors"
+      >
+        Ver página &rarr;
+      </Link>
+    ) : partner.website && (
       <a
         href={partner.website}
         target="_blank"
