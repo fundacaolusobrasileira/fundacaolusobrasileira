@@ -412,3 +412,70 @@ CREATE POLICY "media: exclusão autenticados"
 -- 2. O bucket "media" já estará configurado
 -- 3. O app estará pronto para usar
 -- ============================================================
+
+
+-- ============================================================
+-- MIGRAÇÃO: 2026-04-06 — partner_id e phone em profiles
+-- Executar apenas uma vez no Supabase SQL Editor
+-- ============================================================
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS partner_id UUID REFERENCES public.partners(id) ON DELETE SET NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+
+CREATE INDEX IF NOT EXISTS profiles_partner_id_idx ON public.profiles(partner_id);
+
+-- Função auxiliar para verificar se o utilizador autenticado é admin
+-- Usa SECURITY DEFINER para contornar RLS ao consultar a própria tabela
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Política: admin pode ler todos os profiles
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'profiles: leitura admin'
+  ) THEN
+    CREATE POLICY "profiles: leitura admin"
+      ON public.profiles FOR SELECT
+      USING (public.is_admin());
+  END IF;
+END $$;
+
+-- Política: admin pode atualizar qualquer profile (para vincular partner, alterar role)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'profiles: atualização admin'
+  ) THEN
+    CREATE POLICY "profiles: atualização admin"
+      ON public.profiles FOR UPDATE
+      USING (public.is_admin());
+  END IF;
+END $$;
+
+
+-- ============================================================
+-- MIGRAÇÃO: 2026-04-06 — upload anónimo para community/
+-- Permite que utilizadores não-autenticados façam upload de
+-- ficheiros para a pasta community/ do bucket media.
+-- Executar no Supabase SQL Editor.
+-- ============================================================
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies
+    WHERE tablename = 'objects'
+      AND schemaname = 'storage'
+      AND policyname = 'media: upload comunidade anónimo'
+  ) THEN
+    CREATE POLICY "media: upload comunidade anónimo"
+      ON storage.objects FOR INSERT
+      WITH CHECK (
+        bucket_id = 'media'
+        AND (name LIKE 'community/%')
+      );
+  END IF;
+END $$;

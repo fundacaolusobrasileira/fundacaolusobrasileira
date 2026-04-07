@@ -4,8 +4,8 @@ import { SectionWrapper, Card, Input, Button, Badge, PremiumLoader } from '../..
 import { LoginModal } from '../../components/ui';
 import { EVENTS, AUTH_SESSION } from '../../store/app.store';
 import { submitCommunityMedia } from '../../services/community-media.service';
-import { subscribeToNewsletter } from '../../services/precadastros.service';
-import { saveMediaBlob } from '../../services/media.service';
+import { subscribeToNewsletter, createPreCadastro } from '../../services/precadastros.service';
+import { saveCommunityMediaBlob } from '../../services/media.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Event } from '../../types';
 import { CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp } from 'lucide-react';
@@ -66,9 +66,17 @@ export const EventoColaborarPage = () => {
     setError('');
     setSubmitting(true);
 
-    // Process Newsletter Subscription if checked
-    if (formData.subscribeNewsletter && formData.email) {
-        subscribeToNewsletter(formData.email);
+    // Não-autenticados: criar pré-cadastro como colaborador automaticamente
+    if (!isLoggedIn) {
+      createPreCadastro({
+        name: formData.authorName,
+        email: formData.email,
+        type: 'individual',
+        registrationType: 'colaborador',
+        message: `Enviou memória do evento: ${event.title}`,
+      });
+    } else if (formData.subscribeNewsletter && formData.email) {
+      subscribeToNewsletter(formData.email);
     }
 
     setTimeout(() => {
@@ -103,7 +111,7 @@ export const EventoColaborarPage = () => {
           setFormData(prev => ({ ...prev, type: type }));
 
           try {
-              const publicUrl = await saveMediaBlob(file);
+              const publicUrl = await saveCommunityMediaBlob(file);
               setFormData(prev => ({ ...prev, url: publicUrl }));
               setError('');
           } catch (err) {
@@ -197,9 +205,7 @@ export const EventoColaborarPage = () => {
                         <div className="flex justify-between items-end mb-2 px-2">
                             <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40">Arquivo da Memoria</label>
                             <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
-                                {isLoggedIn && (
-                                  <button type="button" onClick={() => setUploadMode('upload')} className={`transition-colors pb-1 border-b-2 ${uploadMode === 'upload' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Upload</button>
-                                )}
+                                <button type="button" onClick={() => setUploadMode('upload')} className={`transition-colors pb-1 border-b-2 ${uploadMode === 'upload' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Upload</button>
                                 <button type="button" onClick={() => setUploadMode('link')} className={`transition-colors pb-1 border-b-2 ${uploadMode === 'link' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Link URL</button>
                             </div>
                         </div>
@@ -309,6 +315,12 @@ export const EventoColaborarPage = () => {
                     </div>
 
                     <div className="pt-4">
+                        {!isLoggedIn && (
+                          <p className="text-white/30 text-[10px] text-center mb-4 font-light leading-relaxed">
+                            Ao enviar, ficará registado como colaborador da Fundação.<br />
+                            O seu envio será analisado antes de ser publicado.
+                          </p>
+                        )}
                         {error && <p className="text-red-400 text-xs text-center mb-4 font-medium animate-pulse">{error}</p>}
                         <Button variant="gold" type="submit" className="w-full text-xs rounded-2xl py-5 shadow-[0_0_20px_rgba(201,175,136,0.15)] hover:shadow-[0_0_30px_rgba(201,175,136,0.3)]" disabled={submitting}>
                             {submitting ? 'Enviando...' : 'Enviar Memoria'}

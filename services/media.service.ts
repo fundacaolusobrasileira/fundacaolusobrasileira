@@ -26,6 +26,15 @@ export async function resolveGalleryItemSrc(item: { url: string }): Promise<stri
   return item.url || null;
 }
 
+// Upload para a pasta community/ — não requer autenticação (política RLS específica)
+export const saveCommunityMediaBlob = async (file: File): Promise<string> => {
+  const fileName = `community/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+  const { error } = await supabase.storage.from('media').upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+  return data.publicUrl;
+};
+
 export const deleteMediaBlob = async (url: string): Promise<void> => {
   try {
     const fileName = url.split('/').pop();
