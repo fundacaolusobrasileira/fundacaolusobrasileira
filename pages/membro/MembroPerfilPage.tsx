@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Upload, Loader2, User, Images, Gift } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, ExternalLink, Upload, Loader2, User, Images, Gift, ArrowRight } from 'lucide-react';
 import { SectionWrapper, Card, Badge, Button, Input, AccessDeniedModal, LoginModal, PremiumLoader } from '../../components/ui';
 import { SocialIcons } from '../../components/ui';
 import { PARTNERS, FLB_STATE_EVENT, isEditor, showToast, AUTH_LOADING, AUTH_SESSION } from '../../store/app.store';
@@ -45,8 +45,8 @@ export const MembroPerfilPage = () => {
         <div className="min-h-screen pt-32 pb-20 bg-[#F8F9FB]">
             <SectionWrapper>
                 <div className="mb-8 animate-fadeInUpSlow">
-                    <Button variant="ghost" onClick={() => navigate('/membros')} className="pl-0 gap-2 text-slate-400 hover:text-brand-900">
-                        <ArrowLeft size={16} /> Voltar para Lista
+                    <Button variant="ghost" onClick={() => navigate(-1)} className="pl-0 gap-2 text-slate-400 hover:text-brand-900">
+                        <ArrowLeft size={16} /> Voltar
                     </Button>
                 </div>
 
@@ -122,6 +122,30 @@ export const MembroPerfilPage = () => {
                                         </div>
                                     ))
                                 }
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Legaltech Space special area */}
+                {member.id === 'legaltech-space' && (
+                    <div className="mt-10 animate-fadeInUpSlow delay-200">
+                        <div className="bg-brand-900 rounded-[2.5rem] shadow-xl overflow-hidden p-10 md:p-14 relative">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(201,175,136,0.12),transparent_60%)] pointer-events-none" />
+                            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sand-400 mb-2">Espaço Dedicado</p>
+                                    <h3 className="text-2xl md:text-3xl font-serif text-white mb-3">Legaltech Space Group</h3>
+                                    <p className="text-white/60 font-light leading-relaxed max-w-lg">
+                                        Conheça o ecossistema, os serviços e a equipa do espaço de inovação jurídica e tecnológica da Fundação Luso-Brasileira.
+                                    </p>
+                                </div>
+                                <Link
+                                    to="/legaltech-space"
+                                    className="shrink-0 inline-flex items-center gap-3 px-7 py-4 bg-sand-400 text-brand-900 text-xs font-bold uppercase tracking-widest rounded-full hover:bg-sand-300 transition-colors"
+                                >
+                                    Visitar Espaço <ArrowRight size={14} />
+                                </Link>
                             </div>
                         </div>
                     </div>

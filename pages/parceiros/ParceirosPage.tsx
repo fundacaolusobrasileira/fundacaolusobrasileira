@@ -1,5 +1,5 @@
 // pages/parceiros/ParceirosPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { PARTNERS_SEED } from '../../data/partners.data';
 import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
@@ -7,7 +7,7 @@ import { PartnerCard } from '../../components/domain/PartnerCard';
 import { Reveal } from '../../components/ui/Reveal';
 import { Badge } from '../../components/ui/Badge';
 import { SectionWrapper } from '../../components/ui/Layout';
-import { Star, Award, Shield, Landmark, Heart, Store } from 'lucide-react';
+import { Star, Award, Shield, Landmark, Heart, Store, Search, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const SectionDivider = ({ icon: Icon, label, dark }: { icon: React.ElementType; label: string; dark?: boolean }) => (
@@ -32,6 +32,7 @@ export const ParceirosPage = () => {
   usePageMeta('Parceiros – Fundação Luso-Brasileira', 'Rede de patrocinadores, parceiros e amigos da Fundação Luso-Brasileira.');
 
   const [tick, setTick] = useState(0);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const update = () => setTick(t => t + 1);
@@ -39,15 +40,29 @@ export const ParceirosPage = () => {
     return () => window.removeEventListener(FLB_STATE_EVENT, update);
   }, []);
 
-  // Use live Supabase data when available, otherwise fall back to seed data
-  const source = PARTNERS.length > 0 ? PARTNERS : PARTNERS_SEED;
+  // Use live Supabase data when available, otherwise fall back to seed data.
+  // Merge pageRoute from seed so custom pages (e.g. /legaltech-space) are preserved.
+  const source = useMemo(() => (PARTNERS.length > 0 ? PARTNERS : PARTNERS_SEED).map(p => ({
+    ...p,
+    pageRoute: (p as any).pageRoute ?? PARTNERS_SEED.find(s => s.id === p.id)?.pageRoute,
+  })), [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const platinum = source.filter(p => p.category === 'Parceiro Platinum');
-  const gold = source.filter(p => p.category === 'Parceiro Gold');
-  const silver = source.filter(p => p.category === 'Parceiro Silver');
-  const apoioPublico = source.filter(p => p.category === 'Apoio Público');
-  const outroApoio = source.filter(p => p.category === 'Outro Apoio');
-  const exposicao = source.filter(p => p.category === 'Exposição');
+  const filtered = useMemo(() => {
+    if (!search.trim()) return source;
+    const q = search.toLowerCase();
+    return source.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.bio || '').toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+    );
+  }, [source, search]);
+
+  const platinum = filtered.filter(p => p.category === 'Parceiro Platinum');
+  const gold = filtered.filter(p => p.category === 'Parceiro Gold');
+  const silver = filtered.filter(p => p.category === 'Parceiro Silver');
+  const apoioPublico = filtered.filter(p => p.category === 'Apoio Público');
+  const outroApoio = filtered.filter(p => p.category === 'Outro Apoio');
+  const exposicao = filtered.filter(p => p.category === 'Exposição');
 
   return (
     <main className="bg-white min-h-screen overflow-hidden">
@@ -63,6 +78,21 @@ export const ParceirosPage = () => {
             <p className="text-lg text-white/60 font-light leading-relaxed max-w-2xl">
               As instituições e pessoas que sustentam a ponte cultural e empresarial entre Portugal e Brasil.
             </p>
+            <div className="mt-10 relative max-w-2xl">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" aria-hidden="true" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Pesquisar parceiro por nome, categoria..."
+                className="w-full bg-white/10 backdrop-blur border border-white/15 rounded-full py-4 pl-12 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-sand-400/60 focus:bg-white/15 transition-all duration-300"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors p-1" aria-label="Limpar pesquisa">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </Reveal>
         </div>
       </section>

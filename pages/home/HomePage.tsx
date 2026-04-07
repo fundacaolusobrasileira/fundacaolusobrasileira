@@ -497,7 +497,7 @@ export const HomePage = () => {
     </div>
 
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-      {PARTNERS.filter(p => p.category !== 'Governança').map((partner, idx) => (
+      {PARTNERS.filter(p => ['Parceiro Platinum', 'Parceiro Gold', 'Parceiro Silver'].includes(p.category) || p.featured).map((partner, idx) => (
         <Reveal key={partner.id} delay={idx * 60} className="h-full">
           <Link
             to={`/membro/${partner.id}`}
@@ -531,7 +531,7 @@ export const HomePage = () => {
               <div>
                 <Badge variant="light" className="mb-4 bg-slate-100 text-slate-600 border-slate-200">Agenda</Badge>
                 <h2 className="text-3xl md:text-4xl font-serif text-brand-900 leading-tight">
-                  Próximos <span className="italic text-sand-500">Eventos</span>
+                  Eventos <span className="italic text-sand-500">Fundação</span>
                 </h2>
               </div>
             </Reveal>
@@ -539,7 +539,10 @@ export const HomePage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {(() => {
-              const publicEvents = getPublicEvents().slice(0, 3);
+              const publicEvents = getPublicEvents()
+                .slice()
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .slice(0, 3);
               if (EVENTS_ERROR) return (
                 <div className="col-span-3 text-center py-12 text-slate-400 font-light">
                   Não foi possível carregar os eventos.
