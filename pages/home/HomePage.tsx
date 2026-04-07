@@ -90,32 +90,25 @@ export const HomePage = () => {
     return () => window.removeEventListener(FLB_STATE_EVENT, update);
   }, []);
 
+  const updateHeroPointer = (clientX: number, clientY: number) => {
+    if (!heroRef.current) return;
+    const rect = heroRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const ratio = Math.max(0, Math.min(1, x / rect.width));
+    requestAnimationFrame(() => {
+      if (heroRef.current) {
+        heroRef.current.style.setProperty('--mouse-ratio', ratio.toString());
+        heroRef.current.style.setProperty('--mouse-x', `${x}px`);
+        heroRef.current.style.setProperty('--mouse-y', `${y}px`);
+      }
+    });
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!heroRef.current) return;
-      const rect = heroRef.current.getBoundingClientRect();
-
-      // Coordinates relative to the hero section
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      // Parallax ratio (0 to 1 based on width)
-      const ratio = Math.max(0, Math.min(1, x / rect.width));
-
-      // Use requestAnimationFrame for smoother performance
-      requestAnimationFrame(() => {
-          if (heroRef.current) {
-              heroRef.current.style.setProperty('--mouse-ratio', ratio.toString());
-              heroRef.current.style.setProperty('--mouse-x', `${x}px`);
-              heroRef.current.style.setProperty('--mouse-y', `${y}px`);
-          }
-      });
-    };
-
+    const handleMouseMove = (e: MouseEvent) => updateHeroPointer(e.clientX, e.clientY);
     window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   if (loading) {
@@ -138,6 +131,9 @@ export const HomePage = () => {
         ref={heroRef}
         onMouseEnter={() => setIsHoveringHero(true)}
         onMouseLeave={() => setIsHoveringHero(false)}
+        onTouchStart={(e) => { setIsHoveringHero(true); updateHeroPointer(e.touches[0].clientX, e.touches[0].clientY); }}
+        onTouchMove={(e) => { updateHeroPointer(e.touches[0].clientX, e.touches[0].clientY); }}
+        onTouchEnd={() => setIsHoveringHero(false)}
         className="relative z-30 pt-36 pb-24 md:pt-64 md:pb-48 px-6 bg-brand-900 min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center group"
         style={{ '--mouse-ratio': '0.5', '--mouse-x': '50%', '--mouse-y': '50%' } as React.CSSProperties}
         aria-label="Introducao"
@@ -171,7 +167,7 @@ export const HomePage = () => {
 
         {/* Layer 2: Spotlight Reveal (Sharp & Bright) - Only visible via mask around mouse */}
         <div
-            className={`hidden md:block absolute inset-0 pointer-events-none overflow-hidden select-none z-10 transition-opacity duration-700 ease-out ${isHoveringHero ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 pointer-events-none overflow-hidden select-none z-10 transition-opacity duration-700 ease-out ${isHoveringHero ? 'opacity-100' : 'opacity-0'}`}
             style={{
                 maskImage: 'radial-gradient(circle 350px at var(--mouse-x) var(--mouse-y), black 0%, transparent 70%)',
                 WebkitMaskImage: 'radial-gradient(circle 350px at var(--mouse-x) var(--mouse-y), black 0%, transparent 70%)'
@@ -179,7 +175,7 @@ export const HomePage = () => {
         >
            {/* PORTUGAL FLAG - LEFT (SHARP) */}
            <div
-             className="absolute top-[-20%] left-[-5%] w-[60vw] h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
+             className="absolute top-[-5%] md:top-[-20%] left-[-15%] md:left-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
              style={{
                backgroundImage: `url('/flag-portugal.svg')`,
                transform: 'translateX(calc(var(--mouse-ratio) * -40px)) scale(1.2)'
@@ -188,7 +184,7 @@ export const HomePage = () => {
 
            {/* BRAZIL FLAG - RIGHT (SHARP) */}
            <div
-             className="absolute top-[-20%] right-[-5%] w-[60vw] h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
+             className="absolute top-[-5%] md:top-[-20%] right-[-15%] md:right-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
              style={{
                backgroundImage: `url('/flag-brazil.svg')`,
                transform: 'translateX(calc((1 - var(--mouse-ratio)) * 40px)) scale(1.2)'
