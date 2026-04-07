@@ -114,9 +114,8 @@ const SERVICES = [
   },
 ];
 
-// Initials avatar for Sandro Sanches (replace src with real photo base64 when available)
 const SANDRO_PHOTO =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23C9AF88'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia,serif' font-size='24' fill='%23162040'%3ESS%3C/text%3E%3C/svg%3E";
+  'https://media.licdn.com/dms/image/v2/D4D03AQFxCoviPbJ-lQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1669909237046?e=2147483647&v=beta&t=vWFMH2pXrGbpTf1w3LS_s41n-qe_sXwgf0S1hLZdKi4';
 
 export const LegaltechSpacePage = () => {
   usePageMeta(

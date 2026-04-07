@@ -39,6 +39,7 @@ const PrivacyPage = lazy(() => import('./pages/legal/LegalPage').then(m => ({ de
 const TermsPage = lazy(() => import('./pages/legal/LegalPage').then(m => ({ default: m.TermsPage })));
 const BeneficiosPage = lazy(() => import('./pages/beneficios/BeneficiosPage').then(m => ({ default: m.BeneficiosPage })));
 const LegaltechSpacePage = lazy(() => import('./pages/legaltech-space/LegaltechSpacePage').then(m => ({ default: m.LegaltechSpacePage })));
+const ParceiroPerfilPage = lazy(() => import('./pages/parceiros/ParceiroPerfilPage').then(m => ({ default: m.ParceiroPerfilPage })));
 
 export const AppRouter = () => (
   <Suspense fallback={<PremiumLoader />}>
@@ -48,6 +49,7 @@ export const AppRouter = () => (
       <Route path="/administracao" element={<AdminPage />} />
       <Route path="/membros" element={<Navigate to="/administracao" replace />} />
       <Route path="/parceiros" element={<ParceirosPage />} />
+      <Route path="/parceiros/:id" element={<ParceiroPerfilPage />} />
       <Route path="/membro/:id" element={<MembroPerfilPage />} />
       <Route path="/membro/:id/editar" element={<MembroEditarPage />} />
       <Route path="/eventos" element={<EventosPage />} />

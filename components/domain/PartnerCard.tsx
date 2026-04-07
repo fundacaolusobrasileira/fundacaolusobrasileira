@@ -46,19 +46,13 @@ const CardInner: React.FC<PartnerCardProps> = ({ partner }) => (
 
 export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
   const cardClass =
-    'bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-sand-400/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-500 flex flex-col h-full';
+    'bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-sand-400/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-500 flex flex-col h-full cursor-pointer';
 
-  if (partner.pageRoute) {
-    return (
-      <Link to={partner.pageRoute} className={`${cardClass} cursor-pointer`}>
-        <CardInner partner={partner} />
-      </Link>
-    );
-  }
+  const route = partner.pageRoute ?? `/parceiros/${partner.id}`;
 
   return (
-    <div className={cardClass}>
+    <Link to={route} className={cardClass}>
       <CardInner partner={partner} />
-    </div>
+    </Link>
   );
 };
