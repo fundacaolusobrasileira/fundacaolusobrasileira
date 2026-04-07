@@ -264,17 +264,17 @@ CREATE POLICY "partners: leitura pública"
   ON public.partners FOR SELECT
   USING (true);
 
-CREATE POLICY "partners: inserção autenticados"
+CREATE POLICY "partners: inserção editor"
   ON public.partners FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "partners: atualização autenticados"
+CREATE POLICY "partners: atualização editor"
   ON public.partners FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "partners: exclusão autenticados"
+CREATE POLICY "partners: exclusão editor"
   ON public.partners FOR DELETE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
 
 -- ============================================================
@@ -285,41 +285,41 @@ CREATE POLICY "events: leitura pública (publicados)"
   ON public.events FOR SELECT
   USING (
     status = 'published'
-    OR auth.role() = 'authenticated'
+    OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
   );
 
-CREATE POLICY "events: inserção autenticados"
+CREATE POLICY "events: inserção editor"
   ON public.events FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "events: atualização autenticados"
+CREATE POLICY "events: atualização editor"
   ON public.events FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "events: exclusão autenticados"
+CREATE POLICY "events: exclusão editor"
   ON public.events FOR DELETE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
 
 -- ============================================================
 -- RLS: precadastros
 -- ============================================================
 
-CREATE POLICY "precadastros: leitura autenticados"
+CREATE POLICY "precadastros: leitura editor"
   ON public.precadastros FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
 CREATE POLICY "precadastros: inserção pública"
   ON public.precadastros FOR INSERT
   WITH CHECK (true);
 
-CREATE POLICY "precadastros: atualização autenticados"
+CREATE POLICY "precadastros: atualização editor"
   ON public.precadastros FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "precadastros: exclusão autenticados"
+CREATE POLICY "precadastros: exclusão editor"
   ON public.precadastros FOR DELETE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
 
 -- ============================================================
@@ -330,17 +330,17 @@ CREATE POLICY "community_media: inserção pública"
   ON public.community_media_submissions FOR INSERT
   WITH CHECK (true);
 
-CREATE POLICY "community_media: leitura autenticados"
+CREATE POLICY "community_media: leitura editor"
   ON public.community_media_submissions FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "community_media: atualização autenticados"
+CREATE POLICY "community_media: atualização editor"
   ON public.community_media_submissions FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
-CREATE POLICY "community_media: exclusão autenticados"
+CREATE POLICY "community_media: exclusão editor"
   ON public.community_media_submissions FOR DELETE
-  USING (auth.role() = 'authenticated');
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
 
 
 -- ============================================================
@@ -381,25 +381,25 @@ CREATE POLICY "media: leitura pública"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'media');
 
-CREATE POLICY "media: upload autenticados"
+CREATE POLICY "media: upload editor"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'media'
-    AND auth.role() = 'authenticated'
+    AND EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
   );
 
-CREATE POLICY "media: atualização autenticados"
+CREATE POLICY "media: atualização editor"
   ON storage.objects FOR UPDATE
   USING (
     bucket_id = 'media'
-    AND auth.role() = 'authenticated'
+    AND EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
   );
 
-CREATE POLICY "media: exclusão autenticados"
+CREATE POLICY "media: exclusão editor"
   ON storage.objects FOR DELETE
   USING (
     bucket_id = 'media'
-    AND auth.role() = 'authenticated'
+    AND EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
   );
 
 
@@ -524,34 +524,34 @@ DO $$ BEGIN
   ) THEN
     CREATE POLICY "benefits: leitura pública"
       ON public.benefits FOR SELECT
-      USING (active = TRUE OR auth.role() = 'authenticated');
+      USING (active = TRUE OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
   END IF;
 END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
-    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: escrita autenticados'
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: escrita editor'
   ) THEN
-    CREATE POLICY "benefits: escrita autenticados"
+    CREATE POLICY "benefits: escrita editor"
       ON public.benefits FOR INSERT
-      WITH CHECK (auth.role() = 'authenticated');
+      WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
   END IF;
 END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
-    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: atualização autenticados'
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: atualização editor'
   ) THEN
-    CREATE POLICY "benefits: atualização autenticados"
+    CREATE POLICY "benefits: atualização editor"
       ON public.benefits FOR UPDATE
-      USING (auth.role() = 'authenticated');
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
   END IF;
 END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
-    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: exclusão autenticados'
+    SELECT FROM pg_policies WHERE tablename = 'benefits' AND policyname = 'benefits: exclusão editor'
   ) THEN
-    CREATE POLICY "benefits: exclusão autenticados"
+    CREATE POLICY "benefits: exclusão editor"
       ON public.benefits FOR DELETE
-      USING (auth.role() = 'authenticated');
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'editor')));
   END IF;
 END $$;
 
