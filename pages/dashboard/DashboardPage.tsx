@@ -2,12 +2,13 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SectionWrapper, Card, Button, AccessDeniedModal, LoginModal, ConfirmDialog } from '../../components/ui';
 import { StatCard, ListRow, EventEditorModal, MemberEditorModal, ActivityFeed, UniversalListModal, SettingsModal, PremiumLoader, MediaManagerModal, PreCadastroManagerModal } from '../../component.ui';
-import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Edit2, Trash2, Settings, UserPlus, Loader2, Mail, Copy, Check } from 'lucide-react';
+import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Edit2, Trash2, Settings, UserPlus, Loader2, Mail, Copy, Check, Pause, Play, X } from 'lucide-react';
 import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, FLB_STATE_EVENT, isEditor, isAdmin } from '../../store/app.store';
 import { UserManagerModal } from './UserManagerModal';
 import { BenefitsManagerSection } from './BenefitsManagerSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
+import { updatePreCadastro, deletePreCadastro } from '../../services/precadastros.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
 import { generateTestActivity } from '../../store/app.store';
@@ -42,6 +43,10 @@ export const DashboardPage = () => {
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<Partner> | null>(null);
 
+  // Newsletter subscriber editing
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const [editingSubEmail, setEditingSubEmail] = useState('');
+
   // Deletion State
   const [deleteType, setDeleteType] = useState<'event' | 'member' | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -66,6 +71,22 @@ export const DashboardPage = () => {
       setNewsletterCopied(true);
       setTimeout(() => setNewsletterCopied(false), 2000);
     });
+  };
+
+  const handleSubPause = (id: string) =>
+    updatePreCadastro(id, { status: 'pausado' as any }).then(() => setTick(t => t + 1));
+
+  const handleSubResume = (id: string) =>
+    updatePreCadastro(id, { status: 'novo' }).then(() => setTick(t => t + 1));
+
+  const handleSubDelete = (id: string) =>
+    deletePreCadastro(id).then(() => setTick(t => t + 1));
+
+  const handleSubSaveEmail = async (id: string) => {
+    if (!editingSubEmail.trim()) return;
+    await updatePreCadastro(id, { email: editingSubEmail.trim() });
+    setEditingSubId(null);
+    setTick(t => t + 1);
   };
 
   const checkAuth = () => {
@@ -292,24 +313,48 @@ export const DashboardPage = () => {
             <div className="p-3">
               {newsletterSubscribers.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                  {newsletterSubscribers.map(sub => (
-                    <div key={sub.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors group">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-400">
-                        <Mail size={12} />
+                  {newsletterSubscribers.map(sub => {
+                    const isPaused = sub.status === 'pausado';
+                    const isEditing = editingSubId === sub.id;
+                    return (
+                      <div key={sub.id} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isPaused ? 'bg-amber-50/60' : 'hover:bg-slate-50'}`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isPaused ? 'bg-amber-100 text-amber-400' : 'bg-slate-100 text-slate-400'}`}>
+                          <Mail size={12} />
+                        </div>
+                        <div className="flex-grow min-w-0">
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                autoFocus
+                                value={editingSubEmail}
+                                onChange={e => setEditingSubEmail(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleSubSaveEmail(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
+                                className="text-sm border border-sand-300 rounded px-1.5 py-0.5 flex-grow min-w-0 focus:outline-none focus:ring-1 focus:ring-sand-400"
+                              />
+                              <button onClick={() => handleSubSaveEmail(sub.id)} className="p-1 text-green-600 hover:text-green-700"><Check size={12}/></button>
+                              <button onClick={() => setEditingSubId(null)} className="p-1 text-slate-400 hover:text-slate-600"><X size={12}/></button>
+                            </div>
+                          ) : (
+                            <>
+                              <p className={`text-sm truncate font-medium ${isPaused ? 'text-amber-600 line-through' : 'text-slate-700'}`}>{sub.email}</p>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-slate-400">{sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('pt-PT') : '—'}</span>
+                                {isPaused && <span className="text-[9px] font-bold uppercase tracking-widest text-amber-500 bg-amber-100 px-1.5 py-0.5 rounded-full">Pausado</span>}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        {!isEditing && (
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onClick={() => navigator.clipboard.writeText(sub.email)} className="p-1 text-slate-400 hover:text-brand-900 transition-colors" title="Copiar email"><Copy size={11}/></button>
+                            <button onClick={() => { setEditingSubId(sub.id); setEditingSubEmail(sub.email); }} className="p-1 text-slate-400 hover:text-brand-900 transition-colors" title="Editar email"><Edit2 size={11}/></button>
+                            <button onClick={() => isPaused ? handleSubResume(sub.id) : handleSubPause(sub.id)} className={`p-1 transition-colors ${isPaused ? 'text-green-500 hover:text-green-700' : 'text-slate-400 hover:text-amber-500'}`} title={isPaused ? 'Retomar envio' : 'Pausar envio'}>{isPaused ? <Play size={11}/> : <Pause size={11}/>}</button>
+                            <button onClick={() => handleSubDelete(sub.id)} className="p-1 text-slate-400 hover:text-red-500 transition-colors" title="Excluir"><Trash2 size={11}/></button>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="text-sm text-slate-700 truncate font-medium">{sub.email}</p>
-                        <p className="text-[10px] text-slate-400">{sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('pt-PT') : '—'}</p>
-                      </div>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(sub.email)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-brand-900 transition-all"
-                        title="Copiar email"
-                      >
-                        <Copy size={12} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="py-8 text-center text-slate-400 text-xs">Nenhum subscritor de newsletter ainda.</div>

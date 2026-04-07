@@ -10,7 +10,7 @@ export { getMemberByTier };
 const PARTNER_DB_COLUMNS = new Set([
   'name', 'type', 'category', 'role', 'bio', 'summary', 'full',
   'image', 'avatar', 'country', 'website', 'social_links', 'tags',
-  'tier', 'since', 'active', 'featured', 'order', 'gallery', 'albums',
+  'tier', 'since', 'active', 'featured', 'order',
 ]);
 
 const normalize = (p: any): Partner => {
