@@ -346,7 +346,7 @@ export const EventoColaborarPage = () => {
                     </Link>
                 </div>
              </>
-           ) : null}
+           )}
         </div>
       </SectionWrapper>
     </div>
