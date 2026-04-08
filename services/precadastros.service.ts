@@ -75,7 +75,7 @@ export const subscribeToNewsletter = (email: string) => {
 };
 
 // BUG 3 FIX: only send DB columns, strip camelCase fields (createdAt → created_at handled by DB default)
-const PRECADASTRO_DB_COLUMNS = new Set(['name', 'email', 'type', 'registrationType', 'message', 'status', 'note']);
+const PRECADASTRO_DB_COLUMNS = new Set(['name', 'email', 'type', 'registrationType', 'message', 'status', 'notes']);
 
 export const updatePreCadastro = async (id: string, patch: Partial<PreCadastro>) => {
   if (!isEditor()) return;
