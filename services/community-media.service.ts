@@ -49,18 +49,27 @@ export const submitCommunityMedia = async (
     message: submission.message,
   };
 
-  const { data: res, error } = await supabase
+  const { error } = await supabase
     .from('community_media_submissions')
-    .insert([payload])
-    .select();
+    .insert([payload]);
 
-  if (error || !res) {
+  if (error) {
     console.error('submitCommunityMedia error:', error);
     showToast('Erro ao enviar mídia.', 'error');
     return null;
   }
 
-  const normalized = normalize(res[0]);
+  const normalized: PendingMediaSubmission = {
+    id: crypto.randomUUID(),
+    eventId: submission.eventId,
+    authorName: submission.authorName,
+    email: submission.email,
+    url: submission.url,
+    type: submission.type,
+    message: submission.message,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
   PENDING_MEDIA_SUBMISSIONS.push(normalized);
   logActivity('Submissão de mídia', submission.authorName);
   notifyState();

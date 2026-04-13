@@ -10,6 +10,7 @@ import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
 import { syncEvents } from './services/events.service';
+import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
 import { resolveUserRole } from './services/auth.service';
 import {
@@ -85,6 +86,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     syncFromSupabase();
     syncMembers();
     syncEvents();
+    syncCommunityMedia();
     syncActivityLog();
 
     console.log(`[AUTH] resolving role for user=${session.user.id} gen=${generation}`);
