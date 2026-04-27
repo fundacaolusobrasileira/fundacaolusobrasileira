@@ -1,6 +1,7 @@
 import { supabase } from '../supabaseClient';
 import { PENDING_MEDIA_SUBMISSIONS, AUTH_SESSION, notifyState, showToast, logActivity } from '../store/app.store';
 import type { PendingMediaSubmission } from '../types';
+import { isSafeHttpUrl } from '../utils/url';
 
 const normalize = (row: any): PendingMediaSubmission => ({
   id: row.id,
@@ -28,15 +29,8 @@ export const syncCommunityMedia = async () => {
 export const submitCommunityMedia = async (
   submission: Omit<PendingMediaSubmission, 'id' | 'createdAt' | 'status'>
 ): Promise<PendingMediaSubmission | null> => {
-  // FIX SEC-005: Validate URL
-  try {
-    const parsed = new URL(submission.url);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      showToast('URL inválida. Use apenas HTTP ou HTTPS.', 'error');
-      return null;
-    }
-  } catch {
-    showToast('URL inválida.', 'error');
+  if (!isSafeHttpUrl(submission.url)) {
+    showToast('URL inválida. Use apenas HTTP ou HTTPS.', 'error');
     return null;
   }
 
@@ -49,27 +43,19 @@ export const submitCommunityMedia = async (
     message: submission.message,
   };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('community_media_submissions')
-    .insert([payload]);
+    .insert([payload])
+    .select('*')
+    .single();
 
-  if (error) {
+  if (error || !data) {
     console.error('submitCommunityMedia error:', error);
     showToast('Erro ao enviar mídia.', 'error');
     return null;
   }
 
-  const normalized: PendingMediaSubmission = {
-    id: crypto.randomUUID(),
-    eventId: submission.eventId,
-    authorName: submission.authorName,
-    email: submission.email,
-    url: submission.url,
-    type: submission.type,
-    message: submission.message,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-  };
+  const normalized = normalize(data);
   PENDING_MEDIA_SUBMISSIONS.push(normalized);
   logActivity('Submissão de mídia', submission.authorName);
   notifyState();

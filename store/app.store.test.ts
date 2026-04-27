@@ -63,11 +63,48 @@ describe('app.store - AUTH_LOADING', () => {
 });
 
 describe('app.store - notifyState fires FLB_STATE_EVENT', () => {
-  it('dispatches FLB_STATE_EVENT on window', async () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('dispatches FLB_STATE_EVENT on window (after microtask flush)', async () => {
     const { notifyState, FLB_STATE_EVENT } = await import('./app.store');
     let fired = false;
     window.addEventListener(FLB_STATE_EVENT, () => { fired = true; }, { once: true });
     notifyState();
+    await Promise.resolve(); // flush microtask queue
     expect(fired).toBe(true);
+  });
+
+  // Coalesces N synchronous calls into a single event dispatch so cascading
+  // mutations across multiple services don't produce a thundering-herd of
+  // re-renders in components subscribed to FLB_STATE_EVENT.
+  it('coalesces multiple synchronous notifyState() calls into a single event', async () => {
+    const { notifyState, FLB_STATE_EVENT } = await import('./app.store');
+    let count = 0;
+    const handler = () => { count += 1; };
+    window.addEventListener(FLB_STATE_EVENT, handler);
+
+    // Fire 10 calls in the same synchronous tick
+    for (let i = 0; i < 10; i += 1) notifyState();
+    await Promise.resolve();
+
+    window.removeEventListener(FLB_STATE_EVENT, handler);
+    expect(count).toBe(1);
+  });
+
+  it('dispatches a fresh event for calls in a later tick', async () => {
+    const { notifyState, FLB_STATE_EVENT } = await import('./app.store');
+    let count = 0;
+    const handler = () => { count += 1; };
+    window.addEventListener(FLB_STATE_EVENT, handler);
+
+    notifyState();
+    await Promise.resolve();
+    notifyState();
+    await Promise.resolve();
+
+    window.removeEventListener(FLB_STATE_EVENT, handler);
+    expect(count).toBe(2);
   });
 });

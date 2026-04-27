@@ -2,7 +2,7 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PremiumLoader } from './components/ui/Loaders';
-import { AUTH_SESSION, AUTH_LOADING, FLB_STATE_EVENT } from './store/app.store';
+import { AUTH_SESSION, AUTH_LOADING, FLB_STATE_EVENT, isEditor } from './store/app.store';
 
 class ChunkErrorBoundary extends React.Component<{ children: React.ReactNode }, { errored: boolean }> {
   state = { errored: false };
@@ -17,7 +17,7 @@ class ChunkErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   render() { return this.state.errored ? null : this.props.children; }
 }
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children, requireEditor = false }: { children: React.ReactNode; requireEditor?: boolean }) => {
   // Subscribe to auth state changes so the component re-renders reactively
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -28,6 +28,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (AUTH_LOADING) return <PremiumLoader />;
   if (!AUTH_SESSION.isLoggedIn) return <Navigate to="/login" replace />;
+  if (requireEditor && !isEditor()) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -65,7 +66,7 @@ export const AppRouter = () => (
       <Route path="/parceiros" element={<ParceirosPage />} />
       <Route path="/parceiros/:id" element={<ParceiroPerfilPage />} />
       <Route path="/membro/:id" element={<MembroPerfilPage />} />
-      <Route path="/membro/:id/editar" element={<MembroEditarPage />} />
+      <Route path="/membro/:id/editar" element={<ProtectedRoute requireEditor><MembroEditarPage /></ProtectedRoute>} />
       <Route path="/eventos" element={<EventosPage />} />
       <Route path="/eventos/:id" element={<EventoDetalhePage />} />
       <Route path="/eventos/:id/colaborar" element={<EventoColaborarPage />} />
@@ -73,9 +74,9 @@ export const AppRouter = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/dashboard/eventos" element={<ProtectedRoute><DashboardEventosPage /></ProtectedRoute>} />
-      <Route path="/dashboard/eventos/:id/midias" element={<ProtectedRoute><DashboardMediaGerirPage /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute requireEditor><DashboardPage /></ProtectedRoute>} />
+      <Route path="/dashboard/eventos" element={<ProtectedRoute requireEditor><DashboardEventosPage /></ProtectedRoute>} />
+      <Route path="/dashboard/eventos/:id/midias" element={<ProtectedRoute requireEditor><DashboardMediaGerirPage /></ProtectedRoute>} />
       <Route path="/beneficios" element={<BeneficiosPage />} />
       <Route path="/legaltech-space" element={<LegaltechSpacePage />} />
       <Route path="/privacidade" element={<PrivacyPage />} />

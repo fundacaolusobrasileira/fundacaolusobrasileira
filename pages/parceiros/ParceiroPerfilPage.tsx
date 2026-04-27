@@ -12,6 +12,14 @@ import { PremiumLoader } from '../../components/ui/Loaders';
 import { Reveal } from '../../components/ui/Reveal';
 import type { PartnerSeed } from '../../data/partners.data';
 
+const slugifyPartnerName = (name: string) =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 export const ParceiroPerfilPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -23,8 +31,10 @@ export const ParceiroPerfilPage = () => {
   );
 
   useEffect(() => {
-    const source = PARTNERS.length > 0 ? PARTNERS : PARTNERS_SEED;
-    const find = () => source.find(p => p.id === id) ?? null;
+    const find = () => {
+      const source = PARTNERS.length > 0 ? PARTNERS : PARTNERS_SEED;
+      return source.find(p => p.id === id) ?? source.find(p => slugifyPartnerName(p.name) === id) ?? null;
+    };
     setPartner(find());
 
     const handler = () => setPartner(find());

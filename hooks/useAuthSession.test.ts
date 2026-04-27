@@ -26,9 +26,10 @@ describe('useAuthSession hook', () => {
     const { result } = renderHook(() => useAuthSession());
     expect(result.current.isLoggedIn).toBe(false);
 
-    act(() => {
+    await act(async () => {
       setAuthSession({ isLoggedIn: true, role: 'editor', displayName: 'editor@test.com' });
       notifyState();
+      await Promise.resolve(); // flush microtask queue (notifyState is now coalesced)
     });
 
     expect(result.current.isLoggedIn).toBe(true);
@@ -42,9 +43,10 @@ describe('useAuthSession hook', () => {
     const { result } = renderHook(() => useAuthSession());
     expect(result.current.authLoading).toBe(true);
 
-    act(() => {
+    await act(async () => {
       setAuthLoading(false);
       notifyState();
+      await Promise.resolve(); // flush microtask queue (notifyState is now coalesced)
     });
 
     expect(result.current.authLoading).toBe(false);

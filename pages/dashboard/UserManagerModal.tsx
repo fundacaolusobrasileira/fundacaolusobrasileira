@@ -149,19 +149,60 @@ export const UserManagerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [partners, setPartners] = useState<PartnerOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [partnerLinkingAvailable, setPartnerLinkingAvailable] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
-    setLoading(true);
-    Promise.all([
-      fetchAllProfiles(),
-      supabase.from('partners').select('id, name').order('name').then(r => r.data || []),
-    ]).then(([profileData, partnerData]) => {
-      setProfiles(profileData as UserProfile[]);
-      setPartners(partnerData as PartnerOption[]);
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setLoadError(null);
+      setPartnerLinkingAvailable(false);
+
+      const profilesResult = await fetchAllProfiles();
+
+      if (cancelled) return;
+
+      if (!profilesResult.ok) {
+        setProfiles([]);
+        setPartners([]);
+        setLoadError(profilesResult.error);
+        setLoading(false);
+        return;
+      }
+
+      setProfiles(profilesResult.data);
+      setPartnerLinkingAvailable(profilesResult.capabilities.partnerLinking);
+
+      if (profilesResult.capabilities.partnerLinking) {
+        const partnerResult = await supabase.from('partners').select('id, name').order('name');
+
+        if (cancelled) return;
+
+        if (partnerResult.error) {
+          setProfiles([]);
+          setPartners([]);
+          setLoadError('Erro ao carregar membros vinculáveis.');
+          setLoading(false);
+          return;
+        }
+
+        setPartners((partnerResult.data || []) as PartnerOption[]);
+      } else {
+        setPartners([]);
+      }
+
       setLoading(false);
-    });
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen]);
 
   const handleRoleChange = async (profileId: string, newRole: 'admin' | 'editor' | 'membro') => {
@@ -211,6 +252,8 @@ export const UserManagerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
           <div className="flex items-center justify-center py-16">
             <Loader2 size={24} className="animate-spin text-slate-400" />
           </div>
+        ) : loadError ? (
+          <p className="text-center text-red-500 text-sm py-10">{loadError}</p>
         ) : profiles.length === 0 ? (
           <p className="text-center text-slate-400 text-sm py-10">Nenhum utilizador encontrado.</p>
         ) : (
@@ -223,7 +266,9 @@ export const UserManagerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
                   <th className="text-left text-xs font-medium text-slate-400 pb-2 pr-3">Telefone</th>
                   <th className="text-left text-xs font-medium text-slate-400 pb-2 pr-3">Desde</th>
                   <th className="text-left text-xs font-medium text-slate-400 pb-2 pr-3">Role</th>
-                  <th className="text-left text-xs font-medium text-slate-400 pb-2">Membro vinculado</th>
+                  <th className="text-left text-xs font-medium text-slate-400 pb-2">
+                    {partnerLinkingAvailable ? 'Membro vinculado' : 'Vínculo com membro'}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -282,18 +327,27 @@ export const UserManagerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
                       </td>
                       {/* Membro vinculado */}
                       <td className="py-3">
-                        <PartnerCell
-                          profile={profile}
-                          partners={partners}
-                          updating={isLinkUpdating}
-                          onLink={handleLink}
-                        />
+                        {partnerLinkingAvailable ? (
+                          <PartnerCell
+                            profile={profile}
+                            partners={partners}
+                            updating={isLinkUpdating}
+                            onLink={handleLink}
+                          />
+                        ) : (
+                          <span className="text-xs text-amber-700">Indisponível neste banco</span>
+                        )}
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+            {!partnerLinkingAvailable && (
+              <p className="mt-3 text-xs text-amber-700">
+                Vínculo com membro indisponível neste banco. Falta aplicar a migração de `profiles.partner_id`.
+              </p>
+            )}
           </div>
         )}
       </ModalBody>

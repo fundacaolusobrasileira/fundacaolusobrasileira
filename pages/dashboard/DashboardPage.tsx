@@ -8,7 +8,7 @@ import { UserManagerModal } from './UserManagerModal';
 import { BenefitsManagerSection } from './BenefitsManagerSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
-import { updatePreCadastro, deletePreCadastro } from '../../services/precadastros.service';
+import { updatePreCadastro, deletePreCadastro, syncPreCadastros } from '../../services/precadastros.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { useDebounce } from '../../hooks/useDebounce';
 import { generateTestActivity } from '../../store/app.store';
@@ -62,7 +62,8 @@ export const DashboardPage = () => {
   }, []);
 
   const totalPendingMedia = PENDING_MEDIA_SUBMISSIONS.length;
-  const newPreCadastros = PRECADASTROS.filter(p => p.status === 'novo').length;
+  const managedPreCadastros = PRECADASTROS.filter(p => p.type !== 'newsletter');
+  const newPreCadastros = managedPreCadastros.filter(p => p.status === 'novo').length;
   const newsletterSubscribers = PRECADASTROS.filter(p => p.type === 'newsletter');
 
   const copyNewsletterEmails = () => {
@@ -73,18 +74,32 @@ export const DashboardPage = () => {
     });
   };
 
-  const handleSubPause = (id: string) =>
-    updatePreCadastro(id, { status: 'pausado' as any }).then(() => setTick(t => t + 1));
+  const handleSubPause = async (id: string) => {
+    const ok = await updatePreCadastro(id, { status: 'pausado' });
+    if (!ok) return;
+    await syncPreCadastros();
+    setTick(t => t + 1);
+  };
 
-  const handleSubResume = (id: string) =>
-    updatePreCadastro(id, { status: 'novo' }).then(() => setTick(t => t + 1));
+  const handleSubResume = async (id: string) => {
+    const ok = await updatePreCadastro(id, { status: 'novo' });
+    if (!ok) return;
+    await syncPreCadastros();
+    setTick(t => t + 1);
+  };
 
-  const handleSubDelete = (id: string) =>
-    deletePreCadastro(id).then(() => setTick(t => t + 1));
+  const handleSubDelete = async (id: string) => {
+    const ok = await deletePreCadastro(id);
+    if (!ok) return;
+    await syncPreCadastros();
+    setTick(t => t + 1);
+  };
 
   const handleSubSaveEmail = async (id: string) => {
     if (!editingSubEmail.trim()) return;
-    await updatePreCadastro(id, { email: editingSubEmail.trim() });
+    const ok = await updatePreCadastro(id, { email: editingSubEmail.trim() });
+    if (!ok) return;
+    await syncPreCadastros();
     setEditingSubId(null);
     setTick(t => t + 1);
   };
@@ -109,9 +124,15 @@ export const DashboardPage = () => {
       setShowSearchResults(false);
   };
 
-  const confirmDelete = () => {
-      if (deleteType === 'event' && itemToDelete) deleteEvent(itemToDelete);
-      if (deleteType === 'member' && itemToDelete) deleteMember(itemToDelete);
+  const confirmDelete = async () => {
+      if (deleteType === 'event' && itemToDelete) {
+        const ok = await deleteEvent(itemToDelete);
+        if (!ok) return;
+      }
+      if (deleteType === 'member' && itemToDelete) {
+        const ok = await deleteMember(itemToDelete);
+        if (!ok) return;
+      }
       setItemToDelete(null);
       setDeleteType(null);
   };
@@ -125,6 +146,7 @@ export const DashboardPage = () => {
   // Search Logic
   const filteredEvents = useMemo(() => EVENTS.filter(e => e.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())), [debouncedSearchQuery, tick]);
   const filteredMembers = useMemo(() => PARTNERS.filter(p => p.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())), [debouncedSearchQuery, tick]);
+  const roleLabel = isAdmin() ? 'Admin' : 'Editor';
 
   if (loading) return <PremiumLoader />;
 
@@ -138,13 +160,13 @@ export const DashboardPage = () => {
             <div className="bg-brand-900 text-white w-10 h-10 rounded-lg flex items-center justify-center"><BarChart3 size={20} /></div>
             <div>
                 <h1 className="text-2xl font-light text-brand-900 tracking-tight leading-none">Dashboard</h1>
-                <p className="text-slate-500 text-xs mt-1 font-medium uppercase tracking-wider">Visão Geral &bull; Admin</p>
+                <p className="text-slate-500 text-xs mt-1 font-medium uppercase tracking-wider">Visão Geral &bull; {roleLabel}</p>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 w-full lg:w-auto items-center">
              {/* Global Search */}
-             <div className="relative group w-full lg:w-80 z-40">
+             <div className="relative group w-full lg:w-80 z-[120]">
                 <div className="relative">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-900 transition-colors" />
                     <input
@@ -159,7 +181,7 @@ export const DashboardPage = () => {
                 </div>
                 {/* Search Dropdown */}
                 {showSearchResults && searchQuery && (
-                    <div className="absolute top-full left-0 w-full bg-white rounded-xl shadow-xl border border-slate-100 mt-2 overflow-hidden max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute top-full left-0 z-[130] w-full bg-white rounded-xl shadow-xl border border-slate-100 mt-2 overflow-hidden max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                         {filteredEvents.length > 0 && (
                             <div className="p-1">
                                 <div className="text-[10px] font-bold uppercase text-slate-400 px-3 py-1.5 bg-slate-50">Eventos</div>
@@ -216,7 +238,7 @@ export const DashboardPage = () => {
                     {newPreCadastros > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
                 </div>
                 <div>
-                    <div className="text-2xl font-light text-slate-900">{PRECADASTROS.length}</div>
+                    <div className="text-2xl font-light text-slate-900">{managedPreCadastros.length}</div>
                     <div className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Pré-Cadastros</div>
                 </div>
             </div>

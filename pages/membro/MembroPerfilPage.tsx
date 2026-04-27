@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { safeUrl } from '../../utils/url';
+import { resolveLink, safeUrl } from '../../utils/url';
 import { ArrowLeft, ExternalLink, Upload, Loader2, User, Images, Gift, ArrowRight } from 'lucide-react';
 import { SectionWrapper, Card, Badge, Button, Input, AccessDeniedModal, LoginModal, PremiumLoader } from '../../components/ui';
 import { SocialIcons } from '../../components/ui';
@@ -13,6 +13,12 @@ import { BenefitEditorSection } from './BenefitEditorSection';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Benefit } from '../../types';
 
+const slugifyMemberName = (name: string) =>
+  name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const findMemberByRouteId = (routeId?: string) =>
+  PARTNERS.find(p => p.id === routeId) ?? PARTNERS.find(p => slugifyMemberName(p.name) === routeId);
+
 export const MembroPerfilPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -20,11 +26,7 @@ export const MembroPerfilPage = () => {
     const [benefits, setBenefits] = useState<Benefit[]>([]);
 
     useEffect(() => {
-        const slugify = (name: string) =>
-            name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-        const findMember = () =>
-            PARTNERS.find(p => p.id === id) ?? PARTNERS.find(p => slugify(p.name) === id);
+        const findMember = () => findMemberByRouteId(id);
 
         const found = findMember();
         if(found) {
@@ -182,11 +184,20 @@ export const MembroPerfilPage = () => {
                                         </span>
                                         <h4 className="font-semibold text-slate-900 text-sm mb-1">{b.title}</h4>
                                         {b.description && <p className="text-xs text-slate-500 leading-relaxed mb-3">{b.description}</p>}
-                                        {safeUrl(b.link) && (
-                                            <a href={safeUrl(b.link)} target="_blank" rel="noreferrer" className="text-xs font-medium text-brand-700 hover:underline flex items-center gap-1">
-                                                Saber mais <ExternalLink size={10} />
-                                            </a>
-                                        )}
+                                        {(() => {
+                                            const resolved = resolveLink(b.link);
+                                            if (!resolved) return null;
+                                            const className = 'text-xs font-medium text-brand-700 hover:underline flex items-center gap-1';
+                                            return resolved.isExternal ? (
+                                                <a href={resolved.href} target="_blank" rel="noreferrer" className={className}>
+                                                    Saber mais <ExternalLink size={10} />
+                                                </a>
+                                            ) : (
+                                                <Link to={resolved.href} className={className}>
+                                                    Saber mais <ArrowRight size={10} />
+                                                </Link>
+                                            );
+                                        })()}
                                     </div>
                                 ))}
                             </div>
@@ -214,13 +225,11 @@ export const MembroEditarPage = () => {
 
   useEffect(() => {
      const editor = isEditor();
-     console.log(`[EDIT_PAGE] mount id=${id} isEditor=${editor} AUTH_LOADING=${AUTH_LOADING} role=${AUTH_SESSION.role} isLoggedIn=${AUTH_SESSION.isLoggedIn}`);
      if (!editor) {
-         console.warn(`[EDIT_PAGE] access denied on mount — role=${AUTH_SESSION.role} loading=${AUTH_LOADING}`);
          setShowAccessDenied(true);
      }
 
-     const found = PARTNERS.find(p => p.id === id);
+     const found = findMemberByRouteId(id);
      if (found) {
         setFormData({ ...found, socialLinks: found.socialLinks || {} });
      } else {
@@ -231,20 +240,19 @@ export const MembroEditarPage = () => {
   // BUG 4 FIX: await updateMember and show error if it fails
   const handleSave = async () => {
     const editor = isEditor();
-    console.log(`[EDIT_PAGE] handleSave isEditor=${editor} role=${AUTH_SESSION.role}`);
     if (!editor) {
-        console.warn(`[EDIT_PAGE] save blocked — role=${AUTH_SESSION.role}`);
         setShowAccessDenied(true);
         return;
     }
     if (id) {
         setLoading(true);
-        await updateMember(id, formData);
+        const ok = await updateMember(id, formData);
         setLoading(false);
+        if (!ok) return;
         // After save, slug IDs may have been replaced with UUIDs in PARTNERS.
         // Find the member's current id to navigate to the correct profile URL.
-        const saved = PARTNERS.find(p => p.id === id) ?? PARTNERS.find(p => p.name === formData.name);
-        navigate(saved ? `/membro/${saved.id}` : '/administracao');
+        const saved = findMemberByRouteId(id) ?? PARTNERS.find(p => p.name === formData.name);
+        navigate(saved ? `/membro/${saved.id}` : '/dashboard');
     }
   };
 
@@ -266,14 +274,11 @@ export const MembroEditarPage = () => {
     if (!e.target.files?.[0]) return;
     const file = e.target.files[0];
 
-    console.log(`[PERFIL_UPLOAD] file=${file.name} size=${file.size} type=${file.type}`);
     setUploading(true);
     try {
         const publicUrl = await saveMediaBlob(file);
-        console.log(`[PERFIL_UPLOAD] success url=${publicUrl}`);
         setFormData((prev: any) => ({ ...prev, image: publicUrl }));
     } catch (err: any) {
-        console.error(`[PERFIL_UPLOAD] catch err=`, err);
         showToast(`Erro no upload: ${err?.message || 'erro desconhecido'}`, 'error');
     } finally {
         setUploading(false);
@@ -283,7 +288,7 @@ export const MembroEditarPage = () => {
 
   const handleCloseDenied = () => {
       setShowAccessDenied(false);
-      navigate('/membros');
+      navigate('/dashboard');
   };
 
   if (notFound) {
@@ -291,7 +296,7 @@ export const MembroEditarPage = () => {
         <div className="min-h-screen bg-page flex items-center justify-center">
            <Card className="p-8">
                <p className="text-slate-600 mb-4">Membro nao encontrado.</p>
-               <Button onClick={() => navigate('/membros')}>Voltar</Button>
+               <Button onClick={() => navigate('/dashboard')}>Voltar</Button>
            </Card>
         </div>
       );
@@ -357,7 +362,7 @@ export const MembroEditarPage = () => {
                )}
 
                {activeTab === 'beneficios' && id && (
-                 <BenefitEditorSection partnerId={id} />
+                 <BenefitEditorSection partnerId={formData.id} />
                )}
 
                <div className={activeTab === 'info' ? 'space-y-6' : 'hidden'}>
@@ -395,6 +400,21 @@ export const MembroEditarPage = () => {
                             <option value="Governança">Governança</option>
                         </select>
                      </div>
+                 </div>
+
+                 <div>
+                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Cargo Institucional</label>
+                   <select
+                        className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/60 focus:bg-white outline-none text-sm"
+                        value={formData.tier || ''}
+                        onChange={e => handleChange('tier', e.target.value || undefined)}
+                    >
+                        <option value="">Sem cargo definido</option>
+                        <option value="presidente">Presidente</option>
+                        <option value="direcao">Direção</option>
+                        <option value="secretario-geral">Secretário Geral</option>
+                        <option value="vogal">Vogal</option>
+                    </select>
                  </div>
 
                  <div>
@@ -526,6 +546,7 @@ export const MembroEditarPage = () => {
                        <div className="flex items-center gap-2">
                          <button
                            type="button"
+                           aria-label="Alternar status do membro"
                            onClick={() => setFormData((prev: any) => ({ ...prev, active: !(prev.active !== false) }))}
                            className={`relative w-10 h-5 rounded-full transition-colors ${formData.active !== false ? 'bg-green-500' : 'bg-slate-300'}`}
                          >
@@ -539,6 +560,7 @@ export const MembroEditarPage = () => {
                        <div className="flex items-center gap-2">
                          <button
                            type="button"
+                           aria-label="Alternar destaque do membro"
                            onClick={() => setFormData((prev: any) => ({ ...prev, featured: !prev.featured }))}
                            className={`relative w-10 h-5 rounded-full transition-colors ${formData.featured ? 'bg-sand-400' : 'bg-slate-300'}`}
                          >

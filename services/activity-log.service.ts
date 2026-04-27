@@ -23,12 +23,17 @@ export const syncActivityLog = async () => {
   notifyState();
 };
 
-export const persistLogEntry = async (action: string, target: string) => {
+export const persistLogEntry = async (
+  action: string,
+  target: string
+): Promise<{ ok: boolean; error?: string }> => {
   const payload = {
     action,
     target,
     user_name: AUTH_SESSION.displayName || 'Editor',
     user_id: AUTH_SESSION.userId || null,
   };
-  await supabase.from('activity_logs').insert([payload]);
+  const { error } = await supabase.from('activity_logs').insert([payload]);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 };

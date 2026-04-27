@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Trash2, Plus, Loader2, ExternalLink, Check } from 'lucide-react';
-import { safeUrl } from '../../utils/url';
+import { Link } from 'react-router-dom';
+import { Trash2, Plus, Loader2, ExternalLink, ArrowRight, Check } from 'lucide-react';
+import { resolveLink } from '../../utils/url';
 import {
   fetchBenefitsByPartner,
   createBenefit,
@@ -8,6 +9,8 @@ import {
   deleteBenefit,
 } from '../../services/benefits.service';
 import type { Benefit, BenefitCategory } from '../../types';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const CATEGORY_CONFIG: Record<BenefitCategory, { label: string; color: string }> = {
   desconto: { label: 'Desconto',  color: 'bg-emerald-100 text-emerald-700' },
@@ -41,14 +44,20 @@ export const BenefitEditorSection = ({ partnerId }: { partnerId: string }) => {
   const [editState, setEditState] = useState<EditState>({ title: '', description: '', category: 'outro', link: '', active: true });
   const [form, setForm] = useState(EMPTY_FORM);
   const [creating, setCreating] = useState(false);
+  const hasPersistedPartner = UUID_REGEX.test(partnerId);
 
   useEffect(() => {
+    if (!hasPersistedPartner) {
+      setBenefits([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     fetchBenefitsByPartner(partnerId).then(data => {
       setBenefits(data);
       setLoading(false);
     });
-  }, [partnerId]);
+  }, [partnerId, hasPersistedPartner]);
 
   const startEdit = (b: Benefit) => {
     setEditingId(b.id);
@@ -85,6 +94,14 @@ export const BenefitEditorSection = ({ partnerId }: { partnerId: string }) => {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 size={24} className="animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  if (!hasPersistedPartner) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800">
+        Guarde este membro primeiro para criar um registo no banco. Os benefícios só funcionam depois disso.
       </div>
     );
   }
@@ -189,11 +206,23 @@ export const BenefitEditorSection = ({ partnerId }: { partnerId: string }) => {
                   </div>
                   <p className="text-sm font-medium text-slate-800 truncate">{b.title}</p>
                   {b.description && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{b.description}</p>}
-                  {b.link && (
-                    <a href={safeUrl(b.link)} target="_blank" rel="noreferrer" className="text-[11px] text-brand-700 hover:underline flex items-center gap-1 mt-0.5">
-                      <ExternalLink size={10} /> {b.link.replace(/^https?:\/\//, '').split('/')[0]}
-                    </a>
-                  )}
+                  {(() => {
+                    const resolved = resolveLink(b.link);
+                    if (!resolved) return null;
+                    const className = 'text-[11px] text-brand-700 hover:underline flex items-center gap-1 mt-0.5';
+                    if (resolved.isExternal) {
+                      return (
+                        <a href={resolved.href} target="_blank" rel="noreferrer" className={className}>
+                          <ExternalLink size={10} /> {resolved.href.replace(/^https?:\/\//, '').split('/')[0]}
+                        </a>
+                      );
+                    }
+                    return (
+                      <Link to={resolved.href} className={className}>
+                        <ArrowRight size={10} /> {resolved.href}
+                      </Link>
+                    );
+                  })()}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button

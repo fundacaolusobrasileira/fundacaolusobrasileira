@@ -66,9 +66,10 @@ describe('Header auth reactivity', () => {
     expect(screen.getByLabelText('Sair da conta')).toBeInTheDocument();
 
     // Simulate logout — state changes and event fires
-    act(() => {
+    await act(async () => {
       setAuthSession({ isLoggedIn: false, role: 'viewer' });
       notifyState();
+      await Promise.resolve(); // flush microtask queue (notifyState is now coalesced)
     });
 
     expect(screen.getByText('Entrar')).toBeInTheDocument();

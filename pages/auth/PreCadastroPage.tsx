@@ -155,6 +155,7 @@ export const PreCadastroPage = () => {
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Nome Completo</label>
                   <Input
+                    aria-label="Nome"
                     type="text"
                     variant="dark"
                     value={formData.name}
@@ -166,6 +167,7 @@ export const PreCadastroPage = () => {
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">E-mail</label>
                   <Input
+                    aria-label="E-mail"
                     type="email"
                     variant="dark"
                     value={formData.email}
@@ -201,6 +203,7 @@ export const PreCadastroPage = () => {
               <div className="space-y-3">
                 <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Mensagem (Opcional)</label>
                 <textarea
+                  aria-label="Mensagem"
                   rows={4}
                   value={formData.message}
                   onChange={e => setFormData({ ...formData, message: e.target.value })}

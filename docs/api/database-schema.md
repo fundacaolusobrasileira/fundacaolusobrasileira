@@ -177,8 +177,30 @@ Audit trail for admin actions. Persisted to survive page reloads.
 
 ---
 
+## activity_logs
+Append-only audit trail of editor/admin actions. Created in migration `20260425_activity_logs.sql`.
+
+| Column | Type | Nullable | Default | Constraint |
+|--------|------|----------|---------|------------|
+| id | uuid | NO | uuid_generate_v4() | PK |
+| action | text | NO | — | |
+| target | text | NO | — | |
+| user_name | text | YES | — | |
+| user_id | uuid | YES | — | FK → auth.users ON DELETE SET NULL |
+| created_at | timestamptz | NO | now() | INDEX DESC |
+
+**RLS:**
+- SELECT: `is_editor()` only
+- INSERT: authenticated users, `user_id = auth.uid()`
+- UPDATE/DELETE: none (append-only)
+
+---
+
 ## Changed: 2026-03-30
 - Initial schema documentation from live database inspection
 - Fixed partners.category DEFAULT from 'Parceiro' to 'Parceiro Silver'
 - Added user_id to community_media_submissions payload
-- Added activity_logs table for persistent audit trail
+
+## Changed: 2026-04-25
+- `activity_logs` table added (migration `20260425_activity_logs.sql`)
+- `persistLogEntry` now returns `{ ok: boolean; error?: string }` instead of void

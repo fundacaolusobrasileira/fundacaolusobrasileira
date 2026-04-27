@@ -11,6 +11,7 @@ interface PartnerCardProps {
     category: string;
     since?: string;
     pageRoute?: string;
+    featured?: boolean;
   };
 }
 
@@ -30,9 +31,16 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({ partner }) => {
           }
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500 mb-0.5">
-            {partner.category}{partner.since ? ` \u00B7 Est. ${partner.since}` : ''}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 mb-0.5">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500">
+              {partner.category}{partner.since ? ` \u00B7 Est. ${partner.since}` : ''}
+            </p>
+            {partner.featured && (
+              <span className="inline-flex items-center rounded-full bg-sand-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest text-sand-700">
+                Destaque
+              </span>
+            )}
+          </div>
           <h3 className="text-sm font-serif text-brand-900 group-hover:text-sand-600 transition-colors">{partner.name}</h3>
         </div>
       </div>

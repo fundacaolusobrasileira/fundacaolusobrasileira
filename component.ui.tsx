@@ -2,12 +2,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Link as LinkIcon, Link2, Share2, Loader2, Image as ImageIcon, Check, Lock, Trash2, Edit, Plus, ExternalLink, Search, Star, Upload, Mail, Settings, User, AlertTriangle, CheckCircle, Info, AlertCircle as AlertIcon, Crown, Shield, ChevronDown } from 'lucide-react';
 import type { GalleryItem, SocialLinks, Partner, Event, PreCadastro, ActivityLogItem } from './types';
-import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
+import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, isAdmin, isEditor, showToast, generateId, FLB_TOAST_EVENT, FLB_STATE_EVENT, exportState, importState } from './store/app.store';
 import { resolveGalleryItemSrc, saveMediaBlob, uploadSingleImage } from './services/media.service';
 import { loginAsEditor, convertPreCadastroToAccount } from './services/auth.service';
 import { createEvent, updateEvent, deleteEvent, addMediaToEvent, addUrlMediaToEvent, addEventImagesFromFiles, approveCommunityMedia, rejectCommunityMedia } from './services/events.service';
 import { createMember, updateMember } from './services/members.service';
 import { updatePreCadastro, deletePreCadastro, convertPreCadastroToMember } from './services/precadastros.service';
+import { isSafeHttpUrl } from './utils/url';
+import { isUuid } from './utils/uuid';
 
 // --- TOAST NOTIFICATION SYSTEM ---
 interface Toast {
@@ -327,17 +329,34 @@ export const ModalFooter = ({ children, className = '' }: any) => (
 
 export const AsyncImage = ({ item, className = '' }: { item: GalleryItem, className?: string }) => {
   const [src, setSrc] = useState<string>('');
+  const [resolved, setResolved] = useState(false);
+  const [failed, setFailed] = useState(false);
   
   useEffect(() => {
     let active = true;
+    setResolved(false);
+    setFailed(false);
+    setSrc('');
     resolveGalleryItemSrc(item).then(url => {
-        if (active && url) setSrc(url);
+        if (!active) return;
+        if (url) setSrc(url);
+        setResolved(true);
     });
     return () => { active = false; };
   }, [item]);
 
+  if (failed || (resolved && !src)) {
+    return (
+      <div className={`bg-slate-100 text-slate-400 flex items-center justify-center text-center p-3 ${className}`} role="img" aria-label="Prévia indisponível">
+        <div>
+          <p className="text-[11px] font-semibold text-slate-500">Prévia indisponível</p>
+          <p className="text-[10px] text-slate-400 mt-1">Link quebrado ou imagem corrompida.</p>
+        </div>
+      </div>
+    );
+  }
   if (!src) return <div className={`bg-slate-100 animate-pulse ${className}`} role="img" aria-label="Imagem carregando" />;
-  return <img src={src} className={className} alt={item.caption || "Imagem da galeria"} />;
+  return <img src={src} className={className} alt={item.caption || "Imagem da galeria"} onError={() => setFailed(true)} />;
 };
 
 export const LoginModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
@@ -429,6 +448,10 @@ export const MediaManagerModal = ({ isOpen, onClose }: any) => {
     const [tab, setTab] = useState<'oficial' | 'comunidade' | 'pendente'>('oficial');
     const [localEvents, setLocalEvents] = useState(EVENTS);
     const [uploading, setUploading] = useState(false);
+    const [urlModalOpen, setUrlModalOpen] = useState(false);
+    const [urlDraft, setUrlDraft] = useState('');
+    const [urlType, setUrlType] = useState<'image' | 'video'>('image');
+    const [urlPreviewBroken, setUrlPreviewBroken] = useState(false);
 
     // Refresh on open
     useEffect(() => {
@@ -453,12 +476,15 @@ export const MediaManagerModal = ({ isOpen, onClose }: any) => {
         setUploading(false);
     };
 
-    const handleUrlAdd = () => {
-       const url = prompt("URL da imagem/vídeo:");
-       if (url && selectedEventId) {
-           addUrlMediaToEvent(selectedEventId, url);
-           setLocalEvents([...EVENTS]);
-       }
+    const handleUrlAdd = async () => {
+       if (!selectedEventId || !urlDraft.trim()) return;
+       const added = await addUrlMediaToEvent(selectedEventId, urlDraft.trim(), urlType);
+       if (!added) return;
+       setLocalEvents([...EVENTS]);
+       setUrlDraft('');
+       setUrlType('image');
+       setUrlPreviewBroken(false);
+       setUrlModalOpen(false);
     };
 
     const handleApprove = (id: string) => {
@@ -505,12 +531,30 @@ export const MediaManagerModal = ({ isOpen, onClose }: any) => {
                         <>
                             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
                                 <div className="flex gap-2">
-                                    <button onClick={() => setTab('oficial')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === 'oficial' ? 'bg-brand-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>Oficial</button>
-                                    <button onClick={() => setTab('comunidade')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === 'comunidade' ? 'bg-brand-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>Comunidade</button>
-                                    <button onClick={() => setTab('pendente')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === 'pendente' ? 'bg-brand-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>Pendentes</button>
+                                    {(() => {
+                                        const officialCount = (activeEvent.gallery || []).filter((m: any) => m.source === 'oficial').length;
+                                        const communityCount = (activeEvent.gallery || []).filter((m: any) => m.source === 'comunidade').length;
+                                        const pendingCount = PENDING_MEDIA_SUBMISSIONS.filter(s => s.eventId === activeEvent.id).length;
+                                        return (
+                                            <>
+                                                <button onClick={() => setTab('oficial')} className={`relative px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === 'oficial' ? 'bg-brand-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                                    Oficial
+                                                    {officialCount > 0 && <span className={`ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${tab === 'oficial' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'}`}>{officialCount}</span>}
+                                                </button>
+                                                <button onClick={() => setTab('comunidade')} className={`relative px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === 'comunidade' ? 'bg-brand-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                                    Comunidade
+                                                    {communityCount > 0 && <span className={`ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${tab === 'comunidade' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'}`}>{communityCount}</span>}
+                                                </button>
+                                                <button onClick={() => setTab('pendente')} className={`relative px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider ${tab === 'pendente' ? 'bg-brand-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                                    Pendentes
+                                                    {pendingCount > 0 && <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold">{pendingCount}</span>}
+                                                </button>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={handleUrlAdd} className="p-2 border rounded hover:bg-slate-50" title="Add URL" aria-label="Adicionar URL"><LinkIcon size={16}/></button>
+                                    <button onClick={() => setUrlModalOpen(true)} className="p-2 border rounded hover:bg-slate-50" title="Add URL" aria-label="Adicionar URL"><LinkIcon size={16}/></button>
                                     <label className={`p-2 border rounded hover:bg-slate-50 cursor-pointer bg-brand-900 text-white ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`} aria-label="Upload de arquivo"><Plus size={16}/><input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading}/></label>
                                 </div>
                             </div>
@@ -519,7 +563,7 @@ export const MediaManagerModal = ({ isOpen, onClose }: any) => {
                                     {displayedMedia.map((m: any) => (
                                         <div key={m.id} className="relative aspect-square bg-white rounded-lg shadow-sm overflow-hidden group border border-slate-200">
                                             {tab === 'pendente' ? (
-                                                <img src={m.url} className="w-full h-full object-cover" alt="Mídia pendente" />
+                                                <AsyncImage item={m} className="w-full h-full object-cover" />
                                             ) : (
                                                 <AsyncImage item={m} className="w-full h-full object-cover" />
                                             )}
@@ -552,6 +596,75 @@ export const MediaManagerModal = ({ isOpen, onClose }: any) => {
                     )}
                 </div>
             </div>
+            <Modal isOpen={urlModalOpen} onClose={() => setUrlModalOpen(false)} className="max-w-xl" titleId="media-url-modal-title">
+                <ModalHeader id="media-url-modal-title">Adicionar Mídia por URL</ModalHeader>
+                <ModalBody>
+                    <div className="space-y-6">
+                        <div className="flex gap-2 bg-slate-100 p-1 rounded-lg self-start">
+                            <button
+                                type="button"
+                                onClick={() => setUrlType('image')}
+                                className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${urlType === 'image' ? 'bg-white text-brand-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Imagem
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUrlType('video')}
+                                className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${urlType === 'video' ? 'bg-white text-brand-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Vídeo
+                            </button>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">URL da mídia</label>
+                            <Input
+                                aria-label="URL da mídia para adicionar"
+                                value={urlDraft}
+                                onChange={(e: any) => {
+                                    setUrlDraft(e.target.value);
+                                    setUrlPreviewBroken(false);
+                                }}
+                                placeholder={urlType === 'image' ? 'https://...' : 'https://youtube.com/...'}
+                            />
+                        </div>
+                        {urlDraft.trim() && (
+                            <div className="rounded-2xl overflow-hidden border border-slate-200 h-56 bg-slate-50 relative">
+                                {urlType === 'video' ? (
+                                    <iframe
+                                        title="Prévia do vídeo"
+                                        src={urlDraft.replace('watch?v=', 'embed/')}
+                                        className="w-full h-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                ) : (
+                                    urlPreviewBroken ? (
+                                        <div className="w-full h-full flex items-center justify-center text-center p-6">
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-600">Prévia indisponível</p>
+                                                <p className="text-xs text-slate-400 mt-2">O link parece quebrado ou a imagem foi corrompida. Reenvie o ficheiro ou use outra URL.</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={urlDraft}
+                                            alt="Prévia da mídia"
+                                            className="w-full h-full object-cover"
+                                            onError={() => setUrlPreviewBroken(true)}
+                                        />
+                                    )
+                                )}
+                                <div className="absolute top-2 right-2 bg-black/60 text-white text-[9px] px-2 py-1 rounded">Prévia</div>
+                            </div>
+                        )}
+                    </div>
+                </ModalBody>
+                <ModalFooter>
+                    <Button variant="ghost" onClick={() => setUrlModalOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleUrlAdd}>Adicionar URL</Button>
+                </ModalFooter>
+            </Modal>
         </Modal>
     );
 };
@@ -596,31 +709,49 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
         
         // Emulate network/processing delay using async callback
         setTimeout(async () => {
+            let ok = false;
             if (formData.id) {
-                await updateEvent(formData.id, formData);
+                ok = await updateEvent(formData.id, formData);
             } else {
-                await createEvent(formData);
+                ok = !!(await createEvent(formData));
             }
             setLoading(false);
-            onClose();
+            if (ok) onClose();
         }, 600);
     };
 
     // Gallery Logic
-    const handleAddUrl = () => {
-        if (!newImageUrl) return;
-        const newItem: GalleryItem = {
-            id: generateId('media'),
-            kind: 'image',
-            srcType: 'url',
-            url: newImageUrl,
-            source: 'oficial',
-            status: 'published',
-            createdAt: new Date().toISOString(),
-            order: (formData.gallery?.length || 0)
-        };
-        const newGallery = [...(formData.gallery || []), newItem];
-        setFormData({ ...formData, gallery: newGallery });
+    const handleAddUrl = async () => {
+        const url = newImageUrl.trim();
+        if (!url) {
+            showToast('Informe uma URL para adicionar à galeria.', 'warning');
+            return;
+        }
+
+        if (formData.id) {
+            const added = await addUrlMediaToEvent(formData.id, url, 'image');
+            if (!added) return;
+            const updated = EVENTS.find(ev => ev.id === formData.id);
+            if (updated) setFormData({ ...updated });
+        } else {
+            if (!isSafeHttpUrl(url)) {
+                showToast('URL inválida. Use apenas HTTP ou HTTPS.', 'error');
+                return;
+            }
+            const newItem: GalleryItem = {
+                id: generateId('media'),
+                kind: 'image',
+                srcType: 'url',
+                url,
+                source: 'oficial',
+                status: 'published',
+                createdAt: new Date().toISOString(),
+                order: (formData.gallery?.length || 0)
+            };
+            const newGallery = [...(formData.gallery || []), newItem];
+            setFormData({ ...formData, gallery: newGallery });
+        }
+
         setNewImageUrl('');
     };
 
@@ -700,14 +831,14 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
     };
 
     // Close Handler - prevent closing while uploading
-    const handleClose = () => {
+    const handleClose = async () => {
         if (uploading) return; // Block close during upload
         // Clean up auto-created draft if user cancels without saving
         const draftIdToDelete = autoDraftIdRef.current;
         if (draftIdToDelete) {
             const draftEvent = EVENTS.find(ev => ev.id === draftIdToDelete);
             if (draftEvent && draftEvent.status === 'draft' && draftEvent.title === 'Rascunho') {
-                deleteEvent(draftIdToDelete);
+                await deleteEvent(draftIdToDelete);
             }
             autoDraftIdRef.current = null;
         }
@@ -738,7 +869,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                             </h3>
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Título</label>
-                                <Input value={formData.title || ''} onChange={(e: any) => setFormData({...formData, title: e.target.value})} placeholder="Título do Evento" />
+                                <Input aria-label="Título" value={formData.title || ''} onChange={(e: any) => setFormData({...formData, title: e.target.value})} placeholder="Título do Evento" />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Subtítulo</label>
@@ -747,27 +878,28 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data Início</label>
-                                    <input type="date" value={formData.date || ''} onChange={(e: any) => setFormData({...formData, date: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
+                                    <input aria-label="Data Início" type="date" value={formData.date || ''} onChange={(e: any) => setFormData({...formData, date: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Hora Início</label>
-                                    <input type="time" value={formData.time || ''} onChange={(e: any) => setFormData({...formData, time: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
+                                    <input aria-label="Hora Início" type="time" value={formData.time || ''} onChange={(e: any) => setFormData({...formData, time: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Data Fim</label>
-                                    <input type="date" value={formData.endDate || ''} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
+                                    <input aria-label="Data Fim" type="date" value={formData.endDate || ''} onChange={(e: any) => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Hora Fim</label>
-                                    <input type="time" value={formData.endTime || ''} onChange={(e: any) => setFormData({...formData, endTime: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
+                                    <input aria-label="Hora Fim" type="time" value={formData.endTime || ''} onChange={(e: any) => setFormData({...formData, endTime: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none transition-all text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Categoria</label>
                                     <select
+                                        aria-label="Categoria"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
                                         value={formData.category}
                                         onChange={(e) => setFormData({...formData, category: e.target.value as any})}
@@ -780,7 +912,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Local / Venue</label>
-                                    <Input value={formData.location || ''} onChange={(e: any) => setFormData({...formData, location: e.target.value})} placeholder="Nome do local" />
+                                    <Input aria-label="Local" value={formData.location || ''} onChange={(e: any) => setFormData({...formData, location: e.target.value})} placeholder="Nome do local" />
                                 </div>
                             </div>
                             <div>
@@ -804,6 +936,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Descrição</label>
                                 <textarea
+                                    aria-label="Descrição"
                                     className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white min-h-[100px]"
                                     rows={3}
                                     placeholder="Descrição detalhada do evento..."
@@ -825,6 +958,7 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({...prev, status: prev.status === 'published' ? 'draft' : 'published'}))}
+                                            aria-label="Publicar evento"
                                             className={`relative w-10 h-5 rounded-full transition-colors ${formData.status === 'published' ? 'bg-green-500' : 'bg-slate-300'}`}
                                         >
                                             <span className={`absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform ${formData.status === 'published' ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -896,16 +1030,26 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                         <div className="pt-6 border-t border-slate-100">
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Capa Horizontal (topo do evento)</label>
-                                <div className="flex gap-3 items-center">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                                        {formData.image ? <img src={formData.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={16}/></div>}
+                                <div className="space-y-3">
+                                    <div className="aspect-[16/9] w-full max-w-md bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200">
+                                        {formData.image ? (
+                                            <img src={formData.image} className="w-full h-full object-cover object-center" alt="Prévia da capa horizontal do evento" />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+                                                <ImageIcon size={20}/>
+                                                <span className="text-[10px] font-medium uppercase tracking-widest text-slate-400">Prévia 16:9</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <Input value={formData.image || ''} onChange={(e: any) => setFormData({...formData, image: e.target.value})} placeholder="https://..." className="flex-grow" />
-                                    <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleImageUpload('image', coverInputRef, e)} />
-                                    <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploading} className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-black transition-colors disabled:opacity-50">
-                                        <Upload size={11}/> Upload
-                                    </button>
+                                    <div className="flex gap-3 items-center">
+                                        <Input value={formData.image || ''} onChange={(e: any) => setFormData({...formData, image: e.target.value})} placeholder="https://..." className="flex-grow" />
+                                        <input aria-label="Upload imagem de capa do evento" ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleImageUpload('image', coverInputRef, e)} />
+                                        <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploading} className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-black transition-colors disabled:opacity-50">
+                                            <Upload size={11}/> Upload
+                                        </button>
+                                    </div>
                                 </div>
+                                <p className="mt-2 text-[10px] text-slate-400">JPEG, PNG ou WEBP até 5MB. A capa será exibida em formato horizontal 16:9 com recorte central. Recomendado: 1600x900 px.</p>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Capa Vertical (9:16)</label>
@@ -914,11 +1058,12 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
                                         {formData.cardImage ? <img src={formData.cardImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={12}/></div>}
                                     </div>
                                     <Input value={formData.cardImage || ''} onChange={(e: any) => setFormData({...formData, cardImage: e.target.value})} placeholder="https://... (opcional, formato vertical)" className="flex-grow" />
-                                    <input ref={cardInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleImageUpload('cardImage', cardInputRef, e)} />
+                                    <input aria-label="Upload imagem vertical do evento" ref={cardInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleImageUpload('cardImage', cardInputRef, e)} />
                                     <button type="button" onClick={() => cardInputRef.current?.click()} disabled={uploading} className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-black transition-colors disabled:opacity-50">
                                         <Upload size={11}/> Upload
                                     </button>
                                 </div>
+                                <p className="mt-2 text-[10px] text-slate-400">JPEG, PNG ou WEBP até 5MB.</p>
                             </div>
                         </div>
 
@@ -969,13 +1114,14 @@ export const EventEditorModal = ({ isOpen, onClose, event }: any) => {
 
                         {/* Quick URL Add */}
                         <div className="flex gap-2 mb-4">
-                            <Input 
+                            <Input
+                                aria-label="URL da galeria"
                                 placeholder="Adicionar imagem via URL..." 
                                 value={newImageUrl} 
                                 onChange={(e: any) => setNewImageUrl(e.target.value)} 
                                 className="bg-white text-xs h-9"
                             />
-                            <Button onClick={handleAddUrl} variant="outline" className="h-9 px-3 border-slate-200 bg-white"><Plus size={14}/></Button>
+                            <Button aria-label="Adicionar URL à galeria" onClick={handleAddUrl} variant="outline" className="h-9 px-3 border-slate-200 bg-white"><Plus size={14}/></Button>
                         </div>
 
                         {/* Grid */}
@@ -1039,13 +1185,13 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
         setTimeout(async () => {
             try {
                 if (formData.id) {
-                    await updateMember(formData.id, formData);
-                    onClose();
+                    const ok = await updateMember(formData.id, formData);
+                    if (ok) onClose();
                 } else {
                     const newM = await createMember(false);
                     if (newM) {
-                        await updateMember(newM.id, formData, true);
-                        onClose();
+                        const ok = await updateMember(newM.id, formData, true);
+                        if (ok) onClose();
                     } else {
                         // BUG 8 FIX: createMember returned null — show error instead of hanging
                         showToast('Erro ao criar membro.', 'error');
@@ -1064,14 +1210,11 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
         if (!e.target.files?.[0]) return;
         const file = e.target.files[0];
 
-        console.log(`[MEMBER_UPLOAD] selected file=${file.name} size=${file.size} type=${file.type}`);
         setUploading(true);
         try {
             const publicUrl = await saveMediaBlob(file);
-            console.log(`[MEMBER_UPLOAD] success url=${publicUrl}`);
             setFormData({ ...formData, image: publicUrl });
         } catch (err: any) {
-            console.error(`[MEMBER_UPLOAD] catch err=`, err);
             showToast(`Erro no upload: ${err?.message || 'erro desconhecido'}`, 'error');
         } finally {
             setUploading(false);
@@ -1113,13 +1256,15 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                 <Info size={14}/> Informações Básicas
                             </h3>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Nome Completo</label>
-                                <Input value={formData.name || ''} onChange={(e: any) => setFormData({...formData, name: e.target.value})} placeholder="Nome" />
+                                <label htmlFor="member-name" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Nome Completo</label>
+                                <Input id="member-name" value={formData.name || ''} onChange={(e: any) => setFormData({...formData, name: e.target.value})} placeholder="Nome" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Tipo</label>
+                                    <label htmlFor="member-type" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Tipo</label>
                                     <select
+                                        id="member-type"
+                                        aria-label="Tipo"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
                                         value={formData.type || 'pessoa'}
                                         onChange={(e) => setFormData({...formData, type: e.target.value})}
@@ -1129,8 +1274,10 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Categoria</label>
+                                    <label htmlFor="member-category" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Categoria</label>
                                     <select
+                                        id="member-category"
+                                        aria-label="Categoria"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
                                         value={formData.category || 'Parceiro Silver'}
                                         onChange={(e) => setFormData({...formData, category: e.target.value})}
@@ -1146,8 +1293,25 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Cargo / Função</label>
-                                <Input value={formData.role || ''} onChange={(e: any) => setFormData({...formData, role: e.target.value})} placeholder="Ex: Presidente, CEO, Diretor..." />
+                                <label htmlFor="member-tier" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Cargo Institucional</label>
+                                <select
+                                    id="member-tier"
+                                    aria-label="Cargo Institucional"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
+                                    value={formData.tier || ''}
+                                    onChange={(e) => setFormData({...formData, tier: e.target.value || undefined})}
+                                >
+                                    <option value="">Sem cargo definido</option>
+                                    <option value="presidente">Presidente</option>
+                                    <option value="direcao">Direção</option>
+                                    <option value="secretario-geral">Secretário Geral</option>
+                                    <option value="vogal">Vogal</option>
+                                </select>
+                                <p className="text-[10px] text-slate-400 mt-1">Use este campo para definir quem aparece como presidente e demais cargos da governança.</p>
+                            </div>
+                            <div>
+                                <label htmlFor="member-role" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Cargo / Função</label>
+                                <Input id="member-role" value={formData.role || ''} onChange={(e: any) => setFormData({...formData, role: e.target.value})} placeholder="Ex: Presidente, CEO, Diretor..." />
                             </div>
 
                             <div>
@@ -1191,11 +1355,31 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <Settings size={14}/> Configurações
                             </h3>
+                            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                                <p className="text-[11px] font-semibold text-amber-900">Conta de acesso e perfil público são fluxos separados.</p>
+                                <p className="text-[10px] text-amber-800 mt-1 leading-relaxed">
+                                    Crie ou edite o membro aqui. Se esta pessoa também precisar de login no portal, faça isso em <strong>Utilizadores</strong> ou via <strong>Pré-Registos</strong> depois de salvar o perfil.
+                                </p>
+                                {isAdmin() && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onClose();
+                                            window.location.hash = '#/dashboard';
+                                        }}
+                                        className="mt-2 text-[10px] font-bold uppercase tracking-wider text-brand-900 hover:text-black"
+                                    >
+                                        Abrir área administrativa
+                                    </button>
+                                )}
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Status</label>
                                     <div className="flex items-center gap-2">
                                         <button 
+                                            type="button"
+                                            aria-label="Alternar status do membro"
                                             onClick={() => setFormData({...formData, active: !formData.active})}
                                             className={`relative w-10 h-5 rounded-full transition-colors ${formData.active !== false ? 'bg-green-500' : 'bg-slate-300'}`}
                                         >
@@ -1209,6 +1393,8 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Destaque</label>
                                     <div className="flex items-center gap-2">
                                         <button 
+                                            type="button"
+                                            aria-label="Alternar destaque do membro"
                                             onClick={() => setFormData({...formData, featured: !formData.featured})}
                                             className={`relative w-10 h-5 rounded-full transition-colors ${formData.featured ? 'bg-sand-400' : 'bg-slate-300'}`}
                                         >
@@ -1220,8 +1406,9 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                             </div>
                             
                             <div className="mt-4">
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Ordem de Exibição</label>
+                                <label htmlFor="member-order" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Ordem de Exibição</label>
                                 <Input 
+                                    id="member-order"
                                     type="number" 
                                     value={formData.order || 0} 
                                     onChange={(e: any) => setFormData({...formData, order: parseInt(e.target.value) || 0})} 
@@ -1265,8 +1452,9 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                         className="hidden"
                                         onChange={handleImageUpload}
                                     />
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">URL da Imagem</label>
+                                    <label htmlFor="member-image-url" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">URL da Imagem</label>
                                     <Input
+                                        id="member-image-url"
                                         value={formData.image || ''}
                                         onChange={(e: any) => setFormData({...formData, image: e.target.value})}
                                         placeholder="https://..."
@@ -1294,13 +1482,13 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                 </div>
                                 <div className="mt-2 grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">País</label>
-                                        <Input value={formData.country || ''} onChange={(e: any) => setFormData({...formData, country: e.target.value})} placeholder="País..." className="bg-white text-xs" />
+                                        <label htmlFor="member-country" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">País</label>
+                                        <Input id="member-country" value={formData.country || ''} onChange={(e: any) => setFormData({...formData, country: e.target.value})} placeholder="País..." className="bg-white text-xs" />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Website</label>
+                                        <label htmlFor="member-website" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Website</label>
                                         <div className="relative">
-                                            <Input value={formData.website || ''} onChange={(e: any) => setFormData({...formData, website: e.target.value})} placeholder="https://..." className="bg-white pl-8 text-xs" />
+                                            <Input id="member-website" value={formData.website || ''} onChange={(e: any) => setFormData({...formData, website: e.target.value})} placeholder="https://..." className="bg-white pl-8 text-xs" />
                                             <ExternalLink size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
                                         </div>
                                     </div>
@@ -1473,8 +1661,22 @@ export const UniversalListModal = ({ isOpen, onClose, title, items, onEdit, onDe
                                  <div className="text-xs text-slate-500">{item.category || item.date}</div>
                              </div>
                              <div className="flex gap-2">
-                                 <button onClick={() => onEdit(item)} className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 text-slate-500 hover:text-brand-900"><Edit size={14}/></button>
-                                 <button onClick={() => onDelete(item.id)} className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-red-200 text-slate-500 hover:text-red-500"><Trash2 size={14}/></button>
+                                 <button
+                                   onClick={() => onEdit(item)}
+                                   aria-label={`Editar ${item.title || item.name}`}
+                                   title="Editar"
+                                   className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 text-slate-500 hover:text-brand-900"
+                                 >
+                                   <Edit size={14}/>
+                                 </button>
+                                 <button
+                                   onClick={() => onDelete(item.id)}
+                                   aria-label={`Excluir ${item.title || item.name}`}
+                                   title="Excluir"
+                                   className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-red-200 text-slate-500 hover:text-red-500"
+                                 >
+                                   <Trash2 size={14}/>
+                                 </button>
                              </div>
                          </div>
                     ))}
@@ -1496,6 +1698,7 @@ const STATUS_META: Record<string, { label: string; dot: string }> = {
     novo:       { label: 'Novo',       dot: 'bg-blue-500' },
     contatado:  { label: 'Contatado',  dot: 'bg-yellow-500' },
     aprovado:   { label: 'Aprovado',   dot: 'bg-green-500' },
+    pausado:    { label: 'Pausado',    dot: 'bg-amber-500' },
     rejeitado:  { label: 'Rejeitado',  dot: 'bg-red-400' },
     convertido: { label: 'Convertido', dot: 'bg-slate-400' },
 };
@@ -1504,6 +1707,7 @@ const STATUS_META: Record<string, { label: string; dot: string }> = {
 const ROLE_OPTIONS = [
   { value: 'membro' as const,  label: 'Membro',  icon: User,   desc: 'Acesso de visualização apenas.' },
   { value: 'editor' as const,  label: 'Editor',  icon: Shield, desc: 'Pode criar e editar eventos e membros.' },
+  { value: 'admin' as const,   label: 'Admin',   icon: Crown,  desc: 'Acesso total ao painel, utilizadores e configurações.' },
 ];
 
 const ConvertToAccountDialog = ({
@@ -1514,15 +1718,16 @@ const ConvertToAccountDialog = ({
   precadastro: PreCadastro | null;
   onSuccess: (id: string) => void;
 }) => {
-  const [role, setRole] = React.useState<'membro' | 'editor'>('membro');
+  const [role, setRole] = React.useState<'membro' | 'editor' | 'admin'>('membro');
   const [partnerId, setPartnerId] = React.useState<string | null>(null);
   const [partnerSearch, setPartnerSearch] = React.useState('');
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const pickerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (isOpen) { setRole('membro'); setPartnerId(null); setPartnerSearch(''); setPickerOpen(false); }
+    if (isOpen) { setRole('membro'); setPartnerId(null); setPartnerSearch(''); setPickerOpen(false); setErrorMessage(null); }
   }, [isOpen, precadastro?.id]);
 
   React.useEffect(() => {
@@ -1534,15 +1739,17 @@ const ConvertToAccountDialog = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [pickerOpen]);
 
-  if (!isOpen || !precadastro) return null;
+  if (!isAdmin() || !isOpen || !precadastro) return null;
 
-  const filteredPartners = PARTNERS.filter(p =>
+  const linkablePartners = PARTNERS.filter(p => isUuid(p.id));
+  const filteredPartners = linkablePartners.filter(p =>
     p.name.toLowerCase().includes(partnerSearch.toLowerCase())
   );
-  const selectedPartner = partnerId ? PARTNERS.find(p => p.id === partnerId) : null;
+  const selectedPartner = partnerId ? linkablePartners.find(p => p.id === partnerId) : null;
 
   const handleConfirm = async () => {
     setLoading(true);
+    setErrorMessage(null);
     const result = await convertPreCadastroToAccount({
       name: precadastro.name,
       email: precadastro.email,
@@ -1551,8 +1758,14 @@ const ConvertToAccountDialog = ({
       partnerId,
     });
     if (result.ok) {
-      await updatePreCadastro(precadastro.id, { status: 'convertido' });
-      onSuccess(precadastro.id);
+      const updated = await updatePreCadastro(precadastro.id, { status: 'convertido' });
+      if (updated) {
+        onSuccess(precadastro.id);
+      } else {
+        setErrorMessage('Conta criada, mas o estado do pré-cadastro não foi atualizado.');
+      }
+    } else {
+      setErrorMessage(result.error || 'Falha ao criar conta a partir do pré-cadastro.');
     }
     setLoading(false);
   };
@@ -1663,6 +1876,11 @@ const ConvertToAccountDialog = ({
         <p className="text-[10px] text-slate-400 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">
           O utilizador receberá um email de confirmação. Após confirmar, define a sua password em <strong>"Esqueci a password"</strong>.
         </p>
+        {errorMessage && (
+          <p className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 leading-relaxed" role="alert">
+            {errorMessage}
+          </p>
+        )}
 
         <div className="flex gap-3 pt-1">
           <button onClick={onClose} disabled={loading}
@@ -1680,10 +1898,114 @@ const ConvertToAccountDialog = ({
   );
 };
 
+const EditPreCadastroDialog = ({
+  isOpen, onClose, precadastro,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  precadastro: PreCadastro | null;
+}) => {
+  const [formData, setFormData] = React.useState<Partial<PreCadastro>>({});
+  const [loading, setLoading] = React.useState(false);
+  const isConverted = precadastro?.status === 'convertido';
+
+  React.useEffect(() => {
+    if (isOpen && precadastro) {
+      setFormData({
+        name: precadastro.name,
+        email: precadastro.email,
+        type: precadastro.type,
+        registrationType: precadastro.registrationType,
+        message: precadastro.message,
+        status: precadastro.status,
+      });
+    }
+  }, [isOpen, precadastro]);
+
+  if (!isOpen || !precadastro) return null;
+
+  const handleSave = async () => {
+    setLoading(true);
+    const ok = await updatePreCadastro(precadastro.id, formData);
+    setLoading(false);
+    if (ok) onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-xl" titleId="edit-precadastro-title">
+      <ModalHeader id="edit-precadastro-title">Editar Pré-Registo</ModalHeader>
+      <ModalBody>
+        <div className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Nome</label>
+              <Input aria-label="Nome do pré-registo" value={formData.name || ''} onChange={(e: any) => setFormData(prev => ({ ...prev, name: e.target.value }))} disabled={isConverted} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">E-mail</label>
+              <Input aria-label="E-mail do pré-registo" value={formData.email || ''} onChange={(e: any) => setFormData(prev => ({ ...prev, email: e.target.value }))} disabled={isConverted} />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Tipo</label>
+              <Input aria-label="Tipo do pré-registo" value={formData.type || ''} onChange={(e: any) => setFormData(prev => ({ ...prev, type: e.target.value }))} disabled={isConverted} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Perfil pretendido</label>
+              <select
+                aria-label="Perfil pretendido"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
+                value={formData.registrationType || ''}
+                disabled={isConverted}
+                onChange={(e) => setFormData(prev => ({ ...prev, registrationType: (e.target.value || undefined) as any }))}
+              >
+                <option value="">Não definido</option>
+                <option value="membro">Membro</option>
+                <option value="parceiro">Parceiro</option>
+                <option value="colaborador">Colaborador</option>
+                <option value="embaixador">Embaixador</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Estado</label>
+            <div className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700">
+              {(STATUS_META[precadastro.status] || STATUS_META.novo).label}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1">Altere o estado pelos botões de ação do pré-registo para manter o fluxo consistente.</p>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Mensagem</label>
+            <textarea
+              aria-label="Mensagem do pré-registo"
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 outline-none text-sm resize-none focus:border-sand-400 focus:ring-2 focus:ring-sand-400/20 bg-white"
+              value={formData.message || ''}
+              onChange={(e: any) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+            />
+            {isConverted && (
+              <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-2">
+                Este pré-registo já foi convertido. Nome, email e perfil ficam bloqueados aqui para evitar divergência com a conta e o membro já criados.
+              </p>
+            )}
+          </div>
+        </div>
+      </ModalBody>
+      <ModalFooter>
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button onClick={handleSave} isLoading={loading}>{loading ? 'Salvando...' : 'Salvar Alterações'}</Button>
+      </ModalFooter>
+    </Modal>
+  );
+};
+
 export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
     const [filter, setFilter] = React.useState<string>('todos');
     const [tick, setTick] = React.useState(0);
     const [convertTarget, setConvertTarget] = React.useState<PreCadastro | null>(null);
+    const [editTarget, setEditTarget] = React.useState<PreCadastro | null>(null);
+    const [processingKey, setProcessingKey] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         const update = () => setTick(t => t + 1);
@@ -1693,15 +2015,33 @@ export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
 
     if (!isOpen) return null;
 
+    const managedPreCadastros = PRECADASTROS.filter((p: PreCadastro) => p.type !== 'newsletter');
+
     const filtered = filter === 'todos'
-        ? PRECADASTROS
-        : PRECADASTROS.filter((p: PreCadastro) => p.status === filter);
+        ? managedPreCadastros
+        : managedPreCadastros.filter((p: PreCadastro) => p.status === filter);
 
-    const tabs = ['todos', 'novo', 'contatado', 'aprovado', 'rejeitado', 'convertido'];
-    const counts: Record<string, number> = { todos: PRECADASTROS.length };
-    tabs.slice(1).forEach(s => { counts[s] = PRECADASTROS.filter((p: PreCadastro) => p.status === s).length; });
+    const tabs = ['todos', 'novo', 'contatado', 'aprovado', 'pausado', 'rejeitado', 'convertido'];
+    const counts: Record<string, number> = { todos: managedPreCadastros.length };
+    tabs.slice(1).forEach(s => { counts[s] = managedPreCadastros.filter((p: PreCadastro) => p.status === s).length; });
 
-    const handleStatus = (id: string, status: string) => updatePreCadastro(id, { status } as any);
+    const handleStatus = async (id: string, status: string) => {
+        setProcessingKey(`${id}:status`);
+        await updatePreCadastro(id, { status } as any);
+        setProcessingKey(null);
+    };
+
+    const handleConvertMember = async (id: string) => {
+        setProcessingKey(`${id}:convert`);
+        await convertPreCadastroToMember(id);
+        setProcessingKey(null);
+    };
+
+    const handleDelete = async (id: string) => {
+        setProcessingKey(`${id}:delete`);
+        await deletePreCadastro(id);
+        setProcessingKey(null);
+    };
 
     const handleCopyEmail = (email: string) => {
         navigator.clipboard.writeText(email).then(() => showToast('E-mail copiado!', 'success'));
@@ -1738,6 +2078,11 @@ export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
                 precadastro={convertTarget}
                 onSuccess={() => setConvertTarget(null)}
             />
+            <EditPreCadastroDialog
+                isOpen={!!editTarget}
+                onClose={() => setEditTarget(null)}
+                precadastro={editTarget}
+            />
 
             <div className="flex-grow overflow-y-auto p-4 bg-slate-50 custom-scrollbar">
                 <div className="space-y-3">
@@ -1749,6 +2094,7 @@ export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
                     {filtered.map((pre: PreCadastro) => {
                         const regMeta = pre.registrationType ? REG_TYPE_META[pre.registrationType] : null;
                         const statusMeta = STATUS_META[pre.status] || STATUS_META.novo;
+                        const isProcessing = processingKey?.startsWith(`${pre.id}:`) ?? false;
                         return (
                             <Card key={pre.id} className="p-5 flex flex-col gap-4">
                                 {/* Top row: identity + badges */}
@@ -1792,35 +2138,43 @@ export const PreCadastroManagerModal = ({ isOpen, onClose }: any) => {
 
                                 {/* Actions */}
                                 <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-50">
+                                    <button
+                                        disabled={isProcessing}
+                                        onClick={() => setEditTarget(pre)}
+                                        className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                                    >
+                                        <Edit size={10} /> Editar
+                                    </button>
                                     {pre.status === 'novo' && (
-                                        <button onClick={() => handleStatus(pre.id, 'contatado')} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition-colors">
+                                        <button disabled={isProcessing} onClick={() => handleStatus(pre.id, 'contatado')} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition-colors disabled:opacity-50">
                                             Marcar Contatado
                                         </button>
                                     )}
                                     {pre.status !== 'aprovado' && pre.status !== 'convertido' && pre.status !== 'rejeitado' && (
-                                        <button onClick={() => handleStatus(pre.id, 'aprovado')} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+                                        <button disabled={isProcessing} onClick={() => handleStatus(pre.id, 'aprovado')} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors disabled:opacity-50">
                                             Aprovar
                                         </button>
                                     )}
                                     {pre.status !== 'rejeitado' && pre.status !== 'convertido' && (
-                                        <button onClick={() => handleStatus(pre.id, 'rejeitado')} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors">
+                                        <button disabled={isProcessing} onClick={() => handleStatus(pre.id, 'rejeitado')} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50">
                                             Rejeitar
                                         </button>
                                     )}
                                     {pre.status !== 'convertido' && (
-                                        <button onClick={() => convertPreCadastroToMember(pre.id)} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors">
+                                        <button disabled={isProcessing} onClick={() => handleConvertMember(pre.id)} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors disabled:opacity-50">
                                             Converter em {pre.registrationType === 'parceiro' ? 'Parceiro' : 'Membro'}
                                         </button>
                                     )}
-                                    {pre.status !== 'convertido' && (
+                                    {isAdmin() && pre.status !== 'convertido' && (
                                         <button
+                                            disabled={isProcessing}
                                             onClick={() => setConvertTarget(pre)}
-                                            className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-brand-900 text-white hover:bg-black transition-colors flex items-center gap-1.5"
+                                            className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-brand-900 text-white hover:bg-black transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                         >
                                             <Crown size={10} /> Criar Conta
                                         </button>
                                     )}
-                                    <button onClick={() => deletePreCadastro(pre.id)} className="ml-auto text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                                    <button disabled={isProcessing} onClick={() => handleDelete(pre.id)} className="ml-auto text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50">
                                         Eliminar
                                     </button>
                                 </div>

@@ -75,8 +75,8 @@ export const createMember = async (notify = true): Promise<Partner | null> => {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const updateMember = async (id: string, patch: Partial<Partner>, notify = true) => {
-  if (!isEditor()) return;
+export const updateMember = async (id: string, patch: Partial<Partner>, notify = true): Promise<boolean> => {
+  if (!isEditor()) return false;
   const raw: any = { ...patch };
   if (patch.socialLinks !== undefined) { raw.social_links = patch.socialLinks; }
 
@@ -99,7 +99,7 @@ export const updateMember = async (id: string, patch: Partial<Partner>, notify =
 
     if (insertError || !inserted) {
       showToast('Erro ao salvar membro.', 'error');
-      return;
+      return false;
     }
 
     // Replace slug ID with real UUID in the store
@@ -108,32 +108,51 @@ export const updateMember = async (id: string, patch: Partial<Partner>, notify =
     logActivity('Criou membro no banco', inserted.name);
     notifyState();
     if (notify) showToast('Membro salvo.', 'success');
-    return;
+    return true;
   }
 
-  const { error } = await supabase.from('partners').update(payload).eq('id', id);
-  if (!error) {
-    const idx = PARTNERS.findIndex(p => p.id === id);
-    if (idx !== -1) { PARTNERS[idx] = { ...PARTNERS[idx], ...patch }; }
-    logActivity('Editou membro', PARTNERS.find(p => p.id === id)?.name || id);
-    notifyState();
-    if (notify) showToast('Membro atualizado.', 'success');
-  } else {
+  // BUG 2 FIX: RLS USING denial returns { error: null, data: [] } — must check
+  // rows affected, not just absence of error.
+  const { data, error } = await supabase.from('partners').update(payload).eq('id', id).select('id');
+  if (error) {
     showToast('Erro ao atualizar membro.', 'error');
+    return false;
   }
+  if (!data || data.length === 0) {
+    showToast('Sem permissão para atualizar este membro.', 'error');
+    return false;
+  }
+  const idx = PARTNERS.findIndex(p => p.id === id);
+  if (idx !== -1) { PARTNERS[idx] = { ...PARTNERS[idx], ...patch }; }
+  logActivity('Editou membro', PARTNERS.find(p => p.id === id)?.name || id);
+  notifyState();
+  if (notify) showToast('Membro atualizado.', 'success');
+  return true;
 };
 
-export const deleteMember = async (id: string) => {
-  if (!isEditor()) return;
-  const { error } = await supabase.from('partners').delete().eq('id', id);
-  if (!error) {
-    const idx = PARTNERS.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      const name = PARTNERS[idx].name;
-      PARTNERS.splice(idx, 1);
-      logActivity('Removeu membro', name);
-      notifyState();
-      showToast('Membro removido.', 'success');
-    }
+export const deleteMember = async (id: string): Promise<boolean> => {
+  if (!isEditor()) return false;
+  if (!UUID_REGEX.test(id)) {
+    showToast('Este membro ainda é do seed inicial. Salve-o primeiro para gerar um registo editável.', 'warning');
+    return false;
   }
+  // BUG 2 PATTERN: RLS USING denial returns { error: null, data: [] } — verify rows affected.
+  const { data, error } = await supabase.from('partners').delete().eq('id', id).select('id');
+  if (error) {
+    showToast('Erro ao remover membro.', 'error');
+    return false;
+  }
+  if (!data || data.length === 0) {
+    showToast('Sem permissão para remover este membro.', 'error');
+    return false;
+  }
+  const idx = PARTNERS.findIndex(p => p.id === id);
+  if (idx !== -1) {
+    const name = PARTNERS[idx].name;
+    PARTNERS.splice(idx, 1);
+    logActivity('Removeu membro', name);
+    notifyState();
+    showToast('Membro removido.', 'success');
+  }
+  return true;
 };

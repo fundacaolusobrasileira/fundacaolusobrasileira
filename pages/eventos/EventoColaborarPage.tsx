@@ -6,9 +6,10 @@ import { EVENTS, AUTH_SESSION } from '../../store/app.store';
 import { submitCommunityMedia } from '../../services/community-media.service';
 import { subscribeToNewsletter, createPreCadastro } from '../../services/precadastros.service';
 import { saveCommunityMediaBlob } from '../../services/media.service';
+import { supabase } from '../../supabaseClient';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Event } from '../../types';
-import { CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp } from 'lucide-react';
+import { CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp, Loader2 } from 'lucide-react';
 import { ColaborarSchema } from '../../validation/schemas';
 
 export const EventoColaborarPage = () => {
@@ -17,6 +18,7 @@ export const EventoColaborarPage = () => {
   const [event, setEvent] = useState<Event | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [success, setSuccess] = useState(false);
   const [uploadMode, setUploadMode] = useState<'upload' | 'link'>(() =>
     AUTH_SESSION.isLoggedIn ? 'upload' : 'link'
@@ -36,6 +38,7 @@ export const EventoColaborarPage = () => {
   const [error, setError] = useState('');
   const [showLogin, setShowLogin] = useState(false);
   const isLoggedIn = AUTH_SESSION.isLoggedIn;
+  const [loggedUserIdentity, setLoggedUserIdentity] = useState({ name: '', email: '' });
 
   useEffect(() => {
     setTimeout(() => {
@@ -44,15 +47,44 @@ export const EventoColaborarPage = () => {
     }, 400);
   }, [id]);
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setLoggedUserIdentity({ name: '', email: '' });
+      return;
+    }
+
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data.user;
+      if (!user) return;
+      const fallbackEmail = user.email || AUTH_SESSION.displayName || '';
+      const fallbackName = user.user_metadata?.name
+        || fallbackEmail.split('@')[0]?.replace(/[._-]+/g, ' ')
+        || 'Membro autenticado';
+      setLoggedUserIdentity({
+        name: fallbackName.trim(),
+        email: fallbackEmail.trim(),
+      });
+    }).catch(() => {
+      const fallbackEmail = AUTH_SESSION.displayName || '';
+      setLoggedUserIdentity({
+        name: fallbackEmail.split('@')[0]?.replace(/[._-]+/g, ' ') || 'Membro autenticado',
+        email: fallbackEmail,
+      });
+    });
+  }, [isLoggedIn]);
+
   usePageMeta("Colaborar – Fundacao Luso-Brasileira", event ? `Enviar memoria do evento ${event.title}` : "Enviar memoria");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event) return;
 
+    const effectiveAuthorName = isLoggedIn ? loggedUserIdentity.name : formData.authorName;
+    const effectiveEmail = isLoggedIn ? loggedUserIdentity.email : formData.email;
+
     const parsed = ColaborarSchema.safeParse({
-      authorName: formData.authorName,
-      email: formData.email,
+      authorName: effectiveAuthorName,
+      email: effectiveEmail,
       url: formData.url,
       message: formData.message || undefined,
       agreedToTerms: formData.agreedToTerms || undefined,
@@ -69,20 +101,20 @@ export const EventoColaborarPage = () => {
     // Não-autenticados: criar pré-cadastro como colaborador automaticamente
     if (!isLoggedIn) {
       createPreCadastro({
-        name: formData.authorName,
-        email: formData.email,
+        name: effectiveAuthorName,
+        email: effectiveEmail,
         type: 'individual',
         registrationType: 'colaborador',
         message: `Enviou memória do evento: ${event.title}`,
       });
-    } else if (formData.subscribeNewsletter && formData.email) {
-      subscribeToNewsletter(formData.email);
+    } else if (formData.subscribeNewsletter && effectiveEmail) {
+      subscribeToNewsletter(effectiveEmail);
     }
 
     const result = await submitCommunityMedia({
       eventId: event.id,
-      authorName: formData.authorName,
-      email: formData.email,
+      authorName: effectiveAuthorName,
+      email: effectiveEmail,
       url: formData.url,
       type: formData.type,
       message: formData.message
@@ -99,26 +131,24 @@ export const EventoColaborarPage = () => {
       if (e.target.files && e.target.files[0]) {
           const file = e.target.files[0];
 
-          // Basic validation
-          if (file.size > 20 * 1024 * 1024) { // 20MB limit
-              setError("O arquivo e muito grande. Maximo 20MB.");
-              return;
-          }
-
-          // Determine type based on file
-          const type = file.type.startsWith('video') ? 'video' : 'image';
+          const type = file.type.startsWith('video/') ? 'video' : 'image';
 
           // Show preview immediately
           setPreviewUrl(URL.createObjectURL(file));
           setFormData(prev => ({ ...prev, type: type }));
+          setUploadingMedia(true);
 
           try {
               const publicUrl = await saveCommunityMediaBlob(file);
               setFormData(prev => ({ ...prev, url: publicUrl }));
               setError('');
-          } catch (err) {
+          } catch (err: any) {
               if (import.meta.env.DEV) console.error(err);
-              setError("Erro ao salvar arquivo. Tente novamente.");
+              setPreviewUrl('');
+              setFormData(prev => ({ ...prev, url: '' }));
+              setError(err?.message || "Erro ao salvar arquivo. Tente novamente.");
+          } finally {
+              setUploadingMedia(false);
           }
       }
   };
@@ -160,10 +190,10 @@ export const EventoColaborarPage = () => {
                 </div>
                 <h1 className="text-3xl font-light text-white mb-4 tracking-tight">Memoria Recebida</h1>
                 <p className="text-white/60 text-lg font-light mb-10 max-w-lg mx-auto leading-relaxed">
-                   Sua contribuicao foi enviada para curadoria. <br/>Obrigado por enriquecer a historia da Fundacao.
+                   Sua foto ou video foi enviado para curadoria. <br/>Apos aprovacao, ele aparecera na Galeria da Comunidade deste evento.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                   <Button variant="white" onClick={() => navigate(`/eventos/${id}`)}>Voltar a Galeria</Button>
+                   <Button variant="white" onClick={() => navigate(`/eventos/${id}`)}>Ver pagina do evento</Button>
                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => { setSuccess(false); setFormData({...formData, url: '', message: ''}); setPreviewUrl(''); }}>Enviar outra</Button>
                 </div>
              </Card>
@@ -205,10 +235,10 @@ export const EventoColaborarPage = () => {
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-end mb-2 px-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40">Arquivo da Memoria</label>
+                            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40">Foto ou Video da Memoria</label>
                             <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
-                                <button type="button" onClick={() => setUploadMode('upload')} className={`transition-colors pb-1 border-b-2 ${uploadMode === 'upload' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Upload</button>
-                                <button type="button" onClick={() => setUploadMode('link')} className={`transition-colors pb-1 border-b-2 ${uploadMode === 'link' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Link URL</button>
+                                <button type="button" disabled={uploadingMedia} onClick={() => setUploadMode('upload')} className={`transition-colors pb-1 border-b-2 disabled:opacity-40 ${uploadMode === 'upload' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Upload</button>
+                                <button type="button" disabled={uploadingMedia} onClick={() => setUploadMode('link')} className={`transition-colors pb-1 border-b-2 disabled:opacity-40 ${uploadMode === 'link' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Link URL</button>
                             </div>
                         </div>
 
@@ -216,23 +246,37 @@ export const EventoColaborarPage = () => {
                             <div className="relative group">
                                 <input
                                     type="file"
-                                    accept="image/*,video/*"
+                                    accept="image/jpeg,image/png,image/webp,video/mp4"
                                     onChange={handleFileUpload}
+                                    disabled={uploadingMedia}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                 />
                                 <div className="w-full h-24 border border-dashed border-white/20 rounded-2xl bg-white/5 flex flex-col items-center justify-center gap-2 group-hover:bg-white/10 group-hover:border-sand-400/50 transition-all">
-                                    <FileUp size={24} className="text-white/40 group-hover:text-sand-400 transition-colors" />
-                                    <span className="text-xs text-white/50 font-light group-hover:text-white transition-colors">
-                                        Clique para carregar do dispositivo
-                                    </span>
+                                    {uploadingMedia ? (
+                                        <>
+                                            <Loader2 size={24} className="text-sand-400 animate-spin" />
+                                            <span className="text-xs text-sand-200 font-medium">
+                                                A carregar ficheiro...
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileUp size={24} className="text-white/40 group-hover:text-sand-400 transition-colors" />
+                                            <span className="text-xs text-white/50 font-light group-hover:text-white transition-colors">
+                                                Clique para carregar do dispositivo
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ) : (
                             <div className="relative">
                                 <Input
+                                    aria-label="URL da mídia"
                                     required={uploadMode === 'link'}
                                     variant="dark"
                                     value={formData.url.includes('supabase.co/storage') ? '' : formData.url}
+                                    disabled={uploadingMedia}
                                     onChange={(e: any) => {
                                         setFormData({...formData, url: e.target.value});
                                         setPreviewUrl(e.target.value);
@@ -244,7 +288,14 @@ export const EventoColaborarPage = () => {
                             </div>
                         )}
 
-                        <p className="text-[10px] text-white/30 ml-3 font-light pt-1">* {uploadMode === 'upload' ? 'Suportamos JPG, PNG e MP4.' : 'Cole o link direto da imagem ou video.'}</p>
+                        <p className="text-[10px] text-white/30 ml-3 font-light pt-1">* {uploadMode === 'upload' ? 'Suportamos JPG, PNG, WEBP e MP4 ate 5MB. Documentos nao sao aceitos neste fluxo.' : 'Cole o link direto da imagem ou video.'}</p>
+                        <p className="text-[10px] text-white/30 ml-3 font-light">Apos aprovacao, a contribuicao aparecera na Galeria da Comunidade da pagina deste evento.</p>
+                        {uploadingMedia && (
+                            <div className="flex items-center gap-2 text-xs text-sand-200 ml-3 pt-1" role="status" aria-live="polite">
+                                <Loader2 size={14} className="animate-spin" />
+                                A carregar imagem ou vídeo para revisão...
+                            </div>
+                        )}
 
                         {previewUrl && (
                             <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 h-48 bg-white/5 relative animate-fade-in-up-small shadow-inner group">
@@ -260,20 +311,31 @@ export const EventoColaborarPage = () => {
                         )}
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Seu Nome</label>
-                            <Input required variant="dark" value={formData.authorName} onChange={(e: any) => setFormData({...formData, authorName: e.target.value})} placeholder="Como quer ser identificado" />
+                    {!isLoggedIn ? (
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Seu Nome</label>
+                                <Input aria-label="Nome" required variant="dark" value={formData.authorName} onChange={(e: any) => setFormData({...formData, authorName: e.target.value})} placeholder="Como quer ser identificado" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Seu Email</label>
+                                <Input aria-label="E-mail" required variant="dark" type="email" value={formData.email} onChange={(e: any) => setFormData({...formData, email: e.target.value})} placeholder="Para contato" />
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Seu Email</label>
-                            <Input required variant="dark" type="email" value={formData.email} onChange={(e: any) => setFormData({...formData, email: e.target.value})} placeholder="Para contato" />
+                    ) : (
+                        <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">Envio autenticado</p>
+                            <p className="text-sm text-white/70 font-light">
+                                Você está a enviar esta memória como <span className="text-white font-medium">{loggedUserIdentity.name || 'membro autenticado'}</span>
+                                {loggedUserIdentity.email ? <> · <span className="text-white/60">{loggedUserIdentity.email}</span></> : null}
+                            </p>
                         </div>
-                    </div>
+                    )}
 
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Mensagem</label>
                         <textarea
+                            aria-label="Mensagem"
                             rows={3}
                             value={formData.message}
                             onChange={e => setFormData({...formData, message: e.target.value})}
@@ -289,6 +351,7 @@ export const EventoColaborarPage = () => {
                                 {formData.agreedToTerms && <Check size={14} className="text-brand-900 stroke-[3]" />}
                             </div>
                             <input
+                                aria-label="Concordo com os termos"
                                 type="checkbox"
                                 className="hidden"
                                 checked={formData.agreedToTerms}
@@ -300,20 +363,23 @@ export const EventoColaborarPage = () => {
                         </label>
 
                         {/* Checkbox Newsletter */}
-                        <label className="flex items-start gap-3 cursor-pointer group p-2 rounded-lg hover:bg-white/5 transition-colors">
-                            <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${formData.subscribeNewsletter ? 'bg-brand-700 border-brand-700' : 'border-white/20 group-hover:border-white/40'}`}>
-                                {formData.subscribeNewsletter && <Check size={14} className="text-white stroke-[3]" />}
-                            </div>
-                            <input
-                                type="checkbox"
-                                className="hidden"
-                                checked={formData.subscribeNewsletter}
-                                onChange={e => setFormData({...formData, subscribeNewsletter: e.target.checked})}
-                            />
-                            <span className="text-xs text-white/60 leading-relaxed group-hover:text-white/80 transition-colors select-none">
-                                Quero receber novidades e atualizacoes da Fundacao por e-mail.
-                            </span>
-                        </label>
+                        {!isLoggedIn && (
+                            <label className="flex items-start gap-3 cursor-pointer group p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${formData.subscribeNewsletter ? 'bg-brand-700 border-brand-700' : 'border-white/20 group-hover:border-white/40'}`}>
+                                    {formData.subscribeNewsletter && <Check size={14} className="text-white stroke-[3]" />}
+                                </div>
+                                <input
+                                    aria-label="Receber novidades por e-mail"
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={formData.subscribeNewsletter}
+                                    onChange={e => setFormData({...formData, subscribeNewsletter: e.target.checked})}
+                                />
+                                <span className="text-xs text-white/60 leading-relaxed group-hover:text-white/80 transition-colors select-none">
+                                    Quero receber novidades e atualizacoes da Fundacao por e-mail.
+                                </span>
+                            </label>
+                        )}
                     </div>
 
                     <div className="pt-4">
@@ -324,14 +390,15 @@ export const EventoColaborarPage = () => {
                           </p>
                         )}
                         {error && <p className="text-red-400 text-xs text-center mb-4 font-medium animate-pulse">{error}</p>}
-                        <Button variant="gold" type="submit" className="w-full text-xs rounded-2xl py-5 shadow-[0_0_20px_rgba(201,175,136,0.15)] hover:shadow-[0_0_30px_rgba(201,175,136,0.3)]" disabled={submitting}>
-                            {submitting ? 'Enviando...' : 'Enviar Memoria'}
+                        <Button variant="gold" type="submit" className="w-full text-xs rounded-2xl py-5 shadow-[0_0_20px_rgba(201,175,136,0.15)] hover:shadow-[0_0_30px_rgba(201,175,136,0.3)]" disabled={submitting || uploadingMedia}>
+                            {submitting ? 'Enviando...' : uploadingMedia ? 'Aguarde o upload...' : 'Enviar Memoria'}
                         </Button>
                     </div>
                     </form>
                 </Card>
 
                 {/* Member Invite Section */}
+                {!isLoggedIn && (
                 <div className="max-w-xl mx-auto text-center animate-fadeInUpSlow delay-100">
                     <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/40 mb-4">
                         <UserPlus size={12} /> Comunidade
@@ -345,6 +412,7 @@ export const EventoColaborarPage = () => {
                         </button>
                     </Link>
                 </div>
+                )}
              </>
            )}
         </div>

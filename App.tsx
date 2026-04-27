@@ -12,46 +12,25 @@ import { syncMembers } from './services/members.service';
 import { syncEvents } from './services/events.service';
 import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
+import { syncPreCadastros } from './services/precadastros.service';
 import { resolveUserRole } from './services/auth.service';
 import {
   AUTH_SESSION, AUTH_LOADING,
-  PARTNERS, PRECADASTROS,
+  PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG,
   setAuthSession, setAuthLoading, notifyState,
 } from './store/app.store';
 
 // --- Data Sync ---
 
-const syncFromSupabase = async () => {
-  // Partners
-  const { data: partners, error: pError } = await supabase
-    .from('partners').select('*').order('created_at', { ascending: false });
-  if (partners && !pError) {
-    PARTNERS.length = 0;
-    PARTNERS.push(...partners.map((p: any) => ({
-      ...p,
-      type: p.type || (p.category === 'Governança' ? 'pessoa' : 'empresa'),
-      socialLinks: p.social_links || {},
-    })));
-  }
-
-  // PreCadastros (only for authenticated users)
-  if (AUTH_SESSION.isLoggedIn) {
-    const { data: pres } = await supabase.from('precadastros').select('*');
-    if (pres) {
-      PRECADASTROS.length = 0;
-      PRECADASTROS.push(...pres.map((p: any) => ({
-        ...p,
-        createdAt: p.created_at,
-      })));
-    }
-  }
-
+const clearEditorOnlyState = () => {
+  PRECADASTROS.length = 0;
+  PENDING_MEDIA_SUBMISSIONS.length = 0;
+  ACTIVITY_LOG.length = 0;
   notifyState();
 };
 
 // --- Initial Load ---
 
-syncFromSupabase();
 syncMembers();
 syncEvents();
 
@@ -61,8 +40,6 @@ let authGeneration = 0;
 
 const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
   const generation = ++authGeneration;
-
-  console.log(`[AUTH] event=${event} gen=${generation} user=${session?.user?.email ?? 'none'}`);
 
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
     // On SIGNED_IN (token refresh), skip re-resolving if we already have a non-viewer role
@@ -78,24 +55,17 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
       );
 
     if (alreadyResolved) {
-      console.log(`[AUTH] SIGNED_IN skipped — isLoggedIn=${AUTH_SESSION.isLoggedIn} role=${AUTH_SESSION.role}`);
       notifyState();
       return;
     }
 
-    syncFromSupabase();
     syncMembers();
     syncEvents();
-    syncCommunityMedia();
-    syncActivityLog();
+    clearEditorOnlyState();
 
-    console.log(`[AUTH] resolving role for user=${session.user.id} gen=${generation}`);
-    const t0 = Date.now();
     const userRole = await resolveUserRole(session.user.id);
-    console.log(`[AUTH] role resolved: role=${userRole} elapsed=${Date.now() - t0}ms gen=${generation} current=${authGeneration}`);
 
     if (generation !== authGeneration) {
-      console.warn(`[AUTH] stale result discarded gen=${generation}`);
       return;
     }
 
@@ -107,17 +77,22 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
       lastLoginAt: new Date().toISOString(),
     });
     setAuthLoading(false);
-    console.log(`[AUTH] session ready role=${userRole}`);
+    if (userRole === 'admin' || userRole === 'editor') {
+      syncPreCadastros();
+      syncCommunityMedia();
+      syncActivityLog();
+    } else {
+      clearEditorOnlyState();
+    }
   } else if (event === 'INITIAL_SESSION' && !session) {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });
     setAuthLoading(false);
+    clearEditorOnlyState();
     syncEvents();   // garante sync após auth context estabelecido para utilizadores anónimos
-    console.log(`[AUTH] no session, loading=false`);
   } else if (event === 'SIGNED_OUT') {
     setAuthSession({ isLoggedIn: false, role: 'viewer' });
     setAuthLoading(false);
-    console.log(`[AUTH] signed out`);
-    syncFromSupabase();
+    clearEditorOnlyState();
     syncMembers();
     syncEvents();
   }

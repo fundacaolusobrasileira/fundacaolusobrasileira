@@ -36,6 +36,7 @@ vi.mock('./services/precadastros.service', () => ({
 vi.mock('./store/app.store', () => ({
   AUTH_SESSION: { isLoggedIn: true, role: 'editor' },
   EVENTS: [],
+  PARTNERS: [],
   PRECADASTROS: [],
   PENDING_MEDIA_SUBMISSIONS: [],
   isEditor: vi.fn(() => true),
@@ -115,7 +116,7 @@ describe('MemberEditorModal - handleSave', () => {
   it('closes modal after successful member creation', async () => {
     const AppModule = await import('./services/members.service');
     (AppModule.createMember as any).mockResolvedValue({ id: 'new-1', name: 'Novo Membro' });
-    (AppModule.updateMember as any).mockResolvedValue(undefined);
+    (AppModule.updateMember as any).mockResolvedValue(true);
 
     const { MemberEditorModal } = await import('./component.ui');
     const onClose = vi.fn();
@@ -159,6 +160,12 @@ describe('MemberEditorModal — field completeness', () => {
     render(<MemberEditorModal isOpen={true} onClose={vi.fn()} member={{ id: 'x', name: 'Test', type: 'pessoa', category: 'Governança' }} />);
     expect(screen.getByPlaceholderText(/país/i)).toBeTruthy();
   });
+
+  it('renders a field for institutional tier', async () => {
+    const { MemberEditorModal } = await import('./component.ui');
+    render(<MemberEditorModal isOpen={true} onClose={vi.fn()} member={{ id: 'x', name: 'Test', type: 'pessoa', category: 'Governança' }} />);
+    expect(screen.getByLabelText(/cargo institucional/i)).toBeTruthy();
+  });
 });
 
 describe('EventEditorModal — field completeness', () => {
@@ -177,19 +184,19 @@ describe('EventEditorModal — field completeness', () => {
   it('renders start time field', async () => {
     const { EventEditorModal } = await import('./component.ui');
     render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
-    expect(screen.getByPlaceholderText(/hora.*início|HH:MM/i)).toBeTruthy();
+    expect(screen.getByText(/hora início/i)).toBeTruthy();
   });
 
   it('renders end date field', async () => {
     const { EventEditorModal } = await import('./component.ui');
     render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
-    expect(screen.getByPlaceholderText(/data.*fim|fim.*data/i)).toBeTruthy();
+    expect(screen.getByText(/data fim/i)).toBeTruthy();
   });
 
   it('renders end time field', async () => {
     const { EventEditorModal } = await import('./component.ui');
     render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
-    expect(screen.getByPlaceholderText(/hora.*fim|fim.*hora/i)).toBeTruthy();
+    expect(screen.getByText(/hora fim/i)).toBeTruthy();
   });
 
   it('renders address field', async () => {
@@ -243,7 +250,7 @@ describe('EventEditorModal — field completeness', () => {
   it('renders sponsors field', async () => {
     const { EventEditorModal } = await import('./component.ui');
     render(<EventEditorModal isOpen={true} onClose={vi.fn()} event={baseEvent} />);
-    expect(screen.getByPlaceholderText(/patrocinadores/i)).toBeTruthy();
+    expect(screen.getByText(/patrocinadores/i)).toBeTruthy();
   });
 
   it('renders notes field', async () => {

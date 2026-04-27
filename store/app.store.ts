@@ -19,8 +19,17 @@ export const setEventsError = (err: string | null) => { EVENTS_ERROR = err; };
 export const setAuthSession = (session: AuthSession) => { AUTH_SESSION = session; };
 export const setAuthLoading = (loading: boolean) => { AUTH_LOADING = loading; };
 
+// Coalesce multiple synchronous notifyState() calls into a single event dispatch.
+// This prevents thundering-herd re-renders when several services mutate the
+// store in the same tick (e.g., during a sync run or batch operation).
+let stateNotifyPending = false;
 export const notifyState = () => {
-  if (typeof window !== 'undefined') window.dispatchEvent(new Event(FLB_STATE_EVENT));
+  if (typeof window === 'undefined' || stateNotifyPending) return;
+  stateNotifyPending = true;
+  queueMicrotask(() => {
+    stateNotifyPending = false;
+    window.dispatchEvent(new Event(FLB_STATE_EVENT));
+  });
 };
 
 export const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {

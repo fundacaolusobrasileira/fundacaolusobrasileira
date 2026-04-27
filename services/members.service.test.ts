@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Supabase mock ──────────────────────────────────────────────────────────
-const mockEq = vi.fn().mockResolvedValue({ error: null });
-const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
+// Update + Delete chains now use .select() to detect RLS silent-filter.
+const mockUpdateEqSelect = vi.fn<any>().mockResolvedValue({ data: [{ id: 'mock-partner' }], error: null });
+const mockEq = vi.fn<any>(() => ({ select: mockUpdateEqSelect }));
+const mockDeleteEqSelect = vi.fn<any>().mockResolvedValue({ data: [{ id: 'mock-partner' }], error: null });
+const mockDeleteEq = vi.fn<any>(() => ({ select: mockDeleteEqSelect }));
 const mockUpdateChain = vi.fn<any>(() => ({ eq: mockEq }));
 const mockSingle = vi.fn();
 const mockInsertSelectSingle = vi.fn(() => ({ single: mockSingle }));
@@ -33,6 +36,12 @@ vi.mock('../store/app.store', () => ({
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const UUID = '00000000-0000-0000-0000-000000000001';
+
+// Safety net: even if a test throws before its beforeEach runs, the next
+// describe block sees a clean PARTNERS array. Prevents cross-test bleed.
+afterEach(() => {
+  PARTNERS.length = 0;
+});
 
 // ============================================================================
 // CREATE
@@ -223,15 +232,17 @@ describe('updateMember — field completeness', () => {
 
   it('updates PARTNERS store on success', async () => {
     const { updateMember } = await import('./members.service');
-    await updateMember(UUID, { name: 'Updated Name' });
+    const ok = await updateMember(UUID, { name: 'Updated Name' });
+    expect(ok).toBe(true);
     const p = PARTNERS.find(x => x.id === UUID);
     expect(p?.name).toBe('Updated Name');
   });
 
   it('shows error toast when supabase update fails', async () => {
-    mockEq.mockResolvedValueOnce({ error: new Error('Update failed') });
+    mockUpdateEqSelect.mockResolvedValueOnce({ data: null, error: new Error('Update failed') });
     const { updateMember } = await import('./members.service');
-    await updateMember(UUID, { name: 'Fail' });
+    const ok = await updateMember(UUID, { name: 'Fail' });
+    expect(ok).toBe(false);
     expect(mockShowToast).toHaveBeenCalledWith('Erro ao atualizar membro.', 'error');
   });
 
@@ -271,7 +282,7 @@ describe('deleteMember', () => {
     vi.resetModules();
     PARTNERS.length = 0;
     PARTNERS.push({ id: UUID, name: 'To Delete', type: 'pessoa', category: 'Governança' });
-    mockDeleteEq.mockResolvedValue({ error: null });
+    mockDeleteEqSelect.mockResolvedValue({ data: [{ id: UUID }], error: null });
   });
 
   it('removes the member from the database', async () => {
@@ -293,7 +304,7 @@ describe('deleteMember', () => {
   });
 
   it('does NOT remove from store when supabase returns error', async () => {
-    mockDeleteEq.mockResolvedValueOnce({ error: new Error('Delete failed') });
+    mockDeleteEqSelect.mockResolvedValueOnce({ data: null, error: new Error('Delete failed') });
     const { deleteMember } = await import('./members.service');
     await deleteMember(UUID);
     expect(PARTNERS).toHaveLength(1);
@@ -306,5 +317,216 @@ describe('deleteMember', () => {
     await deleteMember(UUID);
     expect(mockDeleteEq).not.toHaveBeenCalled();
     expect(PARTNERS).toHaveLength(1);
+  });
+
+  it('blocks deletion for non-UUID seed ids', async () => {
+    PARTNERS[0] = { id: 'membro-seed', name: 'Seed Member', type: 'pessoa', category: 'Governança' } as any;
+    const { deleteMember } = await import('./members.service');
+    const ok = await deleteMember('membro-seed');
+    expect(ok).toBe(false);
+    expect(mockDeleteEq).not.toHaveBeenCalled();
+    expect(mockShowToast).toHaveBeenCalledWith(
+      'Este membro ainda é do seed inicial. Salve-o primeiro para gerar um registo editável.',
+      'warning',
+    );
+  });
+});
+
+// ============================================================================
+// UNIT — normalize (via syncMembers side-effect)
+// ============================================================================
+describe('normalize (unit)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    PARTNERS.length = 0;
+  });
+
+  it('maps social_links snake_case to socialLinks camelCase', async () => {
+    mockOrder.mockResolvedValue({
+      data: [{ id: UUID, name: 'João', type: 'pessoa', social_links: { linkedin: 'li.com' } }],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    const partner = PARTNERS.find(p => p.id === UUID);
+    expect(partner?.socialLinks).toEqual({ linkedin: 'li.com' });
+    expect((partner as any)?.social_links).toBeUndefined();
+  });
+
+  it('defaults gallery to [] when null', async () => {
+    mockOrder.mockResolvedValue({
+      data: [{ id: UUID, name: 'João', type: 'pessoa', gallery: null }],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    const partner = PARTNERS.find(p => p.id === UUID);
+    expect(partner?.gallery).toEqual([]);
+  });
+
+  it('defaults albums to [] when null', async () => {
+    mockOrder.mockResolvedValue({
+      data: [{ id: UUID, name: 'João', type: 'pessoa', albums: null }],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    const partner = PARTNERS.find(p => p.id === UUID);
+    expect(partner?.albums).toEqual([]);
+  });
+
+  it('defaults type to pessoa when null', async () => {
+    mockOrder.mockResolvedValue({
+      data: [{ id: UUID, name: 'João', type: null }],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    const partner = PARTNERS.find(p => p.id === UUID);
+    expect(partner?.type).toBe('pessoa');
+  });
+});
+
+// ============================================================================
+// INTEGRATION — syncMembers seed merge (BUG 0 scenario)
+// ============================================================================
+describe('syncMembers — seed merge (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    PARTNERS.length = 0;
+  });
+
+  it('merges seed member with DB record when names match — DB UUID replaces slug id', async () => {
+    // The seed members.data.ts has members with slug IDs like 'membro-joao-silva'
+    // When DB has same name, the DB UUID should win as the id
+    mockOrder.mockResolvedValue({
+      data: [
+        // This DB record matches a seed member by name
+        { id: UUID, name: 'João', type: 'pessoa', social_links: {}, gallery: [] },
+        // This DB record is NOT in seed — appears as extra
+        { id: '00000000-0000-0000-0000-000000000002', name: 'DB Only Partner', type: 'empresa', social_links: {}, gallery: [] },
+      ],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    // DB-only partner should also be in store
+    expect(PARTNERS.some(p => p.name === 'DB Only Partner')).toBe(true);
+  });
+
+  it('extra DB partners (not in seed) are appended to store', async () => {
+    mockOrder.mockResolvedValue({
+      data: [
+        { id: '99999999-9999-9999-9999-999999999999', name: 'Parceiro Novo', type: 'empresa', social_links: {} },
+      ],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    expect(PARTNERS.some(p => p.name === 'Parceiro Novo')).toBe(true);
+  });
+
+  it('no duplicate entries on re-sync', async () => {
+    mockOrder.mockResolvedValue({
+      data: [{ id: UUID, name: 'João', type: 'pessoa', social_links: {} }],
+      error: null,
+    });
+    const { syncMembers } = await import('./members.service');
+    await syncMembers();
+    const countBefore = PARTNERS.length;
+    await syncMembers();
+    expect(PARTNERS.length).toBe(countBefore);
+  });
+});
+
+// ============================================================================
+// INTEGRATION — updateMember slug ID → INSERT-then-UPDATE (BUG 0)
+// ============================================================================
+describe('updateMember — slug ID first edit (integration)', () => {
+  // Slug IDs are non-UUID strings like 'membro-joao-silva'
+  const SLUG_ID = 'membro-joao-silva';
+  const NEW_UUID = 'aaaabbbb-0000-0000-0000-000000000001';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    PARTNERS.length = 0;
+    // Seed member with slug id is in store
+    PARTNERS.push({ id: SLUG_ID, name: 'João Silva', type: 'pessoa', socialLinks: {}, gallery: [], albums: [] } as any);
+    // mock insert().select().single() chain for slug path
+    mockSingle.mockResolvedValue({ data: { id: NEW_UUID, name: 'João Silva' }, error: null });
+    mockInsertSelectSingle.mockReturnValue({ single: mockSingle });
+    mockInsert.mockReturnValue({ select: mockInsertSelectSingle });
+  });
+
+  it('calls INSERT (not UPDATE) when id is not a UUID', async () => {
+    const { updateMember } = await import('./members.service');
+    await updateMember(SLUG_ID, { name: 'João Silva', bio: 'Bio nova' });
+    expect(mockInsert).toHaveBeenCalled();
+    expect(mockUpdateChain).not.toHaveBeenCalled();
+  });
+
+  it('replaces slug id with new UUID in PARTNERS store after first edit', async () => {
+    const { updateMember } = await import('./members.service');
+    await updateMember(SLUG_ID, { name: 'João Silva', bio: 'Bio nova' });
+    const partner = PARTNERS.find(p => p.name === 'João Silva');
+    expect(partner?.id).toBe(NEW_UUID);
+  });
+
+  it('shows toast on successful first edit', async () => {
+    const { updateMember } = await import('./members.service');
+    await updateMember(SLUG_ID, { name: 'João Silva' }, true);
+    expect(mockShowToast).toHaveBeenCalledWith('Membro salvo.', 'success');
+  });
+
+  it('shows error toast and does NOT update store when INSERT fails', async () => {
+    mockSingle.mockResolvedValue({ data: null, error: { message: 'DB error' } });
+    const { updateMember } = await import('./members.service');
+    await updateMember(SLUG_ID, { name: 'João Silva' });
+    expect(mockShowToast).toHaveBeenCalledWith('Erro ao salvar membro.', 'error');
+    // ID must still be the slug — store not updated
+    expect(PARTNERS[0].id).toBe(SLUG_ID);
+  });
+
+  it('calls UPDATE (not INSERT) on second edit when id is already a UUID', async () => {
+    // Simulate second edit: store already has UUID
+    PARTNERS[0] = { ...PARTNERS[0], id: NEW_UUID };
+    mockUpdateEqSelect.mockResolvedValue({ data: [{ id: NEW_UUID }], error: null });
+    const { updateMember } = await import('./members.service');
+    await updateMember(NEW_UUID, { bio: 'Updated bio' });
+    expect(mockUpdateChain).toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  // BUG 2 (HIGH) — RLS silent-filter false positive
+  // PostgREST returns { error: null, data: [] } when RLS USING denies UPDATE/DELETE.
+  // updateMember must NOT mutate store nor show success toast in that case.
+  it('returns false and does NOT show success toast when RLS silently filters (BUG 2)', async () => {
+    // Store already has the UUID — simulate UPDATE path
+    PARTNERS[0] = { ...PARTNERS[0], id: NEW_UUID, name: 'Original Name' };
+    mockUpdateEqSelect.mockResolvedValueOnce({ data: [], error: null });
+
+    const { updateMember } = await import('./members.service');
+    const result = await updateMember(NEW_UUID, { name: 'Renamed by viewer' });
+
+    expect(result).toBe(false);
+    expect(mockShowToast).not.toHaveBeenCalledWith('Membro atualizado.', 'success');
+    // Store must remain at original
+    expect(PARTNERS[0].name).toBe('Original Name');
+  });
+
+  // DELETE silent-filter — same RLS pattern but for DELETE.
+  it('deleteMember returns false and keeps row in store when RLS silently filters DELETE', async () => {
+    PARTNERS[0] = { ...PARTNERS[0], id: NEW_UUID, name: 'Persistent Member' };
+    mockDeleteEqSelect.mockResolvedValueOnce({ data: [], error: null });
+
+    const { deleteMember } = await import('./members.service');
+    const result = await deleteMember(NEW_UUID);
+
+    expect(result).toBe(false);
+    expect(mockShowToast).not.toHaveBeenCalledWith('Membro removido.', 'success');
+    expect(PARTNERS[0].id).toBe(NEW_UUID);
   });
 });

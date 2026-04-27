@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import { Gift, ChevronDown } from 'lucide-react';
 import { PARTNERS } from '../../store/app.store';
 import { BenefitEditorSection } from '../membro/BenefitEditorSection';
+import { isUuid } from '../../utils/uuid';
 
 export const BenefitsManagerSection = () => {
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('');
 
-  const partners = PARTNERS.filter(p => p.category !== 'Governança').sort((a, b) => a.name.localeCompare(b.name));
+  const partners = PARTNERS
+    .filter(p => p.category !== 'Governança' && isUuid(p.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
   const selectedPartner = partners.find(p => p.id === selectedPartnerId);
 
   return (

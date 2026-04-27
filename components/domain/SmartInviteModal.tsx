@@ -4,6 +4,7 @@ import { X, Check } from 'lucide-react';
 import { subscribeToNewsletter } from '../../services/precadastros.service';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Forms';
+import { AUTH_SESSION, FLB_STATE_EVENT } from '../../store/app.store';
 
 export const SmartInviteModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,11 +12,33 @@ export const SmartInviteModal = () => {
   const [step, setStep] = useState(1);
 
   useEffect(() => {
-    const seen = localStorage.getItem('flb_invite_seen');
-    if (!seen) {
-      const timer = setTimeout(() => setIsOpen(true), 15000);
-      return () => clearTimeout(timer);
-    }
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const syncVisibility = () => {
+      const seen = localStorage.getItem('flb_invite_seen');
+      if (seen || AUTH_SESSION.isLoggedIn) {
+        setIsOpen(false);
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        return;
+      }
+
+      if (!timer) {
+        timer = setTimeout(() => {
+          setIsOpen(true);
+          timer = null;
+        }, 15000);
+      }
+    };
+
+    syncVisibility();
+    window.addEventListener(FLB_STATE_EVENT, syncVisibility);
+    return () => {
+      window.removeEventListener(FLB_STATE_EVENT, syncVisibility);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const handleClose = () => {

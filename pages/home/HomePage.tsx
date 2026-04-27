@@ -122,6 +122,7 @@ export const HomePage = () => {
   const direcao = govMembers.filter(m => m.tier === 'direcao');
   const secretarioGeral = govMembers.filter(m => m.tier === 'secretario-geral');
   const vogais = govMembers.filter(m => m.tier === 'vogal');
+  const currentPresident = presidente[0];
 
   return (
     <main className="overflow-x-hidden bg-brand-900 text-white selection:bg-sand-400 selection:text-brand-900">
@@ -338,11 +339,11 @@ export const HomePage = () => {
             <div className="grid md:grid-cols-12 gap-8 md:gap-16 items-center">
               {/* Foto do Presidente */}
               <div className="md:col-span-5">
-                <div className="aspect-[4/5] w-full max-w-md mx-auto md:mx-0 overflow-hidden">
+                <div className="aspect-[4/5] w-full max-w-md mx-auto md:mx-0 overflow-hidden rounded-[2rem] shadow-[0_24px_60px_rgba(15,23,42,0.12)] bg-slate-100">
                   <img
-                    src="/presidente.webp"
-                    alt="Paulo Campos Costa"
-                    className="w-full h-full object-cover grayscale"
+                    src={currentPresident?.image || '/presidente.webp'}
+                    alt={currentPresident?.name || 'Paulo Campos Costa'}
+                    className="w-full h-full object-cover object-center grayscale"
                   />
                 </div>
               </div>
@@ -355,15 +356,15 @@ export const HomePage = () => {
                 </h2>
 
                 <blockquote className="text-base md:text-lg text-slate-600 font-light leading-relaxed mb-8 border-l-4 border-sand-400 pl-6 italic">
-                  "É uma honra e um privilégio presidir a esta Fundação e uma enorme responsabilidade. A Língua Portuguesa interliga muitos continentes, países, personalidades, instituições e negócios, e por essa razão acredito que a Fundação deve recuperar relações antigas e impulsionar novas parcerias. Entre Portugal e o Brasil não podem existir entraves, temos de construir pontes que unam a nossa rica e diversificada cultura."
+                  "{currentPresident?.summary || 'É uma honra e um privilégio presidir a esta Fundação e uma enorme responsabilidade. Entre Portugal e o Brasil não podem existir entraves, temos de construir pontes que unam a nossa rica e diversificada cultura.'}"
                 </blockquote>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-medium text-brand-900">Paulo Campos Costa</p>
-                    <p className="text-xs uppercase tracking-widest text-slate-400">Presidente da Fundação</p>
-                    <p className="text-[10px] uppercase tracking-widest text-sand-500 mt-1">Ex-EDP Global</p>
-                  </div>
+                <div className="inline-flex flex-col items-start rounded-2xl border border-slate-200 bg-white/80 px-5 py-4 shadow-sm">
+                  <p className="text-lg font-medium text-brand-900 leading-none">{currentPresident?.name || 'Paulo Campos Costa'}</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400 mt-2">{currentPresident?.role || 'Presidente da Fundação'}</p>
+                  {currentPresident?.country && (
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-sand-500 mt-2">{currentPresident.country}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -496,7 +497,13 @@ export const HomePage = () => {
     </div>
 
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-      {PARTNERS.filter(p => ['Parceiro Platinum', 'Parceiro Gold', 'Parceiro Silver'].includes(p.category) || p.featured).map((partner, idx) => (
+      {PARTNERS
+        .filter(p => ['Parceiro Platinum', 'Parceiro Gold', 'Parceiro Silver'].includes(p.category) || p.featured)
+        .sort((a, b) => {
+          if (Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1;
+          return (a.order ?? 999) - (b.order ?? 999);
+        })
+        .map((partner, idx) => (
         <Reveal key={partner.id} delay={idx * 60} className="h-full">
           <Link
             to={`/membro/${partner.id}`}
@@ -504,8 +511,15 @@ export const HomePage = () => {
             aria-label={`Parceiro: ${partner.name}`}
           >
             <div className="h-full bg-white rounded-2xl p-5 flex flex-col items-center text-center transition-all duration-500 border border-slate-200/80 hover:border-sand-400/50 hover:shadow-xl hover:-translate-y-1">
-              <div className="text-[9px] font-medium text-slate-400 uppercase tracking-wider self-end mb-2">
-                {partner.since ? `Est. ${partner.since}` : partner.category}
+              <div className="w-full flex items-center justify-between gap-2 mb-2">
+                {partner.featured ? (
+                  <span className="inline-flex items-center rounded-full bg-sand-100 text-sand-700 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    Destaque
+                  </span>
+                ) : <span />}
+                <div className="text-[9px] font-medium text-slate-400 uppercase tracking-wider">
+                  {partner.since ? `Est. ${partner.since}` : partner.category}
+                </div>
               </div>
               <div className="h-20 w-full flex items-center justify-center mb-4">
                 {partner.image

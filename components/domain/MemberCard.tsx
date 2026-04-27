@@ -35,7 +35,14 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, size = 'medium',
           )}
         </div>
         <div className="flex-grow min-w-0">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500 mb-0.5">{label}</p>
+          <div className="flex flex-wrap items-center gap-2 mb-0.5">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500">{label}</p>
+            {member.featured && (
+              <span className="inline-flex items-center rounded-full bg-sand-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest text-sand-700">
+                Destaque
+              </span>
+            )}
+          </div>
           <h3 className={`font-serif text-brand-900 leading-tight ${size === 'large' ? 'text-xl' : size === 'medium' ? 'text-base' : 'text-sm'}`}>
             {member.name}
           </h3>

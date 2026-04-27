@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { safeUrl } from '../../utils/url';
-import { ExternalLink, Loader2, Gift } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { resolveLink } from '../../utils/url';
+import { ExternalLink, ArrowRight, Loader2, Gift } from 'lucide-react';
 import { SectionWrapper } from '../../components/ui/Layout';
 import { Reveal } from '../../components/ui/Reveal';
 import { fetchBenefits } from '../../services/benefits.service';
@@ -25,7 +26,7 @@ export const BeneficiosPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [grouped, setGrouped] = useState<GroupedBenefits[]>([]);
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     const handler = () => setTick(t => t + 1);
@@ -34,6 +35,7 @@ export const BeneficiosPage = () => {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     fetchBenefits().then(benefits => {
       const map = new Map<string, Benefit[]>();
       for (const b of benefits) {
@@ -52,7 +54,7 @@ export const BeneficiosPage = () => {
       setGrouped(result);
       setLoading(false);
     });
-  }, []);
+  }, [tick]);
 
   return (
     <div className="min-h-screen">
@@ -114,12 +116,12 @@ export const BeneficiosPage = () => {
                     </div>
                   </div>
 
-                  {/* Benefits grid */}
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Benefits row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {benefits.map(b => {
                       const cfg = CATEGORY_CONFIG[b.category] ?? CATEGORY_CONFIG.outro;
                       return (
-                        <div key={b.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div key={b.id} className="w-full bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex items-start justify-between gap-2 mb-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.color}`}>
                               {cfg.label}
@@ -129,16 +131,20 @@ export const BeneficiosPage = () => {
                           {b.description && (
                             <p className="text-xs text-slate-500 leading-relaxed mb-3">{b.description}</p>
                           )}
-                          {b.link && (
-                            <a
-                              href={safeUrl(b.link)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-900 transition-colors"
-                            >
-                              Saber mais <ExternalLink size={10} />
-                            </a>
-                          )}
+                          {(() => {
+                            const resolved = resolveLink(b.link);
+                            if (!resolved) return null;
+                            const className = 'inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-900 transition-colors';
+                            return resolved.isExternal ? (
+                              <a href={resolved.href} target="_blank" rel="noreferrer" className={className}>
+                                Saber mais <ExternalLink size={10} />
+                              </a>
+                            ) : (
+                              <Link to={resolved.href} className={className}>
+                                Saber mais <ArrowRight size={10} />
+                              </Link>
+                            );
+                          })()}
                         </div>
                       );
                     })}

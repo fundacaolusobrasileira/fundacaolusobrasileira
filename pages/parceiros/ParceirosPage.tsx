@@ -59,12 +59,19 @@ export const ParceirosPage = () => {
     );
   }, [source, search]);
 
-  const platinum = filtered.filter(p => p.category === 'Parceiro Platinum');
-  const gold = filtered.filter(p => p.category === 'Parceiro Gold');
-  const silver = filtered.filter(p => p.category === 'Parceiro Silver');
-  const apoioPublico = filtered.filter(p => p.category === 'Apoio Público');
-  const outroApoio = filtered.filter(p => p.category === 'Outro Apoio');
-  const exposicao = filtered.filter(p => p.category === 'Exposição');
+  const sortPartners = (items: typeof filtered) =>
+    [...items].sort((a, b) => {
+      if (Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  const featured = sortPartners(filtered.filter(p => p.featured));
+  const platinum = sortPartners(filtered.filter(p => p.category === 'Parceiro Platinum'));
+  const gold = sortPartners(filtered.filter(p => p.category === 'Parceiro Gold'));
+  const silver = sortPartners(filtered.filter(p => p.category === 'Parceiro Silver'));
+  const apoioPublico = sortPartners(filtered.filter(p => p.category === 'Apoio Público'));
+  const outroApoio = sortPartners(filtered.filter(p => p.category === 'Outro Apoio'));
+  const exposicao = sortPartners(filtered.filter(p => p.category === 'Exposição'));
 
   return (
     <main className="bg-white min-h-screen overflow-hidden">
@@ -99,8 +106,21 @@ export const ParceirosPage = () => {
         </div>
       </section>
 
+      {featured.length > 0 && (
+        <SectionWrapper className="py-20 md:py-28">
+          <SectionDivider icon={Star} label="Perfis em Destaque" dark />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {featured.map((partner, idx) => (
+              <Reveal key={`featured-${partner.id}`} delay={idx * 60}>
+                <PartnerCard partner={partner} />
+              </Reveal>
+            ))}
+          </div>
+        </SectionWrapper>
+      )}
+
       {/* PARCEIROS PLATINUM */}
-      <SectionWrapper className="py-20 md:py-28">
+      <SectionWrapper className={featured.length > 0 ? "pb-20 md:pb-28" : "py-20 md:py-28"}>
         <SectionDivider icon={Star} label="Parceiros Platinum" dark />
         {platinum.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">

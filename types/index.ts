@@ -146,7 +146,7 @@ export interface PreCadastro {
   type: string;
   registrationType?: RegistrationType;
   message?: string;
-  status: 'novo' | 'contatado' | 'aprovado' | 'rejeitado' | 'convertido';
+  status: 'novo' | 'contatado' | 'aprovado' | 'pausado' | 'rejeitado' | 'convertido';
   createdAt: string;
   notes?: string;
 }

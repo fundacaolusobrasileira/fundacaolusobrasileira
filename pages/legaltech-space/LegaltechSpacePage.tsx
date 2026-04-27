@@ -143,7 +143,7 @@ export const LegaltechSpacePage = () => {
               A Legaltech Space é responsável pela criação e evolução da infraestrutura
               digital da plataforma, conectando inovação, negócios e experiências.
             </p>
-            <a href="mailto:contato@legaltechspace.com">
+            <a href="https://wa.me/393518179789?text=Ol%C3%A1%2C%20vim%20atrav%C3%A9s%20da%20Funda%C3%A7%C3%A3o%20e%20gostaria%20de%20desenvolver%20meu%20projeto" target="_blank" rel="noreferrer">
               <Button variant="gold" className="px-8 py-4 rounded-full text-xs">
                 Falar com a equipe
               </Button>
@@ -316,7 +316,7 @@ export const LegaltechSpacePage = () => {
               A mesma equipe que construiu esta plataforma pode ajudar o seu projeto a sair do papel.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="mailto:contato@legaltechspace.com">
+              <a href="https://wa.me/393518179789?text=Ol%C3%A1%2C%20vim%20atrav%C3%A9s%20da%20Funda%C3%A7%C3%A3o%20e%20gostaria%20de%20desenvolver%20meu%20projeto" target="_blank" rel="noreferrer">
                 <Button variant="gold" className="px-8 py-4 rounded-full text-xs">
                   Quero desenvolver meu projeto
                 </Button>

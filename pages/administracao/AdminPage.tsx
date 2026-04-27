@@ -41,6 +41,12 @@ const TierSection: React.FC<TierSectionProps> = ({ title, subtitle, members, siz
   );
 };
 
+const byDisplayOrder = (a: Partner, b: Partner) => {
+  if (Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1;
+  if ((a.order || 99) !== (b.order || 99)) return (a.order || 99) - (b.order || 99);
+  return a.name.localeCompare(b.name);
+};
+
 export const AdminPage = () => {
   usePageMeta('Administração – Fundação Luso-Brasileira', 'Conselho de Administração e estrutura de governança.');
   const [loading, setLoading] = useState(true);
@@ -53,15 +59,21 @@ export const AdminPage = () => {
     return () => { clearTimeout(t); window.removeEventListener(FLB_STATE_EVENT, handler); };
   }, []);
 
+  const governanceMembers = PARTNERS.filter((p: Partner) => p.category === 'Governança' && p.active !== false);
+
   const byTier = (tier: MemberTier) =>
     PARTNERS
       .filter((p: Partner) => p.tier === tier && p.active !== false)
-      .sort((a: Partner, b: Partner) => (a.order || 99) - (b.order || 99));
+      .sort(byDisplayOrder);
 
   const presidente = byTier('presidente');
   const direcao = byTier('direcao');
   const secretario = byTier('secretario-geral');
   const vogais = byTier('vogal');
+  const assignedIds = new Set([...presidente, ...direcao, ...secretario, ...vogais].map(member => member.id));
+  const semCargoDefinido = governanceMembers
+    .filter(member => !assignedIds.has(member.id))
+    .sort(byDisplayOrder);
 
   if (loading) return <PremiumLoader />;
 
@@ -103,8 +115,15 @@ export const AdminPage = () => {
           size="small"
           cols="sm:grid-cols-2 lg:grid-cols-4"
         />
+        <TierSection
+          title="Governança"
+          subtitle="Perfis sem cargo definido"
+          members={semCargoDefinido}
+          size="medium"
+          cols="sm:grid-cols-2 lg:grid-cols-3"
+        />
 
-        {!presidente.length && !direcao.length && !secretario.length && !vogais.length && (
+        {!presidente.length && !direcao.length && !secretario.length && !vogais.length && !semCargoDefinido.length && (
           <div className="py-20 text-center border border-dashed border-white/10 rounded-3xl">
             <p className="text-white/40 text-sm">A sincronizar membros...</p>
           </div>

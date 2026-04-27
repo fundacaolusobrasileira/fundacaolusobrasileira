@@ -1,5 +1,5 @@
 // pages/quem-somos/QuemSomosPage.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { MISSION, PRESIDENT_MESSAGE, PILLARS, HISTORY } from '../../data/content.data';
@@ -8,9 +8,21 @@ import { Reveal } from '../../components/ui/Reveal';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { SectionWrapper } from '../../components/ui/Layout';
+import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
 
 export const QuemSomosPage = () => {
   usePageMeta('Quem Somos – Fundação Luso-Brasileira', 'Missão, história e valores da Fundação.');
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setTick(v => v + 1);
+    window.addEventListener(FLB_STATE_EVENT, handler);
+    return () => window.removeEventListener(FLB_STATE_EVENT, handler);
+  }, []);
+
+  const currentPresident =
+    PARTNERS.find(p => p.tier === 'presidente' && p.active !== false) ||
+    PARTNERS.find(p => p.name === PRESIDENT_MESSAGE.author);
 
   return (
     <main className="bg-white text-slate-900 overflow-hidden">
@@ -108,8 +120,8 @@ export const QuemSomosPage = () => {
           <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-start">
             <div className="md:col-span-5">
               <Reveal>
-                <div className="aspect-[4/5] overflow-hidden rounded-2xl shadow-lg">
-                  <img src="/presidente.webp" alt="Paulo Campos Costa" width={400} height={500} className="w-full h-full object-cover grayscale" />
+                <div className="aspect-[4/5] overflow-hidden rounded-[2rem] shadow-[0_24px_60px_rgba(15,23,42,0.12)] bg-slate-100">
+                  <img src={currentPresident?.image || '/presidente.webp'} alt={currentPresident?.name || 'Paulo Campos Costa'} width={400} height={500} className="w-full h-full object-cover object-center grayscale" />
                 </div>
               </Reveal>
             </div>
@@ -120,15 +132,15 @@ export const QuemSomosPage = () => {
                   Construindo Pontes
                 </h2>
                 <ExpandableText
-                  summary={PRESIDENT_MESSAGE.quote}
-                  full={PRESIDENT_MESSAGE.full}
+                  summary={currentPresident?.summary || PRESIDENT_MESSAGE.quote}
+                  full={currentPresident?.full || PRESIDENT_MESSAGE.full}
                   previewLines={6}
                   textClassName="text-base md:text-lg text-slate-600 font-light leading-relaxed italic"
                 />
-                <div className="mt-8 pt-6 border-t border-slate-200">
-                  <p className="text-base font-medium text-brand-900">{PRESIDENT_MESSAGE.author}</p>
-                  <p className="text-xs uppercase tracking-widest text-slate-400 mt-1">{PRESIDENT_MESSAGE.role}</p>
-                  <p className="text-[10px] uppercase tracking-widest text-sand-500 mt-1">{PRESIDENT_MESSAGE.company}</p>
+                <div className="mt-8 inline-flex flex-col items-start rounded-2xl border border-slate-200 bg-white/80 px-5 py-4 shadow-sm">
+                  <p className="text-base font-medium text-brand-900 leading-none">{currentPresident?.name || PRESIDENT_MESSAGE.author}</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400 mt-2">{currentPresident?.role || PRESIDENT_MESSAGE.role}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-sand-500 mt-2">{currentPresident?.country || PRESIDENT_MESSAGE.company}</p>
                 </div>
               </Reveal>
             </div>

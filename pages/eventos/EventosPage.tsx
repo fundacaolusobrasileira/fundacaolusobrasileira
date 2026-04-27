@@ -175,8 +175,10 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
     setItemToDelete(id);
   };
 
-  const confirmDelete = () => {
-    if (itemToDelete) { deleteEvent(itemToDelete); setItemToDelete(null); }
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    const ok = await deleteEvent(itemToDelete);
+    if (ok) setItemToDelete(null);
   };
 
   const handleCloseModal = () => {
@@ -186,7 +188,7 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
   };
 
   return (
-    <div className="bg-brand-900 min-h-screen text-slate-900 selection:bg-sand-400 selection:text-brand-900">
+    <main className="bg-brand-900 min-h-screen text-slate-900 selection:bg-sand-400 selection:text-brand-900">
       {/* HERO */}
       <section className="relative pt-48 pb-32 px-6 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -297,6 +299,6 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
         onCancel={() => setItemToDelete(null)}
       />
       <EventEditorModal isOpen={isModalOpen} onClose={handleCloseModal} event={editingEvent} />
-    </div>
+    </main>
   );
 };

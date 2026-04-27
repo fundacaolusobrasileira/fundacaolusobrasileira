@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Menu, X, Calendar, MapPin, Mail,
-  ArrowRight, Video, Check, LogOut, Search as SearchIcon
+  ArrowRight, Video, Check, LogOut, Search as SearchIcon, Eye, Download
 } from 'lucide-react';
 import { Button, Badge, Card, SocialIcons, LoginModal, Input, AsyncImage } from './component.ui';
 import type { Partner, Event, PendingMediaSubmission, Pillar, Space } from './types';
@@ -254,7 +254,22 @@ export const MediaCurationCard: React.FC<{
         </div>
       </div>
 
-      <div className="flex gap-3 pt-3 border-t border-slate-50">
+      <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-50">
+        <a
+          href={src}
+          target="_blank"
+          rel="noreferrer"
+          className="flex-1 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-300 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-slate-400"
+        >
+          <Eye size={14} aria-hidden="true" /> Ver
+        </a>
+        <a
+          href={src}
+          download
+          className="flex-1 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-300 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-slate-400"
+        >
+          <Download size={14} aria-hidden="true" /> Baixar
+        </a>
         <button onClick={() => onReject(item.id)} className="flex-1 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500">
           <X size={14} aria-hidden="true" /> Rejeitar
         </button>
@@ -560,9 +575,15 @@ const formatEventDate = (d: string) => {
 
 export const EventDetailHeader = ({ event }: { event: Event }) => {
     return (
-        <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
+        <div className="relative aspect-[16/9] min-h-[320px] max-h-[620px] w-full overflow-hidden bg-brand-900">
             <div className="absolute inset-0">
-                {(event.coverImage || event.image) && <img src={event.coverImage || event.image} alt={event.title} className="w-full h-full object-cover" />}
+                {(event.coverImage || event.image) && (
+                    <img
+                        src={event.coverImage || event.image}
+                        alt={event.title}
+                        className="w-full h-full object-cover object-center"
+                    />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 via-brand-900/50 to-transparent"></div>
             </div>
             

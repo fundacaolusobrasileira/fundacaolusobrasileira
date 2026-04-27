@@ -63,6 +63,7 @@ export const CadastroPage = () => {
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Nome Completo</label>
             <Input
+              aria-label="Nome"
               type="text"
               variant="dark"
               placeholder="Seu nome"
@@ -75,6 +76,7 @@ export const CadastroPage = () => {
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Email</label>
             <Input
+              aria-label="E-mail"
               type="email"
               variant="dark"
               placeholder="seu@email.com"
@@ -87,6 +89,7 @@ export const CadastroPage = () => {
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] ml-2">Senha</label>
             <Input
+              aria-label="Senha"
               type="password"
               variant="dark"
               placeholder="Mínimo 8 caracteres"

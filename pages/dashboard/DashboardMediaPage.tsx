@@ -34,8 +34,8 @@ export const DashboardEventosPage = () => {
         <div className="grid gap-6">
            {EVENTS.map((event, idx) => {
               const pendingCount = PENDING_MEDIA_SUBMISSIONS.filter(s => s.eventId === event.id).length;
-              const communityCount = event.media?.filter(m => m.source === 'comunidade').length || 0;
-              const officialCount = event.media?.filter(m => m.source === 'oficial').length || 0;
+              const communityCount = event.gallery?.filter(m => m.source === 'comunidade').length || 0;
+              const officialCount = event.gallery?.filter(m => m.source === 'oficial').length || 0;
 
               return (
                  <Card
@@ -108,7 +108,7 @@ export const DashboardMediaGerirPage = () => {
   if (!event) return <div className="p-20 text-center">Evento nao encontrado</div>;
 
   const pendingItems = PENDING_MEDIA_SUBMISSIONS.filter(s => s.eventId === event.id);
-  const publishedItems = event.media || [];
+  const publishedItems = event.gallery || [];
   const communityPublished = publishedItems.filter(m => m.source === 'comunidade');
   const officialPublished = publishedItems.filter(m => m.source === 'oficial');
 

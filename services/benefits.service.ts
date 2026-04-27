@@ -1,6 +1,7 @@
 import { supabase } from '../supabaseClient';
 import { isEditor, showToast, logActivity } from '../store/app.store';
 import type { Benefit } from '../types';
+import { BenefitSchema } from '../validation/schemas';
 
 export const fetchBenefits = async (): Promise<Benefit[]> => {
   const { data } = await supabase
@@ -26,20 +27,30 @@ export const createBenefit = async (
   benefit: Omit<Benefit, 'id' | 'created_at'>
 ): Promise<Benefit | null> => {
   if (!isEditor()) { showToast('Sem permissão.', 'error'); return null; }
+  const parsed = BenefitSchema.safeParse(benefit);
+  if (!parsed.success) {
+    showToast(parsed.error.issues[0]?.message || 'Dados inválidos.', 'error');
+    return null;
+  }
   const { data, error } = await supabase
     .from('benefits')
-    .insert([benefit])
+    .insert([parsed.data])
     .select()
     .single();
   if (error) { showToast('Erro ao criar benefício.', 'error'); return null; }
-  logActivity('Criou benefício', benefit.title);
+  logActivity('Criou benefício', parsed.data.title);
   showToast('Benefício criado.', 'success');
   return data as Benefit;
 };
 
 export const updateBenefit = async (id: string, patch: Partial<Benefit>): Promise<boolean> => {
   if (!isEditor()) { showToast('Sem permissão.', 'error'); return false; }
-  const { error } = await supabase.from('benefits').update(patch).eq('id', id);
+  const parsed = BenefitSchema.partial().safeParse(patch);
+  if (!parsed.success) {
+    showToast(parsed.error.issues[0]?.message || 'Dados inválidos.', 'error');
+    return false;
+  }
+  const { error } = await supabase.from('benefits').update(parsed.data).eq('id', id);
   if (error) { showToast('Erro ao atualizar benefício.', 'error'); return false; }
   showToast('Benefício guardado.', 'success');
   return true;

@@ -6,7 +6,7 @@ import { EventDetailHeader, GallerySection } from '../../component.domain';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { EventEditorModal } from '../../component.ui';
 import { EVENTS, PARTNERS, FLB_STATE_EVENT, isEditor, resolveGalleryItemSrc } from '../../store/app.store';
-import { deleteEvent } from '../../services/events.service';
+import { deleteEvent, syncEvents } from '../../services/events.service';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Event, Partner } from '../../types';
 import { Camera, Upload, Image as ImageIcon, Edit, Trash2, ArrowLeft, Plus } from 'lucide-react';
@@ -29,6 +29,9 @@ export const EventoDetalhePage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Force fresh fetch from Supabase so newly approved community media (or
+    // any edit done in another tab/context) shows up without manual refresh.
+    syncEvents().catch(() => {});
     setTimeout(() => {
       const found = EVENTS.find(e => e.id === id);
       setEvent(found);
@@ -68,12 +71,12 @@ export const EventoDetalhePage = () => {
       setIsEditModalOpen(true);
   };
 
-  const confirmDelete = () => {
-      if (id) {
-          deleteEvent(id);
-          setIsDeleting(false); // Close dialog first
-          navigate('/eventos', { replace: true });
-      }
+  const confirmDelete = async () => {
+      if (!id) return;
+      const ok = await deleteEvent(id);
+      if (!ok) return;
+      setIsDeleting(false);
+      navigate('/eventos', { replace: true });
   };
 
   const openLightbox = async (index: number, source: 'gallery' | 'media') => {
@@ -86,16 +89,15 @@ export const EventoDetalhePage = () => {
               return {
                   ...item,
                   src: src || '',
-                  source: 'oficial',
-                  type: 'image'
+                  type: item.kind || 'image'
               };
           }));
           items = resolvedItems.filter(i => i.src);
-      } else if (source === 'media' && event?.media) {
-          // Legacy/Community media already has 'url'
-          items = event.media.map((m: any) => ({
+      } else if (source === 'media' && event?.gallery) {
+          items = event.gallery.map((m: any) => ({
              ...m,
-             src: m.url, // Map to standard 'src' expected by Lightbox
+             src: m.url,
+             type: m.kind || 'image',
           }));
       }
 
@@ -105,8 +107,10 @@ export const EventoDetalhePage = () => {
   };
 
   const galleryItems = event?.gallery || [];
-  const displayGallery = galleryItems.slice(0, 6);
-  const remainingGallery = Math.max(0, galleryItems.length - 6);
+  const officialGalleryItems = galleryItems.filter(item => item.source === 'oficial');
+  const communityGalleryItems = galleryItems.filter(item => item.source === 'comunidade');
+  const displayGallery = officialGalleryItems.slice(0, 6);
+  const remainingGallery = Math.max(0, officialGalleryItems.length - 6);
 
   if (loading) {
     return <PremiumLoader />;
@@ -165,7 +169,7 @@ export const EventoDetalhePage = () => {
                        <Camera size={28} />
                     </div>
                     <h3 className="text-lg font-medium text-brand-900 mb-2 relative z-10">Esteve presente?</h3>
-                    <p className="text-slate-500 font-light text-sm mb-8 relative z-10">Contribua com o acervo digital enviando seus registros para a comunidade.</p>
+                    <p className="text-slate-500 font-light text-sm mb-8 relative z-10">Contribua com o acervo digital enviando fotos ou videos. Apos curadoria, o material aprovado aparece na Galeria da Comunidade.</p>
                     <Button onClick={() => navigate(`/eventos/${id}/colaborar`)} className="w-full relative z-10 text-xs">
                        Adicionar Memoria
                     </Button>
@@ -224,11 +228,6 @@ export const EventoDetalhePage = () => {
                   </div>
                 );
               })()}
-              {/* Gallery placeholder */}
-              <div className="mt-12 p-8 border border-dashed border-slate-200 rounded-2xl text-center">
-                <p className="text-xs text-slate-400 uppercase tracking-wider">Galeria de imagens - Em breve</p>
-              </div>
-
               {/* OFFICIAL GALLERY SECTION */}
               <div className="mb-20 mt-12">
                   <div className="flex items-center justify-between mb-8">
@@ -237,7 +236,7 @@ export const EventoDetalhePage = () => {
                      </h2>
                   </div>
 
-                  {galleryItems.length > 0 ? (
+                  {officialGalleryItems.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {displayGallery.map((item, idx) => (
                               <div
@@ -275,16 +274,13 @@ export const EventoDetalhePage = () => {
               </div>
 
               {/* COMMUNITY GALLERY (Keep existing structure, passing filtered media) */}
-              {event.media && event.media.length > 0 && (
+              {communityGalleryItems.length > 0 && (
                   <div className="border-t border-slate-100 pt-20">
                     <GallerySection
-                        mediaList={event.media || []}
+                        mediaList={communityGalleryItems}
                         filter={filter}
                         onFilterChange={(f: any) => setFilter(f)}
                         onMediaClick={(idx: number) => {
-                            // Find the global index in mediaList
-                            const filtered = (event.media || []).filter((m: any) => filter === 'todos' ? true : m.source === filter);
-                            // Need to resolve for lightbox
                             openLightbox(idx, 'media');
                         }}
                         emptyStateSlot={<></>}

@@ -41,8 +41,8 @@ export const LoginPage = () => {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleForgotPassword = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
     if (!resetEmail) return;
     setResetLoading(true);
     setResetMessage(null);
@@ -135,6 +135,8 @@ export const LoginPage = () => {
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-1 group-focus-within:text-sand-400 transition-colors">Email Institucional</label>
                 <div className="relative">
                    <Input
+                     id="login-email"
+                     aria-label="E-mail"
                      type="email"
                      required
                      variant="dark"
@@ -154,6 +156,8 @@ export const LoginPage = () => {
                  </div>
                 <div className="relative">
                    <Input
+                     id="login-password"
+                     aria-label="Senha"
                      type="password"
                      required
                      variant="dark"
@@ -169,8 +173,9 @@ export const LoginPage = () => {
               {showForgotPassword && (
                 <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-3">
                   <p className="text-white/60 text-xs">Insira o seu email para receber o link de redefinição:</p>
-                  <form onSubmit={handleForgotPassword} className="flex gap-2">
+                  <div className="flex gap-2">
                     <Input
+                      aria-label="E-mail para redefinição"
                       type="email"
                       required
                       variant="dark"
@@ -179,10 +184,10 @@ export const LoginPage = () => {
                       onChange={(e: any) => setResetEmail(e.target.value)}
                       className="bg-white/5 border-white/10 focus:border-sand-400/50 h-10 text-sm flex-grow"
                     />
-                    <Button variant="gold" type="submit" className="text-xs px-4 h-10 shrink-0" disabled={resetLoading}>
+                    <Button variant="gold" type="button" onClick={handleForgotPassword} className="text-xs px-4 h-10 shrink-0" disabled={resetLoading}>
                       {resetLoading ? '...' : 'Enviar'}
                     </Button>
-                  </form>
+                  </div>
                   {resetMessage && (
                     <div className={`flex items-center gap-2 text-xs ${resetMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
                       {resetMessage.type === 'success' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
@@ -201,7 +206,7 @@ export const LoginPage = () => {
 
               <div className="pt-6">
                 <Button variant="gold" type="submit" className="w-full text-xs py-5 rounded-xl font-bold tracking-widest hover:scale-[1.02] active:scale-[0.98]" disabled={loading}>
-                  {loading ? 'Autenticando...' : 'Acessar Portal'}
+                  {loading ? 'Autenticando...' : 'Entrar no Portal'}
                 </Button>
               </div>
 
