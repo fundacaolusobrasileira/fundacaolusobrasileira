@@ -51,6 +51,7 @@ const DashboardEventosPage = lazy(() => import('./pages/dashboard/DashboardMedia
 const DashboardMediaGerirPage = lazy(() => import('./pages/dashboard/DashboardMediaPage').then(m => ({ default: m.DashboardMediaGerirPage })));
 const PrivacyPage = lazy(() => import('./pages/legal/LegalPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./pages/legal/LegalPage').then(m => ({ default: m.TermsPage })));
+const DocumentacaoPage = lazy(() => import('./pages/documentacao/DocumentacaoPage').then(m => ({ default: m.DocumentacaoPage })));
 const BeneficiosPage = lazy(() => import('./pages/beneficios/BeneficiosPage').then(m => ({ default: m.BeneficiosPage })));
 const LegaltechSpacePage = lazy(() => import('./pages/legaltech-space/LegaltechSpacePage').then(m => ({ default: m.LegaltechSpacePage })));
 const ParceiroPerfilPage = lazy(() => import('./pages/parceiros/ParceiroPerfilPage').then(m => ({ default: m.ParceiroPerfilPage })));
@@ -81,6 +82,7 @@ export const AppRouter = () => (
       <Route path="/legaltech-space" element={<LegaltechSpacePage />} />
       <Route path="/privacidade" element={<PrivacyPage />} />
       <Route path="/termos" element={<TermsPage />} />
+      <Route path="/documentacao" element={<DocumentacaoPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   </Suspense>

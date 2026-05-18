@@ -34,7 +34,7 @@ export const Footer = () => {
 
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10">
         <div className="grid md:grid-cols-12 gap-12 mb-20">
-          <div className="md:col-span-4 space-y-8">
+          <div className="md:col-span-3 space-y-8">
             <BrandLogo variant="original" />
             <p className="text-white/40 font-light max-w-sm leading-relaxed text-sm">
               Promovendo a cultura, educação e inovação entre Portugal, Brasil e o mundo lusófono.
@@ -63,7 +63,38 @@ export const Footer = () => {
             </ul>
           </div>
 
-          <div className="md:col-span-4 space-y-6">
+          <div className="md:col-span-2 space-y-6">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white/30">Documentação</h4>
+            <ul className="space-y-4 text-sm font-light text-white/60">
+              <li>
+                <Link to="/documentacao" className="hover:text-sand-400 transition-colors">
+                  Documentos Institucionais
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="/Estatutos.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-sand-400 transition-colors inline-flex items-center gap-1.5"
+                >
+                  Estatutos em Vigor
+                </a>
+              </li>
+              <li>
+                <Link to="/documentacao" className="hover:text-sand-400 transition-colors">
+                  Relatórios Anuais
+                </Link>
+              </li>
+              <li>
+                <Link to="/documentacao" className="hover:text-sand-400 transition-colors">
+                  Órgãos Sociais
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-3 space-y-6">
             <h4 className="text-xs font-bold uppercase tracking-widest text-white/30">Newsletter</h4>
             <p className="text-white/40 font-light text-sm">Receba atualizações sobre eventos e iniciativas.</p>
             {subscribed ? (
