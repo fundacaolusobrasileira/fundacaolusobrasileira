@@ -339,11 +339,11 @@ export const HomePage = () => {
             <div className="grid md:grid-cols-12 gap-8 md:gap-16 items-center">
               {/* Foto do Presidente */}
               <div className="md:col-span-5">
-                <div className="aspect-[4/5] w-full max-w-md mx-auto md:mx-0 overflow-hidden rounded-[2rem] shadow-[0_24px_60px_rgba(15,23,42,0.12)] bg-slate-100">
+                <div className="aspect-[4/5] w-full max-w-md mx-auto md:mx-0 overflow-hidden rounded-[2rem] shadow-[0_24px_60px_rgba(15,23,42,0.12)] bg-slate-100 group">
                   <img
                     src={currentPresident?.image || '/presidente.webp'}
                     alt={currentPresident?.name || 'Paulo Campos Costa'}
-                    className="w-full h-full object-cover object-center grayscale"
+                    className="w-full h-full object-cover object-center grayscale group-hover:grayscale-0 transition-all duration-700"
                   />
                 </div>
               </div>

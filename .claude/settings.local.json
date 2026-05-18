@@ -34,9 +34,22 @@
       "Bash(cp \"C:/Users/Kasa/Downloads/Flag_of_Brazil.svg\" H:/Workspace/fundacaolusobrasileira/public/flag-brazil.svg)",
       "Bash(ls:*)",
       "Bash(taskkill /F /IM node.exe)",
+      "Bash(find \"C:\\\\workspace\\\\fundacaolusobrasileira\\\\dist\\\\assets\" -name \"*.js\" -type f -exec wc -c {})",
+      "Bash(wc -l /c/workspace/fundacaolusobrasileira/dist/assets/vendor*.js)",
+      "Bash(du -sh /c/workspace/fundacaolusobrasileira/dist/assets/vendor*.js)",
+      "Bash(gzip -c /c/workspace/fundacaolusobrasileira/dist/assets/index-Dn1-pb_t.css)",
+      "Bash(gzip -c /c/workspace/fundacaolusobrasileira/dist/assets/vendor-react-q5f1n1Zq.js)",
+      "Bash(gzip -c /c/workspace/fundacaolusobrasileira/dist/assets/vendor-supabase-vtL5VWMt.js)",
+      "WebFetch(domain:pagespeed.web.dev)",
+      "Bash(du:*)",
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npm run build)",
+      "Bash(git config *)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(git stash *)"
     ]
   }
 }
