@@ -143,21 +143,35 @@ export const HomePage = () => {
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
            <div className="absolute inset-0 bg-noise opacity-[0.07] mix-blend-overlay z-10 pointer-events-none"></div>
 
+           {/*
+             Bandeiras: cada uma ocupa exatamente metade do hero (w-1/2 h-full)
+             com <img> + object-cover. Isso mantém a proporção em qualquer zoom
+             ou viewport, evitando o problema antigo do `bg-contain` em caixas
+             dimensionadas com `h-[140%]` que ficavam descalibradas ao dar zoom.
+           */}
            {/* PORTUGAL FLAG - LEFT (AMBIENT) */}
-           <div
-             className="absolute top-[-5%] md:top-[-20%] left-[-15%] md:left-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-screen opacity-15 md:opacity-20 blur-[60px] md:blur-[80px]"
+           <img
+             src="/flag-portugal.svg"
+             alt=""
+             aria-hidden="true"
+             draggable={false}
+             className="absolute inset-y-0 left-0 w-1/2 h-full object-cover object-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-screen opacity-25 md:opacity-30 blur-[40px] md:blur-[60px] pointer-events-none select-none"
              style={{
-               backgroundImage: `url('/flag-portugal.svg')`,
-               transform: 'translateX(calc(var(--mouse-ratio) * -20px)) scale(1.1)'
+               transform: 'translateX(calc(var(--mouse-ratio) * -20px)) scale(1.05)',
+               transformOrigin: 'left center'
              }}
            />
 
            {/* BRAZIL FLAG - RIGHT (AMBIENT) */}
-           <div
-             className="absolute top-[-5%] md:top-[-20%] right-[-15%] md:right-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-screen opacity-15 md:opacity-20 blur-[60px] md:blur-[80px]"
+           <img
+             src="/flag-brazil.svg"
+             alt=""
+             aria-hidden="true"
+             draggable={false}
+             className="absolute inset-y-0 right-0 w-1/2 h-full object-cover object-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-screen opacity-25 md:opacity-30 blur-[40px] md:blur-[60px] pointer-events-none select-none"
              style={{
-               backgroundImage: `url('/flag-brazil.svg')`,
-               transform: 'translateX(calc((1 - var(--mouse-ratio)) * 20px)) scale(1.1)'
+               transform: 'translateX(calc((1 - var(--mouse-ratio)) * 20px)) scale(1.05)',
+               transformOrigin: 'right center'
              }}
            />
 
@@ -175,20 +189,28 @@ export const HomePage = () => {
             }}
         >
            {/* PORTUGAL FLAG - LEFT (SHARP) */}
-           <div
-             className="absolute top-[-5%] md:top-[-20%] left-[-15%] md:left-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
+           <img
+             src="/flag-portugal.svg"
+             alt=""
+             aria-hidden="true"
+             draggable={false}
+             className="absolute inset-y-0 left-0 w-1/2 h-full object-cover object-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 pointer-events-none select-none"
              style={{
-               backgroundImage: `url('/flag-portugal.svg')`,
-               transform: 'translateX(calc(var(--mouse-ratio) * -40px)) scale(1.2)'
+               transform: 'translateX(calc(var(--mouse-ratio) * -40px)) scale(1.1)',
+               transformOrigin: 'left center'
              }}
            />
 
            {/* BRAZIL FLAG - RIGHT (SHARP) */}
-           <div
-             className="absolute top-[-5%] md:top-[-20%] right-[-15%] md:right-[-5%] w-[80vw] md:w-[60vw] h-[100%] md:h-[140%] bg-no-repeat bg-contain bg-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 blur-0"
+           <img
+             src="/flag-brazil.svg"
+             alt=""
+             aria-hidden="true"
+             draggable={false}
+             className="absolute inset-y-0 right-0 w-1/2 h-full object-cover object-center transition-transform duration-[1500ms] ease-out will-change-transform mix-blend-normal opacity-90 pointer-events-none select-none"
              style={{
-               backgroundImage: `url('/flag-brazil.svg')`,
-               transform: 'translateX(calc((1 - var(--mouse-ratio)) * 40px)) scale(1.2)'
+               transform: 'translateX(calc((1 - var(--mouse-ratio)) * 40px)) scale(1.1)',
+               transformOrigin: 'right center'
              }}
            />
 
