@@ -1306,8 +1306,10 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                                     <option value="direcao">Direção</option>
                                     <option value="secretario-geral">Secretário Geral</option>
                                     <option value="vogal">Vogal</option>
+                                    <option value="conselho-fiscal">Conselho Fiscal</option>
+                                    <option value="conselho-curadores">Conselho de Curadores</option>
                                 </select>
-                                <p className="text-[10px] text-slate-400 mt-1">Use este campo para definir quem aparece como presidente e demais cargos da governança.</p>
+                                <p className="text-[10px] text-slate-400 mt-1">Use este campo para definir quem aparece como presidente e demais cargos da governança. Membros do Conselho Fiscal e do Conselho de Curadores aparecem nas respetivas secções da página de Administração.</p>
                             </div>
                             <div>
                                 <label htmlFor="member-role" className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Cargo / Função</label>

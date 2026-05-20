@@ -13,10 +13,11 @@ import { syncEvents } from './services/events.service';
 import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
 import { syncPreCadastros } from './services/precadastros.service';
+import { syncEstatutosLeads } from './services/estatutos-leads.service';
 import { resolveUserRole } from './services/auth.service';
 import {
   AUTH_SESSION, AUTH_LOADING,
-  PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG,
+  PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, ESTATUTOS_LEADS,
   setAuthSession, setAuthLoading, notifyState,
 } from './store/app.store';
 
@@ -26,6 +27,7 @@ const clearEditorOnlyState = () => {
   PRECADASTROS.length = 0;
   PENDING_MEDIA_SUBMISSIONS.length = 0;
   ACTIVITY_LOG.length = 0;
+  ESTATUTOS_LEADS.length = 0;
   notifyState();
 };
 
@@ -81,6 +83,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
       syncPreCadastros();
       syncCommunityMedia();
       syncActivityLog();
+      syncEstatutosLeads();
     } else {
       clearEditorOnlyState();
     }

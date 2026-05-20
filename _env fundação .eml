@@ -1,0 +1,120 @@
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=gxzvCqwv871Qw/nN/Fb9wvigPSPHy/g+d0mnZm5KQltHUyNwwfJWc/rXq7lNU3Hs4zolXRQh8Obu2jpXBXo8szz5hZPvfhH4MgXRVo2C9Q81mV9xl1oIkePEbk/q9WC43ldWNozL8B2R3Q+Pthg3SYpuJQtWkBnDtlNwgXMtQJ3HFpNPUvxr+qcwtbAfYLNWZk/9kxCXBN2aC5F3ZvR9zcp5UhOnIZgm9lkZ6t8PKIwcYwvbjUldURLQRn7xT3zJFigbrkbQ1P+MP6bSAA4esZf5PDJFjYH74MvyCOxXyeGneH8VzlC4JehFfOcJKc6kkGHOJDmq2jlTxltjhf4t2A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vtSBjCrJRvnzyTnhksIjTgbFi06n05StWsu7GfMR5ag=;
+ b=I8kN8aOTmocOuHc8O1inCPr6prkZe5KgAnOtYD4jcmiHuncQ2sWKi9cVZqqZ5g/2zvXvsrqy4SBN34huVaUC5CCS7fE16Z1cwJq6kYD+6o4UFy8u9N4eX0qs+UHKUSILHEeJDST8X7SAJPwiA6snX1/aHDMQUPmTorfyjYCoLh8g9Q9RNTpXCTCnb5TpyNY5T+rfXeebukBqwSfcjaK7u2RmEeUSWSi+PVJvhanWy6mXbjTnclHHhHQtOV63mIx+uBT7JoScBUWqPUU+govyYeeKV7ewY6oOHv9FZVlXE3OnT6CqrJq2mqxBXA90nBVits9FSjJeG3HOLw8zJ4JSqQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vtSBjCrJRvnzyTnhksIjTgbFi06n05StWsu7GfMR5ag=;
+ b=u9DjmQWx2F7K3dse+UzWgXDZVYd/m0pxykpxhRXIKbNgsTkgZYB2EJNx1Wzp5NSJBVhy9xLOe1fGejRuxPMoY/E/9cAUlmy842RLi7fItuRV9Aw1C52ZHWsJShbsxf3G6YK3c3VgQhlHk/XiXr2Ve561RwWI9NLWSPC8ewmB+O4y52QJEF/YpHmZv4LCQJntkExRBw31WVCEOrqZXUkvzJzf+l0wT962IZoJnIsEWosLKzj8O2UbHTer+DizKtbytk6A5s6TafhOE0VQPKVmrMehG80qlJblMzwBF3bmZiftVTgopOffUoDG8LxZ5EweyBa/PbsFlpsK6j5hSkDJlw==
+Received: from BYAPR14MB2486.namprd14.prod.outlook.com (2603:10b6:a03:ae::21)
+ by DM4PR14MB7153.namprd14.prod.outlook.com (2603:10b6:8:180::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Tue, 31 Mar
+ 2026 05:05:04 +0000
+Received: from BYAPR14MB2486.namprd14.prod.outlook.com
+ ([fe80::c034:6067:9404:5182]) by BYAPR14MB2486.namprd14.prod.outlook.com
+ ([fe80::c034:6067:9404:5182%3]) with mapi id 15.20.9745.019; Tue, 31 Mar 2026
+ 05:05:04 +0000
+From: Sandro Sanches <sslawtech@outlook.com>
+To: "sslawtech@outlook.com.br" <sslawtech@outlook.com.br>
+Subject: =?iso-8859-1?Q?=5Fenv_funda=E7=E3o_?=
+Thread-Topic: =?iso-8859-1?Q?=5Fenv_funda=E7=E3o_?=
+Thread-Index: AQHcwMvc6YI5p4ssgE+pd3ecd10pWg==
+Date: Tue, 31 Mar 2026 05:05:04 +0000
+Message-ID: <BYAPR14MB2486F7C9192C2C3BEA0158BABC53A@BYAPR14MB2486.namprd14.prod.outlook.com>
+Accept-Language: pt-BR, en-US
+Content-Language: pt-BR
+X-MS-Has-Attach: yes
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BYAPR14MB2486:EE_|DM4PR14MB7153:EE_
+x-ms-office365-filtering-correlation-id: 26b6b56d-b5f0-4b11-fff9-08de8ee3123f
+x-ms-exchange-slblob-mailprops: /V4+jUvCnwZAkPSk6ZAANTIxJ9uz0f8424afmGlayUWmEsia+FdzQcXhqP5IuYvYPzah8pSITUpa7i55j166HaEhXq4/Iij7AoBeK92t4b3tTws/wKryOV3yH87EibzUO3knyV96lranq+X+hw8apDt7KXPsj33R5DLTB82uY/7pm27gRrQVVVxEiUFZ55jU6Dylenf76QrlSY4nwgzhvqQ3fJCjB8WB3qPV7eG8QomJHmXCuyo8KPsLxljWNCqDn041YQapdjxzLMKiaPrz4mz9cooTQoKYdrVKldF50Zq3Ae53GM4fgaBiDLCMs8wEODLaqFyyntXT7X5v6UHI2kENpnWp/EspuPMQiZ9xQW9OIepvVWItumHFhrp5OYvw+1zOJvtSn/1CbjrvB3VsvZSRgkm5qqt+O/KAEClehPG4F0b3vTUSnLqEbgayKNew6gT3W/AooZ9b4ntKU1uG6YomZcUGi9ULfFp368vq0Q0jl6aYwx7AipUmlpm0h3VwkBt4bnzQQNh2vTcbWP/+2vtPWDMpIOkJyJy2FraPfT9ieH3SW8OQ1Y39VITinSQP5MteQSvjdsBKhbSzt3uehTy1LS2wu/alMiMCRRRfEbA=
+x-microsoft-antispam: BCL:0;ARA:14566002|8062599012|15080799012|6092099016|24071999003|31061999003|461199028|20031999003|15030799006|39105399006|19110799012|37011999003|440099028|3412199025|26115399003|102099032|850799032|26121999003|40105399003;
+x-microsoft-antispam-message-info: GtPgcvl27NyZFzYG6ZFlz3Cnmw+5X4nV408d5mDV458TyEuU5oqbSU2YSbcIen8Ih1csdb1mxXRaWpjxnSyT21xpN+za3x3SaKq6pnKK9gN9sx0Wc7nbI7vwvh1R/ua5qaNqxe3Zw9fgkrP5kOgy7DREQUctGpCCaz+ozYPSjtzjKxyuHdXZCtSp9wt3TtrnRNvq2OAbYxXH4nfiER9cHvVXvD3tK74X8UYxLlxGBozLuQ80Q9Ce6L3NxB8nQCbMvCO6jn4i1KRaFyNP5o4EGB+QQXXfDVV3NRcMAo20Z0DjfKt27979MHoNjDLq36stmnHEfsYbsjEY+iXq5DDB5ZbsX8DHvLSNjl/WVjEN55Fz3B/4zaqrRCPu+99ZlSqyJ1xMCxl/PPSAmvZmBYA8IP4Lc87KAPB8qgatXhTlQ14D21DLPWzW0cmdyLk4thkSQUgM5PUbmOd+DIatTUzUCyDDMU+5KsbfCjpYi++AQnnmqlcS9OKRT6i27oGMT8UTpEkNS8sQ7AFqhinwBxISDSY0Vr0PmTk+I/ogwokdj3poSwEUOdB4r52/EWl0+LKN332yqz4/RQDWRaeIhCCWjuFx6bd5IwNTfE/t3lkbloL6NHJbjEFlE7kGbj/GOSHsVt4oh9cX50w83kRLbwpWAD+a40jrgaOr5ujVwj4+tYKXliUX5RRMGYQNw22HckrwgZ1MHANRRwMohfBs3ZyjLRVfyx03WWp5Utq625TYDLua3a966BRLY8uVK+61XysQMqYYDDhAJeV9TCS7nhiL/4l1+4W9QiZfzjnO0lks7Ql3og1lG9yiK18qu8MQ5gBQTmbSQAFsO4gXRlpATnlxBw==
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?1D9VxRG8oAbLwl61S/6xMM+UKxvRbba52BniuwacaojgXdkmaas2rICnfC?=
+ =?iso-8859-1?Q?QB3VoFlGsIYXBx1y3kUelb4xGD6SGLci2XKhmAonVC954rAjaednePIi7T?=
+ =?iso-8859-1?Q?UIHGHZt4Mo96himyqliaMqF+Jvgps102xfE+DoBf6awpV1gw+SJA1yLP/T?=
+ =?iso-8859-1?Q?7KdO3wjuEJZY8srKrigzPD/yOURNb1E+Ckp88WKFcUpX7xTugEstoC0MA9?=
+ =?iso-8859-1?Q?XOGv64T+BgR3ic7g7mh0j1SIPzBQ1hwzdMeDoxN84CW3N+uPaePSEVAoin?=
+ =?iso-8859-1?Q?Q+uI2Yciip0LfANbBSP4K/Zn8slZmN4xOmUFHSns1Y+ILQabCQAruvGla7?=
+ =?iso-8859-1?Q?BAq9k62oUKK9l94nrFri+vIQcYTx/vw4i/jXNAOqp9QfkX/jo5hCTGnSAz?=
+ =?iso-8859-1?Q?o8h4XWRoV1vrgH1f4JRL930cvxckYpTeycm7b7tAwqmIeQcJAFd5vfU4fi?=
+ =?iso-8859-1?Q?uEvdTbntaSFAQ7mv3zjZszfTeqG6ATlNChodrZYfhhYg8eNxRQm/0pNEwS?=
+ =?iso-8859-1?Q?YKT+62P1Y85A2KgC4OOLyQVbZQgyhZBbNlKX71Duy+FBZM2CQssf5vqTFl?=
+ =?iso-8859-1?Q?SEmU6Vc3HE5zSCfiNtX67nvP1TWFEyaaIs3fyJWV8zC3XcCSPSDmqwI7mM?=
+ =?iso-8859-1?Q?REDZ0ESX6kWscq+Bzn7OEJbzhxRWmUpHWIYmEEyKGJ7xgcCpXFkLi+gmkM?=
+ =?iso-8859-1?Q?rUnq3JzKmXHvY+hxtDV9PaAhDWnsOT6x4Nlaqj9mm+jUyVJPOmZzRwsG+Q?=
+ =?iso-8859-1?Q?WZAZr6uOfC0lYXOQvgsj1eae4gEcZkmIIwAWd516TPsbZ7RzvB/dZgExTP?=
+ =?iso-8859-1?Q?mjYsFKTij5IaXEAuXQBcQNLSTNB+1KwOMa7gTTAxhoTxvrIXQBadXsSf5D?=
+ =?iso-8859-1?Q?zz+jfx3okT6i/3BBsfFRYwu3XgNXABid2F6AVwki0vlCz3IEYuykJeyW8b?=
+ =?iso-8859-1?Q?MKFRo392XXkpYWiVz2XgUFfBLZ8xEFGW2qQkYzpy3PkPXZWe/mCxN5Iqat?=
+ =?iso-8859-1?Q?sZ0aGWQ+SkF5ToDzBO4dR7UI/Q058M2y28iUFU6up4x/3sBxm5HQkN0wue?=
+ =?iso-8859-1?Q?zagICvfrzqiobdCFySrgob/oPfJ0NGeIot0YsO1mUw8no66w3Vaovj6vI3?=
+ =?iso-8859-1?Q?f6wjkpcUaLZA9jVnPQ2lyIsgUCq5jmKeSwSA2JEaM/5aGKwa1jNd+JjMpV?=
+ =?iso-8859-1?Q?fSkLGv/9h5fYY3FH7NyJRuBhadV1K6VTgdESjpNOeUr6q6sc7gSRm5v6Xs?=
+ =?iso-8859-1?Q?7DG8u49Wgl1tihaaeLdd0E4DcP3O6ybIJFcp1l+eD5GFFDG4b+oMTSOZuc?=
+ =?iso-8859-1?Q?0utACrxQnp7mozUCAWoRqr6DouSez/lHJ8VPHwWJpwWDOdqw8eVPopawFo?=
+ =?iso-8859-1?Q?jxGnOIMcB4Mq6fgvvQenYjA5j2zcjcM4XhKNKmnBE1R8LTIpyKlYrs+3OY?=
+ =?iso-8859-1?Q?dxn1f1YCRWUqHQ5szP6prEgwKGJGIC7hE3pdx/2AJTuFhTFCGVucqdlIza?=
+ =?iso-8859-1?Q?E=3D?=
+Content-Type: multipart/mixed;
+	boundary="_004_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_"
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR14MB2486.namprd14.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 26b6b56d-b5f0-4b11-fff9-08de8ee3123f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Mar 2026 05:05:04.7492
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR14MB7153
+MIME-Version: 1.0
+
+--_004_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_
+Content-Type: multipart/alternative;
+	boundary="_000_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_"
+
+--_000_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+
+
+--_000_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+</head>
+<body>
+<div></div>
+</body>
+</html>
+
+--_000_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_--
+
+--_004_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_
+Content-Type: application/octet-stream; name="_env"
+Content-Description: _env
+Content-Disposition: attachment; filename="_env"; size=129;
+	creation-date="Tue, 31 Mar 2026 05:04:51 GMT";
+	modification-date="Tue, 31 Mar 2026 05:04:59 GMT"
+Content-Transfer-Encoding: base64
+
+VklURV9TVVBBQkFTRV9VUkw9aHR0cHM6Ly9saGd6eXJzenpieGpqdm54Znd6Zi5zdXBhYmFzZS5j
+bwpWSVRFX1NVUEFCQVNFX0FOT05fS0VZPXNiX3B1Ymxpc2hhYmxlXzVreHlxR3ZQOUdWNGUyQmh2
+THdXVndfUnJhcU43QnQK
+
+--_004_BYAPR14MB2486F7C9192C2C3BEA0158BABC53ABYAPR14MB2486namp_--

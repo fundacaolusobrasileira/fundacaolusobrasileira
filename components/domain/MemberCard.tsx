@@ -16,6 +16,8 @@ const tierLabel: Record<MemberTier, string> = {
   'direcao': 'Direção',
   'secretario-geral': 'Secretário Geral',
   'vogal': 'Vogal',
+  'conselho-fiscal': 'Conselho Fiscal',
+  'conselho-curadores': 'Conselho de Curadores',
 };
 
 export const MemberCard: React.FC<MemberCardProps> = ({ member, size = 'medium', showExpandable = false }) => {

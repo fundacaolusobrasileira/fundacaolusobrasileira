@@ -15,10 +15,26 @@ interface TierSectionProps {
   members: Partner[];
   size?: 'large' | 'medium' | 'small';
   cols?: string;
+  /**
+   * When true the section is always rendered, even if the members array is
+   * empty. An "Em breve" placeholder is shown in that case. Used for the
+   * Conselho Fiscal and Conselho de Curadores sections, which are publicly
+   * announced but not yet populated.
+   */
+  showEmptyPlaceholder?: boolean;
+  emptyMessage?: string;
 }
 
-const TierSection: React.FC<TierSectionProps> = ({ title, subtitle, members, size = 'medium', cols = 'sm:grid-cols-2 lg:grid-cols-3' }) => {
-  if (!members.length) return null;
+const TierSection: React.FC<TierSectionProps> = ({
+  title,
+  subtitle,
+  members,
+  size = 'medium',
+  cols = 'sm:grid-cols-2 lg:grid-cols-3',
+  showEmptyPlaceholder = false,
+  emptyMessage = 'Em breve.',
+}) => {
+  if (!members.length && !showEmptyPlaceholder) return null;
   return (
     <div className="mb-16 md:mb-20">
       <Reveal>
@@ -30,13 +46,22 @@ const TierSection: React.FC<TierSectionProps> = ({ title, subtitle, members, siz
           <div className="h-px bg-white/10 flex-grow"></div>
         </div>
       </Reveal>
-      <div className={`grid gap-4 ${cols}`}>
-        {members.map((member, idx) => (
-          <Reveal key={member.id} delay={idx * 60}>
-            <MemberCard member={member} size={size} showExpandable />
-          </Reveal>
-        ))}
-      </div>
+      {members.length ? (
+        <div className={`grid gap-4 ${cols}`}>
+          {members.map((member, idx) => (
+            <Reveal key={member.id} delay={idx * 60}>
+              <MemberCard member={member} size={size} showExpandable />
+            </Reveal>
+          ))}
+        </div>
+      ) : (
+        <Reveal>
+          <div className="py-10 px-6 text-center border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-sand-400 mb-2">Em breve</p>
+            <p className="text-white/50 text-sm font-light max-w-xl mx-auto leading-relaxed">{emptyMessage}</p>
+          </div>
+        </Reveal>
+      )}
     </div>
   );
 };
@@ -70,7 +95,12 @@ export const AdminPage = () => {
   const direcao = byTier('direcao');
   const secretario = byTier('secretario-geral');
   const vogais = byTier('vogal');
-  const assignedIds = new Set([...presidente, ...direcao, ...secretario, ...vogais].map(member => member.id));
+  const conselhoFiscal = byTier('conselho-fiscal');
+  const conselhoCuradores = byTier('conselho-curadores');
+  const assignedIds = new Set(
+    [...presidente, ...direcao, ...secretario, ...vogais, ...conselhoFiscal, ...conselhoCuradores]
+      .map(member => member.id)
+  );
   const semCargoDefinido = governanceMembers
     .filter(member => !assignedIds.has(member.id))
     .sort(byDisplayOrder);
@@ -114,6 +144,24 @@ export const AdminPage = () => {
           members={vogais}
           size="small"
           cols="sm:grid-cols-2 lg:grid-cols-4"
+        />
+        <TierSection
+          title="Conselho Fiscal"
+          subtitle="Órgão de fiscalização da Fundação"
+          members={conselhoFiscal}
+          size="medium"
+          cols="sm:grid-cols-2 lg:grid-cols-3"
+          showEmptyPlaceholder
+          emptyMessage="A composição do Conselho Fiscal será divulgada em breve."
+        />
+        <TierSection
+          title="Conselho de Curadores"
+          subtitle="Órgão consultivo e de orientação estratégica"
+          members={conselhoCuradores}
+          size="medium"
+          cols="sm:grid-cols-2 lg:grid-cols-3"
+          showEmptyPlaceholder
+          emptyMessage="A composição do Conselho de Curadores será divulgada em breve."
         />
         <TierSection
           title="Governança"

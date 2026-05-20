@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { FileText, Download, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-import { SectionWrapper, Reveal } from '../../components/ui';
+import { FileText, Download, ChevronDown, ChevronUp, Lock, CheckCircle, Loader2 } from 'lucide-react';
+import { SectionWrapper, Reveal, Modal, ModalBody, Button, Input } from '../../components/ui';
 import { usePageMeta } from '../../hooks/usePageMeta';
+import { createEstatutosLead } from '../../services/estatutos-leads.service';
+import { showToast } from '../../store/app.store';
 
 type DocItem = {
   label: string;
   file: string;
   year?: number;
+  /** When true the document is gated behind a name/email capture modal */
+  gated?: boolean;
 };
 
 type DocGroup = {
@@ -15,12 +19,14 @@ type DocGroup = {
   docs: DocItem[];
 };
 
+const ESTATUTOS_FILE = '/Estatutos.pdf';
+
 const DOCUMENTOS: DocGroup[] = [
   {
     title: 'Estatutos',
     description: 'Versão consolidada dos estatutos em vigor da Fundação Luso-Brasileira.',
     docs: [
-      { label: 'Estatutos em vigor', file: '/Estatutos.pdf' },
+      { label: 'Estatutos em vigor', file: ESTATUTOS_FILE, gated: true },
     ],
   },
   {
@@ -40,7 +46,143 @@ const DOCUMENTOS: DocGroup[] = [
   },
 ];
 
-const DocGroupCard = ({ group, defaultOpen }: { group: DocGroup; defaultOpen?: boolean }) => {
+type GatedDownloadModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  file: string;
+  label: string;
+};
+
+const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose, file, label }) => {
+  const [step, setStep] = useState<'form' | 'ready'>('form');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => {
+    setStep('form');
+    setName('');
+    setEmail('');
+    setError(null);
+    setLoading(false);
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const result = await createEstatutosLead({ name, email });
+    setLoading(false);
+    if (!result.success) {
+      setError(result.error || 'Não foi possível concluir o pedido. Tente novamente.');
+      return;
+    }
+    setStep('ready');
+    showToast('Dados registados com sucesso.', 'success');
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={handleClose} className="max-w-lg" titleId="estatutos-download-title">
+      <ModalBody>
+        {step === 'form' ? (
+          <>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-sand-400/20 text-sand-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock size={22} />
+              </div>
+              <h2 id="estatutos-download-title" className="text-2xl font-light text-brand-900">
+                {label}
+              </h2>
+              <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                Para descarregar este documento, preencha o seu nome completo e email. <span className="font-medium text-brand-900">Não é necessário criar conta.</span>
+                <br />
+                <span className="text-slate-500">Na próxima etapa terá acesso ao botão de download.</span>
+              </p>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="estatutos-name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-1">
+                  Nome completo
+                </label>
+                <Input
+                  id="estatutos-name"
+                  type="text"
+                  value={name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                  placeholder="O seu nome"
+                  autoFocus
+                  required
+                  minLength={2}
+                  maxLength={120}
+                />
+              </div>
+              <div>
+                <label htmlFor="estatutos-email" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-1">
+                  Email
+                </label>
+                <Input
+                  id="estatutos-email"
+                  type="email"
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
+              {error && <p className="text-red-600 text-xs text-center" role="alert">{error}</p>}
+              <Button type="submit" className="w-full" isLoading={loading}>
+                {loading ? 'A registar...' : 'Continuar para o download'}
+              </Button>
+              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                Os seus dados são utilizados apenas pela Fundação Luso-Brasileira para fins de transparência e contacto institucional.
+              </p>
+            </form>
+          </>
+        ) : (
+          <div className="text-center py-2">
+            <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={28} />
+            </div>
+            <h2 id="estatutos-download-title" className="text-2xl font-light text-brand-900">
+              Tudo certo, {name.split(' ')[0]}!
+            </h2>
+            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+              O documento está pronto para ser descarregado. Clique no botão abaixo.
+            </p>
+            <a
+              href={file}
+              download
+              onClick={() => {
+                showToast('A iniciar download...', 'info');
+                setTimeout(handleClose, 600);
+              }}
+              className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-900 text-white text-xs font-medium uppercase tracking-wide hover:bg-black transition-colors"
+            >
+              <Download size={14} /> Descarregar {label}
+            </a>
+            <p className="text-[10px] text-slate-400 mt-4">
+              Caso o download não inicie automaticamente, clique novamente no botão acima.
+            </p>
+          </div>
+        )}
+      </ModalBody>
+    </Modal>
+  );
+};
+
+type DocGroupCardProps = {
+  group: DocGroup;
+  defaultOpen?: boolean;
+  onRequestDownload: (doc: DocItem) => void;
+};
+
+const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onRequestDownload }) => {
   const [open, setOpen] = useState(!!defaultOpen);
 
   return (
@@ -69,23 +211,31 @@ const DocGroupCard = ({ group, defaultOpen }: { group: DocGroup; defaultOpen?: b
             <ul className="space-y-3">
               {group.docs.map(doc => (
                 <li key={doc.file} className="flex items-center justify-between gap-4 p-3 bg-white rounded-xl border border-slate-100">
-                  <span className="text-sm text-slate-700 font-medium">{doc.label}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-sm text-slate-700 font-medium truncate">{doc.label}</span>
+                    {doc.gated && (
+                      <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-sand-700 bg-sand-100 px-2 py-0.5 rounded-full">
+                        <Lock size={9} /> Identificação necessária
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <a
-                      href={doc.file}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs font-semibold text-brand-900 hover:text-sand-600 transition-colors px-3 py-1.5 rounded-lg border border-brand-900/20 hover:border-sand-400 hover:bg-sand-50"
-                    >
-                      <ExternalLink size={13} /> Ver
-                    </a>
-                    <a
-                      href={doc.file}
-                      download
-                      className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-900 hover:bg-brand-800 transition-colors px-3 py-1.5 rounded-lg"
-                    >
-                      <Download size={13} /> Baixar
-                    </a>
+                    {doc.gated ? (
+                      <button
+                        onClick={() => onRequestDownload(doc)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-900 hover:bg-brand-800 transition-colors px-3 py-1.5 rounded-lg"
+                      >
+                        <Download size={13} /> Baixar
+                      </button>
+                    ) : (
+                      <a
+                        href={doc.file}
+                        download
+                        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-900 hover:bg-brand-800 transition-colors px-3 py-1.5 rounded-lg"
+                      >
+                        <Download size={13} /> Baixar
+                      </a>
+                    )}
                   </div>
                 </li>
               ))}
@@ -102,6 +252,14 @@ export const DocumentacaoPage = () => {
     'Documentação Institucional – Fundação Luso-Brasileira',
     'Acesso público a documentos legais, estatutos, relatórios e regulamentos da Fundação Luso-Brasileira.'
   );
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeDoc, setActiveDoc] = useState<DocItem | null>(null);
+
+  const requestDownload = (doc: DocItem) => {
+    setActiveDoc(doc);
+    setModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-page pt-32 pb-24 relative overflow-hidden">
@@ -126,34 +284,13 @@ export const DocumentacaoPage = () => {
         <Reveal delay={150}>
           <div className="space-y-4 mb-16">
             {DOCUMENTOS.map((group, i) => (
-              <DocGroupCard key={group.title} group={group} defaultOpen={i === 0} />
+              <DocGroupCard
+                key={group.title}
+                group={group}
+                defaultOpen={i === 0}
+                onRequestDownload={requestDownload}
+              />
             ))}
-          </div>
-        </Reveal>
-
-        {/* Inline PDF Viewer for Estatutos */}
-        <Reveal delay={200}>
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText size={18} className="text-brand-900" />
-                <span className="text-sm font-bold text-brand-900">Estatutos — Visualização</span>
-              </div>
-              <a
-                href="/Estatutos.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs font-semibold text-brand-900 hover:text-sand-600 transition-colors"
-              >
-                <ExternalLink size={13} /> Abrir em nova aba
-              </a>
-            </div>
-            <iframe
-              src="/Estatutos.pdf"
-              title="Estatutos da Fundação Luso-Brasileira"
-              className="w-full"
-              style={{ height: '75vh', minHeight: '500px' }}
-            />
           </div>
         </Reveal>
 
@@ -163,6 +300,15 @@ export const DocumentacaoPage = () => {
           </p>
         </div>
       </SectionWrapper>
+
+      {activeDoc && (
+        <GatedDownloadModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          file={activeDoc.file}
+          label={activeDoc.label}
+        />
+      )}
     </div>
   );
 };

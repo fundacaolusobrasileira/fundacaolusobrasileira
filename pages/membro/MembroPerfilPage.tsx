@@ -414,6 +414,8 @@ export const MembroEditarPage = () => {
                         <option value="direcao">Direção</option>
                         <option value="secretario-geral">Secretário Geral</option>
                         <option value="vogal">Vogal</option>
+                        <option value="conselho-fiscal">Conselho Fiscal</option>
+                        <option value="conselho-curadores">Conselho de Curadores</option>
                     </select>
                  </div>
 

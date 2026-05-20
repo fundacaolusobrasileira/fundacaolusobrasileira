@@ -1,7 +1,13 @@
 // types/index.ts
 import React from 'react';
 
-export type MemberTier = 'presidente' | 'direcao' | 'secretario-geral' | 'vogal';
+export type MemberTier =
+  | 'presidente'
+  | 'direcao'
+  | 'secretario-geral'
+  | 'vogal'
+  | 'conselho-fiscal'
+  | 'conselho-curadores';
 
 export type PartnerType = 'pessoa' | 'empresa';
 export type PartnerCategory = 'Parceiro Platinum' | 'Parceiro Gold' | 'Parceiro Silver' | 'Apoio Público' | 'Outro Apoio' | 'Exposição' | 'Governança';
@@ -206,3 +212,10 @@ export type ActivityLogItem = {
   timestamp: string;
   user?: string;
 };
+
+export interface EstatutosLead {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+}
