@@ -252,5 +252,6 @@ export interface CouncilMember {
   role?: string | null;
   order: number;
   active: boolean;
+  partner_id?: string | null;   // perfil ligado (fonte da verdade do nome/foto)
   created_at: string;
 }

@@ -13,6 +13,7 @@ const normalize = (row: any): CouncilMember => ({
   role: row.role ?? null,
   order: row.order ?? 0,
   active: row.active !== false,
+  partner_id: row.partner_id ?? null,
   created_at: row.created_at,
 });
 

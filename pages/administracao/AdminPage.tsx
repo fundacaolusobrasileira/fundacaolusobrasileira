@@ -19,7 +19,7 @@ import type { Partner, CouncilMember, CouncilType } from '../../types';
 interface CouncilNameSectionProps {
   title: string;
   subtitle?: string;
-  members: CouncilMember[];
+  members: { id: string; name: string; role?: string | null }[];
   emptyMessage: string;
 }
 
@@ -76,10 +76,17 @@ const ADMIN_NAME_ALIASES: Record<string, string> = {
 // Converte um membro do conselho (nome/cargo oficiais) num objeto de card,
 // reaproveitando foto/bio/id do partner correspondente quando existir. Quem
 // não tem partner (ex.: membros novos) vira card só com nome + cargo.
+// Encontra o partner ligado: primeiro pelo partner_id (estável), depois por
+// nome (oficial ou antigo). O perfil é a fonte da verdade: usamos o nome,
+// cargo, foto e bio do partner — assim editar no admin reflete aqui.
+const findCouncilPartner = (cm: CouncilMember): Partner | undefined =>
+  (cm.partner_id ? PARTNERS.find(x => x.id === cm.partner_id) : undefined)
+  || PARTNERS.find(x => x.name === cm.name)
+  || (ADMIN_NAME_ALIASES[cm.name] ? PARTNERS.find(x => x.name === ADMIN_NAME_ALIASES[cm.name]) : undefined);
+
 const toCardMember = (cm: CouncilMember): Partner => {
-  const p = PARTNERS.find(x => x.name === cm.name)
-    || (ADMIN_NAME_ALIASES[cm.name] ? PARTNERS.find(x => x.name === ADMIN_NAME_ALIASES[cm.name]) : undefined);
-  if (p) return { ...p, name: cm.name, role: cm.role || p.role, tier: undefined };
+  const p = findCouncilPartner(cm);
+  if (p) return { ...p, role: p.role || cm.role || undefined, tier: undefined };
   return {
     id: `council-${cm.id}`,
     name: cm.name,
@@ -97,8 +104,16 @@ interface CouncilCardSectionProps {
 
 const CouncilCardSection: React.FC<CouncilCardSectionProps> = ({ title, subtitle, members }) => {
   if (!members.length) return null;
-  const presidente = members.filter(m => (m.role || '').toLowerCase() === 'presidente');
-  const others = members.filter(m => (m.role || '').toLowerCase() !== 'presidente');
+  const r = (m: Partner) => (m.role || '').toLowerCase().trim();
+  const presidente  = members.filter(m => r(m).startsWith('presidente'));
+  const vice        = members.filter(m => r(m).includes('vice'));
+  const secretario  = members.filter(m => r(m).includes('secretar') && !r(m).includes('vice'));
+  const vogais      = members.filter(m =>
+    !r(m).startsWith('presidente') && !r(m).includes('vice') && !r(m).includes('secretar')
+  );
+
+  const Divider = () => <div className="h-px bg-white/[0.07] my-7" />;
+
   return (
     <div className="mb-16 md:mb-20">
       <Reveal>
@@ -110,8 +125,10 @@ const CouncilCardSection: React.FC<CouncilCardSectionProps> = ({ title, subtitle
           <div className="h-px bg-white/10 flex-grow"></div>
         </div>
       </Reveal>
+
+      {/* Presidente */}
       {presidente.length > 0 && (
-        <div className="max-w-2xl mb-4">
+        <div className="max-w-2xl">
           {presidente.map(m => (
             <Reveal key={m.id}>
               <MemberCard member={m} size="large" showExpandable />
@@ -119,14 +136,47 @@ const CouncilCardSection: React.FC<CouncilCardSectionProps> = ({ title, subtitle
           ))}
         </div>
       )}
-      {others.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-          {others.map((m, idx) => (
-            <Reveal key={m.id} delay={idx * 60} className="h-full">
-              <MemberCard member={m} size="medium" showExpandable />
-            </Reveal>
-          ))}
-        </div>
+
+      {/* Vice-Presidente */}
+      {vice.length > 0 && (
+        <>
+          {presidente.length > 0 && <Divider />}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+            {vice.map((m, idx) => (
+              <Reveal key={m.id} delay={idx * 60} className="h-full">
+                <MemberCard member={m} size="medium" showExpandable />
+              </Reveal>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Secretário-Geral */}
+      {secretario.length > 0 && (
+        <>
+          {(presidente.length > 0 || vice.length > 0) && <Divider />}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+            {secretario.map((m, idx) => (
+              <Reveal key={m.id} delay={idx * 60} className="h-full">
+                <MemberCard member={m} size="medium" showExpandable />
+              </Reveal>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Vogais */}
+      {vogais.length > 0 && (
+        <>
+          {(presidente.length > 0 || vice.length > 0 || secretario.length > 0) && <Divider />}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+            {vogais.map((m, idx) => (
+              <Reveal key={m.id} delay={idx * 60} className="h-full">
+                <MemberCard member={m} size="medium" showExpandable />
+              </Reveal>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -146,11 +196,19 @@ export const AdminPage = () => {
 
   const byCouncil = (council: CouncilType) =>
     COUNCILS.filter((m: CouncilMember) => m.council === council && m.active !== false).sort(byCouncilOrder);
+  // Nas listas, o nome vem do perfil ligado (se existir), para refletir edições
+  // do admin; o cargo é o do conselho (específico do órgão, ex.: "Curador").
+  const resolveList = (council: CouncilType) =>
+    byCouncil(council).map(cm => ({
+      id: cm.id,
+      name: findCouncilPartner(cm)?.name ?? cm.name,
+      role: cm.role ?? null,
+    }));
   // Conselho de Administração → cards (com foto/perfil); os restantes → listas.
   const administracaoCards = byCouncil('administracao').map(toCardMember);
-  const executivoNames = byCouncil('executivo');
-  const fiscalNames = byCouncil('fiscal');
-  const curadoresNames = byCouncil('curadores');
+  const executivoNames = resolveList('executivo');
+  const fiscalNames = resolveList('fiscal');
+  const curadoresNames = resolveList('curadores');
 
   if (loading) return <PremiumLoader />;
 
