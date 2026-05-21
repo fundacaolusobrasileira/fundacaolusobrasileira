@@ -207,6 +207,12 @@ export const AdminPage = () => {
           cols="sm:grid-cols-2 lg:grid-cols-4"
         />
         <CouncilNameSection
+          title="Conselho de Curadores"
+          subtitle="Órgão consultivo e de orientação estratégica"
+          members={curadoresNames}
+          emptyMessage="A composição do Conselho de Curadores será divulgada em breve."
+        />
+        <CouncilNameSection
           title="Conselho de Administração"
           subtitle="Composição oficial · órgão de administração da Fundação"
           members={administracaoNames}
@@ -223,12 +229,6 @@ export const AdminPage = () => {
           subtitle="Órgão de fiscalização da Fundação"
           members={fiscalNames}
           emptyMessage="A composição do Conselho Fiscal será divulgada em breve."
-        />
-        <CouncilNameSection
-          title="Conselho de Curadores"
-          subtitle="Órgão consultivo e de orientação estratégica"
-          members={curadoresNames}
-          emptyMessage="A composição do Conselho de Curadores será divulgada em breve."
         />
         <TierSection
           title="Governança"

@@ -92,7 +92,7 @@ FROM (VALUES
   ('curadores', 'Fernando Maia Cerqueira',  NULL,        3),
   ('curadores', 'Francisco Teixeira',       NULL,        4),
   ('curadores', 'Jorge Rebelo de Almeida',  NULL,        5),
-  ('curadores', 'Luís Filipe D''Avila',     NULL,        6),
+  ('curadores', 'Luís Filipe D’Avila',      NULL,        6),
   ('curadores', 'Maria João Bustorff',      NULL,        7),
   ('curadores', 'Marco Amaral',             NULL,        8),
   ('curadores', 'Mário Assis Ferreira',     NULL,        9),
