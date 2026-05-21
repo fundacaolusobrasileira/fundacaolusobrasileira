@@ -72,14 +72,9 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a
-                  href="/Estatutos.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-sand-400 transition-colors inline-flex items-center gap-1.5"
-                >
+                <Link to="/documentacao" className="hover:text-sand-400 transition-colors">
                   Estatutos em Vigor
-                </a>
+                </Link>
               </li>
               <li>
                 <Link to="/documentacao" className="hover:text-sand-400 transition-colors">

@@ -123,25 +123,30 @@ export const HomePage = () => {
   // (Presidente em destaque → Vice-Presidente + Secretário-Geral → Vogais).
   // Cada item é mapeado para o partner existente (preserva foto e link do
   // perfil) e o nome/cargo exibido é sobrescrito conforme a composição oficial.
-  const findGov = (name: string) =>
-    govMembers.find(m => m.name === name) || PARTNERS.find(p => p.name === name);
-  const execEntry = (matchName: string, name: string, role: string) => {
-    const base = findGov(matchName);
+  // Aceita vários nomes (oficial + antigos) para encontrar o partner mesmo
+  // antes do rename no banco — assim a foto e o link do perfil nunca somem.
+  const findGov = (...names: string[]) => {
+    for (const n of names) {
+      const hit = govMembers.find(m => m.name === n) || PARTNERS.find(p => p.name === n);
+      if (hit) return hit;
+    }
+    return undefined;
+  };
+  const execEntry = (matchNames: string[], name: string, role: string) => {
+    const base = findGov(...matchNames);
     return base ? { ...base, name, role } : null;
   };
 
   const presidente = [
-    execEntry('Paulo Campos Costa', 'Paulo Campos Costa', 'Presidente'),
+    execEntry(['Paulo Campos Costa'], 'Paulo Campos Costa', 'Presidente'),
   ].filter(m => m !== null);
-  const direcao = [
-    execEntry('Álvaro Covões', 'Álvaro Ricardo Villaverde Covões Gávea', 'Vice-Presidente'),
-  ].filter(m => m !== null);
-  const secretarioGeral = [
-    execEntry('João Pedro Carvalho', 'João Carvalho', 'Secretário-Geral'),
-  ].filter(m => m !== null);
-  const vogais = [
-    execEntry('Nuno Fernandes Thomaz', 'Nuno Maria Pinto de Magalhães Fernandes Thomaz', 'Vogal'),
-    execEntry('Pedro Ribeiro', 'Pedro Luís Bernardes Ribeiro', 'Vogal'),
+  // Demais membros do Conselho Executivo (Vice-Presidente, Secretário-Geral e
+  // Vogais), exibidos num grid uniforme — cada cartão completa o outro.
+  const board = [
+    execEntry(['Álvaro Covões', 'Álvaro Ricardo Villaverde Covões Gávea'], 'Álvaro Ricardo Villaverde Covões Gávea', 'Vice-Presidente'),
+    execEntry(['João Pedro Carvalho', 'João Carvalho'], 'João Carvalho', 'Secretário-Geral'),
+    execEntry(['Nuno Fernandes Thomaz', 'Nuno Maria Pinto de Magalhães Fernandes Thomaz'], 'Nuno Maria Pinto de Magalhães Fernandes Thomaz', 'Vogal'),
+    execEntry(['Pedro Ribeiro', 'Pedro Luís Bernardes Ribeiro'], 'Pedro Luís Bernardes Ribeiro', 'Vogal'),
   ].filter(m => m !== null);
   const currentPresident = presidente[0];
 
@@ -463,48 +468,26 @@ export const HomePage = () => {
             </Reveal>
           ))}
 
-          {/* Row 2: Direção (2) + Secretário Geral (1) — same row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...direcao, ...secretarioGeral].map((m, idx) => (
-              <Reveal key={m.id} delay={150 + idx * 50}>
+          {/* Demais membros do Conselho Executivo — grid uniforme (2 colunas no
+              desktop, 1 no mobile), cartões de altura igual que se completam. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+            {board.map((m, idx) => (
+              <Reveal key={m.id} delay={150 + idx * 50} className="h-full">
                 <Link
                   to={`/membro/${m.id}`}
-                  className="group block focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-sand-400 rounded-2xl"
+                  className="group block h-full focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-sand-400 rounded-2xl"
                   aria-label={`Ver perfil de ${m.name}, ${m.role}`}
                 >
-                  <div className="relative bg-white border border-slate-200/80 rounded-2xl p-4 flex items-center gap-4 hover:border-sand-400/50 hover:shadow-lg transition-all duration-500 hover:-translate-y-0.5">
-                    <div className="w-12 h-12 md:w-14 md:h-14 relative overflow-hidden rounded-full shrink-0 shadow-sm bg-slate-100">
+                  <div className="h-full bg-white border border-slate-200/80 rounded-2xl p-5 flex items-center gap-4 hover:border-sand-400/50 hover:shadow-lg transition-all duration-500 hover:-translate-y-0.5">
+                    <div className="w-14 h-14 md:w-16 md:h-16 relative overflow-hidden rounded-full shrink-0 shadow-sm bg-slate-100">
                       {m.image && <img src={m.image} alt="" className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex-grow min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500 mb-0.5">{m.role}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-sand-500 mb-1">{m.role}</p>
                       <h3 className="text-base md:text-lg font-serif text-brand-900 group-hover:text-sand-600 transition-colors leading-tight">{m.name}</h3>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-brand-900 group-hover:text-white transition-all duration-300 shrink-0 opacity-0 group-hover:opacity-100" aria-hidden="true">
                       <ArrowUpRight size={14} />
-                    </div>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-
-          {/* Row 3: Vogais — 4 mini cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-            {vogais.map((m, idx) => (
-              <Reveal key={m.id} delay={250 + idx * 50}>
-                <Link
-                  to={`/membro/${m.id}`}
-                  className="group block focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-sand-400 rounded-2xl"
-                  aria-label={`Ver perfil de ${m.name}, ${m.role}`}
-                >
-                  <div className="relative bg-white border border-slate-200/80 rounded-2xl p-3 flex items-center gap-3 hover:border-sand-400/50 hover:shadow-md transition-all duration-500 hover:-translate-y-0.5">
-                    <div className="w-10 h-10 relative overflow-hidden rounded-full shrink-0 shadow-sm bg-slate-100">
-                      {m.image && <img src={m.image} alt="" className="w-full h-full object-cover" />}
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <p className="text-[8px] font-bold uppercase tracking-widest text-sand-500 mb-0.5">Vogal</p>
-                      <h3 className="text-xs font-serif text-brand-900 group-hover:text-sand-600 transition-colors truncate">{m.name}</h3>
                     </div>
                   </div>
                 </Link>
