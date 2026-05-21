@@ -20,17 +20,19 @@ const normalizeLead = (row: Record<string, unknown>): EstatutosLead => {
  * only allows INSERT (anon) + SELECT/DELETE for editors.
  */
 export const createEstatutosLead = async (
-  data: Pick<EstatutosLead, 'name' | 'email'>
+  data: Pick<EstatutosLead, 'name' | 'email'> & { document?: string }
 ): Promise<{ success: boolean; error?: string }> => {
-  const parsed = CreateLeadSchema.safeParse(data);
+  const parsed = CreateLeadSchema.safeParse({ name: data.name, email: data.email });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message || 'Dados inválidos.' };
   }
 
-  const payload = {
+  const payload: { name: string; email: string; document?: string } = {
     name: parsed.data.name.trim(),
     email: parsed.data.email.trim().toLowerCase(),
   };
+  // Regista qual documento foi pedido (a coluna `document` tem default 'estatutos').
+  if (data.document && data.document.trim()) payload.document = data.document.trim().slice(0, 200);
 
   const { error } = await supabase.from('estatutos_leads').insert([payload]);
 

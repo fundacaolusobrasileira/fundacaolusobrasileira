@@ -10,6 +10,7 @@ import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
 import { syncCouncils } from './services/councils.service';
+import { syncDocuments } from './services/documents.service';
 import { syncEvents } from './services/events.service';
 import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
@@ -36,6 +37,7 @@ const clearEditorOnlyState = () => {
 
 syncMembers();
 syncCouncils();
+syncDocuments();
 syncEvents();
 
 // --- Auth Listener ---
@@ -65,6 +67,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
 
     syncMembers();
     syncCouncils();
+    syncDocuments();
     syncEvents();
     clearEditorOnlyState();
 
@@ -101,6 +104,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     clearEditorOnlyState();
     syncMembers();
     syncCouncils();
+    syncDocuments();
     syncEvents();
   }
 

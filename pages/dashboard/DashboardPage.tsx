@@ -7,6 +7,7 @@ import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG
 import { UserManagerModal } from './UserManagerModal';
 import { BenefitsManagerSection } from './BenefitsManagerSection';
 import { CouncilManagerSection } from './CouncilManagerSection';
+import { DocumentManagerSection } from './DocumentManagerSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { updatePreCadastro, deletePreCadastro, syncPreCadastros } from '../../services/precadastros.service';
@@ -415,12 +416,14 @@ export const DashboardPage = () => {
 
         <CouncilManagerSection />
 
+        <DocumentManagerSection />
+
         {/* Estatutos Downloads — leads capturados no botão de download da página de Documentação */}
         <div className="mt-6 animate-fadeInUpSlow delay-300">
           <Card className="bg-white shadow-sm border-slate-200 overflow-hidden">
             <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
               <h3 className="font-medium text-brand-900 flex items-center gap-2">
-                <FileText size={16} /> Downloads de Estatutos
+                <FileText size={16} /> Downloads de Documentos
                 <span className="ml-1 bg-sand-100 text-sand-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">{ESTATUTOS_LEADS.length}</span>
                 <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-2">
                   <Download size={11} /> /documentacao
@@ -444,6 +447,7 @@ export const DashboardPage = () => {
                       <tr className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-left">
                         <th className="px-3 py-2">Nome</th>
                         <th className="px-3 py-2">Email</th>
+                        <th className="px-3 py-2">Documento</th>
                         <th className="px-3 py-2">Data</th>
                         <th className="px-3 py-2 w-12 text-right"> </th>
                       </tr>
@@ -455,6 +459,7 @@ export const DashboardPage = () => {
                           <td className="px-3 py-2 text-slate-600">
                             <span className="truncate">{lead.email}</span>
                           </td>
+                          <td className="px-3 py-2 text-slate-500 text-xs">{lead.document || 'estatutos'}</td>
                           <td className="px-3 py-2 text-slate-400 text-xs">
                             {lead.createdAt ? new Date(lead.createdAt).toLocaleString('pt-PT') : '—'}
                           </td>

@@ -217,12 +217,33 @@ export interface EstatutosLead {
   id: string;
   name: string;
   email: string;
+  document?: string;   // qual documento foi pedido (ex.: 'estatutos', título do relatório)
   createdAt: string;
 }
 
 // Conselhos listados apenas por nome (não perfis): Curadores, Fiscal,
 // Administração e Executivo.
 export type CouncilType = 'curadores' | 'fiscal' | 'administracao' | 'executivo';
+
+// Documentos institucionais da página /documentacao, geríveis no Dashboard.
+export type DocumentCategory =
+  | 'estatutos'
+  | 'relatorios-anuais'
+  | 'regulamento-interno'
+  | 'orgaos-sociais';
+
+export interface InstitutionalDocument {
+  id: string;
+  category: DocumentCategory;
+  title: string;
+  description?: string | null;
+  year?: number | null;
+  file_url: string;
+  gated: boolean;       // exige nome+email para download
+  order: number;
+  active: boolean;
+  created_at: string;
+}
 
 export interface CouncilMember {
   id: string;

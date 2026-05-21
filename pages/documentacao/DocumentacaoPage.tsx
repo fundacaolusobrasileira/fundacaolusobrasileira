@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Download, ChevronDown, ChevronUp, Lock, CheckCircle, Loader2 } from 'lucide-react';
 import { SectionWrapper, Reveal, Modal, ModalBody, Button, Input } from '../../components/ui';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { createEstatutosLead } from '../../services/estatutos-leads.service';
-import { showToast } from '../../store/app.store';
+import { getDocumentsByCategory } from '../../services/documents.service';
+import { showToast, FLB_STATE_EVENT } from '../../store/app.store';
+import type { DocumentCategory } from '../../types';
 
 type DocItem = {
   label: string;
   file: string;
-  year?: number;
+  year?: number | null;
   /** When true the document is gated behind a name/email capture modal */
   gated?: boolean;
 };
@@ -21,30 +23,54 @@ type DocGroup = {
 
 const ESTATUTOS_FILE = '/Estatutos.pdf';
 
-const DOCUMENTOS: DocGroup[] = [
+// Definição fixa das secções. Os documentos de cada secção vêm do banco
+// (tabela institutional_documents → store DOCUMENTS); o Estatutos mantém
+// também um item estático garantido, para nunca depender só do banco.
+type DocGroupDef = {
+  title: string;
+  description: string;
+  category: DocumentCategory;
+  staticDocs?: DocItem[];
+};
+
+const GROUP_DEFS: DocGroupDef[] = [
   {
     title: 'Estatutos',
     description: 'Versão consolidada dos estatutos em vigor da Fundação Luso-Brasileira.',
-    docs: [
-      { label: 'Estatutos em vigor', file: ESTATUTOS_FILE, gated: true },
-    ],
+    category: 'estatutos',
+    staticDocs: [{ label: 'Estatutos em vigor', file: ESTATUTOS_FILE, gated: true }],
   },
   {
     title: 'Relatórios Anuais',
     description: 'Relatórios de atividades, demonstrações financeiras, parecer do Conselho Fiscal e atas de aprovação.',
-    docs: [],
+    category: 'relatorios-anuais',
   },
   {
     title: 'Regulamento Interno',
     description: 'Regulamento interno em vigor.',
-    docs: [],
+    category: 'regulamento-interno',
   },
   {
     title: 'Órgãos Sociais',
     description: 'Identificação dos titulares dos órgãos previstos nos estatutos.',
-    docs: [],
+    category: 'orgaos-sociais',
   },
 ];
+
+// Combina os documentos estáticos (ex.: Estatutos) com os do banco, por categoria.
+const buildGroup = (def: DocGroupDef): DocGroup => ({
+  title: def.title,
+  description: def.description,
+  docs: [
+    ...(def.staticDocs ?? []),
+    ...getDocumentsByCategory(def.category).map<DocItem>(d => ({
+      label: d.year ? `${d.title} (${d.year})` : d.title,
+      file: d.file_url,
+      year: d.year,
+      gated: d.gated,
+    })),
+  ],
+});
 
 type GatedDownloadModalProps = {
   isOpen: boolean;
@@ -77,7 +103,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const result = await createEstatutosLead({ name, email });
+    const result = await createEstatutosLead({ name, email, document: label });
     setLoading(false);
     if (!result.success) {
       setError(result.error || 'Não foi possível concluir o pedido. Tente novamente.');
@@ -255,6 +281,16 @@ export const DocumentacaoPage = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeDoc, setActiveDoc] = useState<DocItem | null>(null);
+  const [, setTick] = useState(0);
+
+  // Re-renderiza quando os documentos chegam do banco (sync assíncrono).
+  useEffect(() => {
+    const handler = () => setTick(v => v + 1);
+    window.addEventListener(FLB_STATE_EVENT, handler);
+    return () => window.removeEventListener(FLB_STATE_EVENT, handler);
+  }, []);
+
+  const groups = GROUP_DEFS.map(buildGroup);
 
   const requestDownload = (doc: DocItem) => {
     setActiveDoc(doc);
@@ -283,7 +319,7 @@ export const DocumentacaoPage = () => {
 
         <Reveal delay={150}>
           <div className="space-y-4 mb-16">
-            {DOCUMENTOS.map((group, i) => (
+            {groups.map((group, i) => (
               <DocGroupCard
                 key={group.title}
                 group={group}

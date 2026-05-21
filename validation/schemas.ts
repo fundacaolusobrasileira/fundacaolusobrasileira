@@ -109,3 +109,19 @@ export const CouncilMemberSchema = z.object({
 });
 
 export type CouncilMemberInput = z.infer<typeof CouncilMemberSchema>;
+
+// Documentos institucionais (página /documentacao) — geríveis no Dashboard.
+export const DocumentSchema = z.object({
+  category: z.enum(['estatutos', 'relatorios-anuais', 'regulamento-interno', 'orgaos-sociais'], {
+    message: 'Categoria inválida',
+  }),
+  title: z.string().trim().min(2, 'Título deve ter pelo menos 2 caracteres').max(200, 'Título muito longo'),
+  description: z.string().max(1000, 'Descrição muito longa').optional().nullable(),
+  year: z.number().int().min(1900, 'Ano inválido').max(2200, 'Ano inválido').optional().nullable(),
+  file_url: z.string().min(1, 'É necessário um arquivo ou link').max(2048, 'URL muito longa'),
+  gated: z.boolean(),
+  order: z.number().int().min(0, 'Ordem não pode ser negativa'),
+  active: z.boolean(),
+});
+
+export type DocumentInput = z.infer<typeof DocumentSchema>;
