@@ -126,27 +126,45 @@ export const HomePage = () => {
   // Aceita vários nomes (oficial + antigos) para encontrar o partner mesmo
   // antes do rename no banco — assim a foto e o link do perfil nunca somem.
   const findGov = (...names: string[]) => {
+    // 1. Exact name match
     for (const n of names) {
       const hit = govMembers.find(m => m.name === n) || PARTNERS.find(p => p.name === n);
       if (hit) return hit;
     }
+    // 2. Fuzzy fallback: all significant tokens (>3 chars) of a lookup name appear in
+    //    the partner name — handles renames where the new name isn't in matchNames yet.
+    for (const n of names) {
+      const nLower = n.toLowerCase().trim();
+      const tokenHit = (list: typeof govMembers) => list.find(m => {
+        const mLower = (m.name || '').toLowerCase().trim();
+        if (!mLower || mLower === nLower) return false;
+        const [shorter, longer] = nLower.length <= mLower.length ? [nLower, mLower] : [mLower, nLower];
+        const tokens = shorter.split(/\s+/).filter(t => t.length > 3);
+        return tokens.length >= 2 && tokens.every(t => longer.includes(t));
+      });
+      const hit = tokenHit(govMembers) || tokenHit(PARTNERS.filter(p => p.active !== false));
+      if (hit) return hit;
+    }
     return undefined;
   };
-  const execEntry = (matchNames: string[], name: string, role: string) => {
+  // O perfil (partner) é a fonte da verdade: o cartão usa o NOME e o CARGO do
+  // partner (com um cargo de reserva, caso ainda não esteja preenchido). Assim,
+  // editar o membro no admin reflete aqui. Encontra pelo nome oficial ou antigo.
+  const execEntry = (matchNames: string[], fallbackRole: string) => {
     const base = findGov(...matchNames);
-    return base ? { ...base, name, role } : null;
+    return base ? { ...base, role: base.role || fallbackRole } : null;
   };
 
   const presidente = [
-    execEntry(['Paulo Campos Costa'], 'Paulo Campos Costa', 'Presidente'),
+    execEntry(['Paulo Campos Costa'], 'Presidente'),
   ].filter(m => m !== null);
   // Demais membros do Conselho Executivo (Vice-Presidente, Secretário-Geral e
   // Vogais), exibidos num grid uniforme — cada cartão completa o outro.
   const board = [
-    execEntry(['Álvaro Covões', 'Álvaro Ricardo Villaverde Covões Gávea'], 'Álvaro Ricardo Villaverde Covões Gávea', 'Vice-Presidente'),
-    execEntry(['João Pedro Carvalho', 'João Carvalho'], 'João Carvalho', 'Secretário-Geral'),
-    execEntry(['Nuno Fernandes Thomaz', 'Nuno Maria Pinto de Magalhães Fernandes Thomaz'], 'Nuno Maria Pinto de Magalhães Fernandes Thomaz', 'Vogal'),
-    execEntry(['Pedro Ribeiro', 'Pedro Luís Bernardes Ribeiro'], 'Pedro Luís Bernardes Ribeiro', 'Vogal'),
+    execEntry(['Álvaro Ricardo Villaverde Covões Gávea', 'Álvaro Covões'], 'Vice-Presidente'),
+    execEntry(['João Carvalho', 'João Pedro Carvalho'], 'Secretário-Geral'),
+    execEntry(['Nuno Maria Pinto de Magalhães Fernandes Thomaz', 'Nuno Fernandes Thomaz'], 'Vogal'),
+    execEntry(['Pedro Luís Bernardes Ribeiro', 'Pedro Ribeiro'], 'Vogal'),
   ].filter(m => m !== null);
   const currentPresident = presidente[0];
 
@@ -626,29 +644,4 @@ export const HomePage = () => {
             </Reveal>
 
             <Reveal delay={100}>
-                <h2 className="text-4xl md:text-6xl font-light tracking-tight mb-6 leading-[1.1]">
-                   Um legado em movimento.
-                </h2>
-            </Reveal>
-
-            <Reveal delay={200}>
-                <p className="text-lg md:text-xl text-white/60 font-light mb-10 leading-relaxed max-w-xl mx-auto">
-                   Junte-se a nós para preservar a história e impulsionar a inovação entre as nossas nações.
-                </p>
-            </Reveal>
-
-            <Reveal delay={300}>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                   <Link to="/precadastro">
-                      <Button variant="gold" className="px-8 py-4 rounded-full text-xs hover:scale-105 transition-transform duration-300">
-                         Tornar-se Membro
-                      </Button>
-                   </Link>
-                </div>
-            </Reveal>
-         </div>
-      </section>
-
-    </main>
-  );
-};
+                <h2 className="text-4xl md:text-6xl font-light tracki
