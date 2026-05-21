@@ -117,6 +117,26 @@ A sua participação nas deliberações do Conselho é orientada pelo compromiss
 O seu envolvimento reflete o compromisso com a missão da Fundação de promover a cooperação cultural, educativa e empresarial entre Portugal, Brasil e o espaço lusófono.`,
     tags: ['Vogal', 'Conselho', 'Supervisão'],
   },
+  {
+    id: 'bernardo-correa-de-barros',
+    order: 9,
+    tier: 'vogal',
+    name: 'Bernardo Correa de Barros',
+    role: 'Vogal',
+    summary: 'Vogal do Conselho de Administração da Fundação Luso-Brasileira.',
+    full: `Bernardo Correa de Barros integra o Conselho de Administração da Fundação Luso-Brasileira na qualidade de Vogal.`,
+    tags: ['Vogal', 'Conselho de Administração'],
+  },
+  {
+    id: 'luciane-tome',
+    order: 10,
+    tier: 'vogal',
+    name: 'Luciane Tomé',
+    role: 'Vogal',
+    summary: 'Vogal do Conselho de Administração da Fundação Luso-Brasileira.',
+    full: `Luciane Tomé integra o Conselho de Administração da Fundação Luso-Brasileira na qualidade de Vogal.`,
+    tags: ['Vogal', 'Conselho de Administração'],
+  },
 ];
 
 export const getMemberByTier = (tier: MemberSeed['tier']) =>
