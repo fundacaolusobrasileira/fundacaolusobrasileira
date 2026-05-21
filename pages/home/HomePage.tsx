@@ -118,10 +118,31 @@ export const HomePage = () => {
   // Use live data from DB (merged with seed in syncMembers). partnersTick ensures re-render.
   void partnersTick;
   const govMembers = PARTNERS.filter(p => p.category === 'Governança' && p.active !== false);
-  const presidente = govMembers.filter(m => m.tier === 'presidente');
-  const direcao = govMembers.filter(m => m.tier === 'direcao');
-  const secretarioGeral = govMembers.filter(m => m.tier === 'secretario-geral');
-  const vogais = govMembers.filter(m => m.tier === 'vogal');
+
+  // A HOME mostra APENAS o Conselho Executivo, mantendo o mesmo layout/ordem
+  // (Presidente em destaque → Vice-Presidente + Secretário-Geral → Vogais).
+  // Cada item é mapeado para o partner existente (preserva foto e link do
+  // perfil) e o nome/cargo exibido é sobrescrito conforme a composição oficial.
+  const findGov = (name: string) =>
+    govMembers.find(m => m.name === name) || PARTNERS.find(p => p.name === name);
+  const execEntry = (matchName: string, name: string, role: string) => {
+    const base = findGov(matchName);
+    return base ? { ...base, name, role } : null;
+  };
+
+  const presidente = [
+    execEntry('Paulo Campos Costa', 'Paulo Campos Costa', 'Presidente'),
+  ].filter(m => m !== null);
+  const direcao = [
+    execEntry('Álvaro Covões', 'Álvaro Ricardo Villaverde Covões Gávea', 'Vice-Presidente'),
+  ].filter(m => m !== null);
+  const secretarioGeral = [
+    execEntry('João Pedro Carvalho', 'João Carvalho', 'Secretário-Geral'),
+  ].filter(m => m !== null);
+  const vogais = [
+    execEntry('Nuno Fernandes Thomaz', 'Nuno Maria Pinto de Magalhães Fernandes Thomaz', 'Vogal'),
+    execEntry('Pedro Ribeiro', 'Pedro Luís Bernardes Ribeiro', 'Vogal'),
+  ].filter(m => m !== null);
   const currentPresident = presidente[0];
 
   return (
