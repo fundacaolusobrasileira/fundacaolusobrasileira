@@ -8,9 +8,13 @@ import { createCouncilMember, updateCouncilMember, deleteCouncilMember } from '.
 import type { CouncilMember, CouncilType } from '../../types';
 
 const COUNCIL_LABELS: Record<CouncilType, { title: string; hint: string }> = {
-  curadores: { title: 'Conselho de Curadores', hint: 'Órgão consultivo e de orientação estratégica' },
+  administracao: { title: 'Conselho de Administração', hint: 'Órgão de administração da Fundação' },
+  executivo: { title: 'Conselho Executivo', hint: 'Órgão executivo da Fundação' },
   fiscal: { title: 'Conselho Fiscal', hint: 'Órgão de fiscalização da Fundação' },
+  curadores: { title: 'Conselho de Curadores', hint: 'Órgão consultivo e de orientação estratégica' },
 };
+
+const COUNCIL_ORDER: CouncilType[] = ['administracao', 'executivo', 'fiscal', 'curadores'];
 
 const inputCls =
   'w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/10 transition-all';
@@ -188,13 +192,14 @@ export const CouncilManagerSection = () => {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-sm">
           <h3 className="font-medium text-brand-900 flex items-center gap-2">
-            <Landmark size={16} /> Conselhos (Curadores &amp; Fiscal)
-            <span className="ml-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Apenas nomes</span>
+            <Landmark size={16} /> Conselhos da Fundação
+            <span className="ml-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome &amp; função</span>
           </h3>
         </div>
         <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <CouncilGroup council="curadores" />
-          <CouncilGroup council="fiscal" />
+          {COUNCIL_ORDER.map(council => (
+            <CouncilGroup key={council} council={council} />
+          ))}
         </div>
       </div>
     </div>

@@ -98,7 +98,7 @@ export type ColaborarInput = z.infer<typeof ColaborarSchema>;
 
 // Conselhos (Curadores / Fiscal) — apenas nomes editáveis no Dashboard.
 export const CouncilMemberSchema = z.object({
-  council: z.enum(['curadores', 'fiscal'], { message: 'Conselho inválido' }),
+  council: z.enum(['curadores', 'fiscal', 'administracao', 'executivo'], { message: 'Conselho inválido' }),
   name: z.string()
     .trim()
     .min(2, 'Nome deve ter pelo menos 2 caracteres')

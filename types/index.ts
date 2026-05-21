@@ -220,8 +220,9 @@ export interface EstatutosLead {
   createdAt: string;
 }
 
-// Conselhos listados apenas por nome (não perfis): Curadores e Fiscal.
-export type CouncilType = 'curadores' | 'fiscal';
+// Conselhos listados apenas por nome (não perfis): Curadores, Fiscal,
+// Administração e Executivo.
+export type CouncilType = 'curadores' | 'fiscal' | 'administracao' | 'executivo';
 
 export interface CouncilMember {
   id: string;

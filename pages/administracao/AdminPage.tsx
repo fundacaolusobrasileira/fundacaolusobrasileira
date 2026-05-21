@@ -154,6 +154,8 @@ export const AdminPage = () => {
   // Conselhos listados só por nome (tabela council_members → store COUNCILS).
   const byCouncil = (council: CouncilType) =>
     COUNCILS.filter((m: CouncilMember) => m.council === council && m.active !== false).sort(byCouncilOrder);
+  const administracaoNames = byCouncil('administracao');
+  const executivoNames = byCouncil('executivo');
   const curadoresNames = byCouncil('curadores');
   const fiscalNames = byCouncil('fiscal');
   const assignedIds = new Set(
@@ -203,6 +205,18 @@ export const AdminPage = () => {
           members={vogais}
           size="small"
           cols="sm:grid-cols-2 lg:grid-cols-4"
+        />
+        <CouncilNameSection
+          title="Conselho de Administração"
+          subtitle="Composição oficial · órgão de administração da Fundação"
+          members={administracaoNames}
+          emptyMessage="A composição do Conselho de Administração será divulgada em breve."
+        />
+        <CouncilNameSection
+          title="Conselho Executivo"
+          subtitle="Órgão executivo da Fundação"
+          members={executivoNames}
+          emptyMessage="A composição do Conselho Executivo será divulgada em breve."
         />
         <CouncilNameSection
           title="Conselho Fiscal"
