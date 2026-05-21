@@ -88,23 +88,23 @@ INSERT INTO public.council_members (council, name, role, "order")
 SELECT v.council, v.name, v.role, v."order"
 FROM (VALUES
   ('curadores', 'Miguel Horta e Costa',    'Presidente', 1),
-  ('curadores', 'Carlos Carreiras',         NULL,        2),
-  ('curadores', 'Fernando Maia Cerqueira',  NULL,        3),
-  ('curadores', 'Francisco Teixeira',       NULL,        4),
-  ('curadores', 'Jorge Rebelo de Almeida',  NULL,        5),
-  ('curadores', 'Luís Filipe D’Avila',      NULL,        6),
-  ('curadores', 'Maria João Bustorff',      NULL,        7),
-  ('curadores', 'Marco Amaral',             NULL,        8),
-  ('curadores', 'Mário Assis Ferreira',     NULL,        9),
-  ('curadores', 'Miguel Relvas',            NULL,        10),
-  ('curadores', 'Miguel Setas',             NULL,        11),
-  ('curadores', 'Pedro Matias',             NULL,        12),
-  ('curadores', 'Pedro Rebelo de Sousa',    NULL,        13),
-  ('curadores', 'Prof. Vítor Gonçalves',    NULL,        14),
-  ('curadores', 'Raquel Mendes',            NULL,        15),
-  ('curadores', 'Ricardo Pereira',          NULL,        16),
-  ('curadores', 'Rui Miguel Nabeiro',       NULL,        17),
-  ('curadores', 'Tomás Froes',              NULL,        18)
+  ('curadores', 'Carlos Carreiras',         'Curador',  2),
+  ('curadores', 'Fernando Maia Cerqueira',  'Curador',  3),
+  ('curadores', 'Francisco Teixeira',       'Curador',  4),
+  ('curadores', 'Jorge Rebelo de Almeida',  'Curador',  5),
+  ('curadores', 'Luís Filipe D’Avila',      'Curador',  6),
+  ('curadores', 'Maria João Bustorff',      'Curador',  7),
+  ('curadores', 'Marco Amaral',             'Curador',  8),
+  ('curadores', 'Mário Assis Ferreira',     'Curador',  9),
+  ('curadores', 'Miguel Relvas',            'Curador',  10),
+  ('curadores', 'Miguel Setas',             'Curador',  11),
+  ('curadores', 'Pedro Matias',             'Curador',  12),
+  ('curadores', 'Pedro Rebelo de Sousa',    'Curador',  13),
+  ('curadores', 'Prof. Vítor Gonçalves',    'Curador',  14),
+  ('curadores', 'Raquel Mendes',            'Curador',  15),
+  ('curadores', 'Ricardo Pereira',          'Curador',  16),
+  ('curadores', 'Rui Miguel Nabeiro',       'Curador',  17),
+  ('curadores', 'Tomás Froes',              'Curador',  18)
 ) AS v(council, name, role, "order")
 WHERE NOT EXISTS (
   SELECT 1 FROM public.council_members cm

@@ -1,76 +1,18 @@
 // pages/administracao/AdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { PARTNERS, COUNCILS, FLB_STATE_EVENT } from '../../store/app.store';
-import { MemberCard } from '../../components/domain/MemberCard';
+import { COUNCILS, FLB_STATE_EVENT } from '../../store/app.store';
 import { Reveal } from '../../components/ui/Reveal';
 import { Badge } from '../../components/ui/Badge';
 import { SectionWrapper } from '../../components/ui/Layout';
 import { PremiumLoader } from '../../components/ui/Loaders';
-import type { Partner, MemberTier, CouncilMember, CouncilType } from '../../types';
-
-interface TierSectionProps {
-  title: string;
-  subtitle?: string;
-  members: Partner[];
-  size?: 'large' | 'medium' | 'small';
-  cols?: string;
-  /**
-   * When true the section is always rendered, even if the members array is
-   * empty. An "Em breve" placeholder is shown in that case. Used for the
-   * Conselho Fiscal and Conselho de Curadores sections, which are publicly
-   * announced but not yet populated.
-   */
-  showEmptyPlaceholder?: boolean;
-  emptyMessage?: string;
-}
-
-const TierSection: React.FC<TierSectionProps> = ({
-  title,
-  subtitle,
-  members,
-  size = 'medium',
-  cols = 'sm:grid-cols-2 lg:grid-cols-3',
-  showEmptyPlaceholder = false,
-  emptyMessage = 'Em breve.',
-}) => {
-  if (!members.length && !showEmptyPlaceholder) return null;
-  return (
-    <div className="mb-16 md:mb-20">
-      <Reveal>
-        <div className="flex items-center gap-4 mb-8">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-sand-500">{title}</h2>
-            {subtitle && <p className="text-sm text-white/40 font-light mt-0.5">{subtitle}</p>}
-          </div>
-          <div className="h-px bg-white/10 flex-grow"></div>
-        </div>
-      </Reveal>
-      {members.length ? (
-        <div className={`grid gap-4 ${cols}`}>
-          {members.map((member, idx) => (
-            <Reveal key={member.id} delay={idx * 60}>
-              <MemberCard member={member} size={size} showExpandable />
-            </Reveal>
-          ))}
-        </div>
-      ) : (
-        <Reveal>
-          <div className="py-10 px-6 text-center border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-sand-400 mb-2">Em breve</p>
-            <p className="text-white/50 text-sm font-light max-w-xl mx-auto leading-relaxed">{emptyMessage}</p>
-          </div>
-        </Reveal>
-      )}
-    </div>
-  );
-};
+import type { CouncilMember, CouncilType } from '../../types';
 
 /**
- * Conselho de Curadores e Conselho Fiscal são listados APENAS por nome
- * (sem foto, sem card de perfil, sem link). Os dados vêm da tabela isolada
- * `council_members` (store COUNCILS), por isso nomes que também são membros
- * do Conselho de Administração podem repetir aqui sem conflito.
+ * Todos os conselhos (Curadores, Administração, Executivo e Fiscal) são
+ * listados APENAS por nome + função (sem foto, sem card de perfil, sem link).
+ * Os dados vêm da tabela isolada `council_members` (store COUNCILS), por isso
+ * a mesma pessoa pode aparecer em mais de um conselho sem conflito.
  */
 interface CouncilNameSectionProps {
   title: string;
@@ -120,12 +62,6 @@ const CouncilNameSection: React.FC<CouncilNameSectionProps> = ({ title, subtitle
 const byCouncilOrder = (a: CouncilMember, b: CouncilMember) =>
   (a.order - b.order) || a.name.localeCompare(b.name);
 
-const byDisplayOrder = (a: Partner, b: Partner) => {
-  if (Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1;
-  if ((a.order || 99) !== (b.order || 99)) return (a.order || 99) - (b.order || 99);
-  return a.name.localeCompare(b.name);
-};
-
 export const AdminPage = () => {
   usePageMeta('Administração – Fundação Luso-Brasileira', 'Conselho de Administração e estrutura de governança.');
   const [loading, setLoading] = useState(true);
@@ -138,33 +74,16 @@ export const AdminPage = () => {
     return () => { clearTimeout(t); window.removeEventListener(FLB_STATE_EVENT, handler); };
   }, []);
 
-  const governanceMembers = PARTNERS.filter((p: Partner) => p.category === 'Governança' && p.active !== false);
-
-  const byTier = (tier: MemberTier) =>
-    PARTNERS
-      .filter((p: Partner) => p.tier === tier && p.active !== false)
-      .sort(byDisplayOrder);
-
-  const presidente = byTier('presidente');
-  const direcao = byTier('direcao');
-  const secretario = byTier('secretario-geral');
-  const vogais = byTier('vogal');
-  const conselhoFiscal = byTier('conselho-fiscal');
-  const conselhoCuradores = byTier('conselho-curadores');
-  // Conselhos listados só por nome (tabela council_members → store COUNCILS).
+  // A página Pessoas exibe SOMENTE listas de nomes dos conselhos
+  // (tabela council_members → store COUNCILS). Os cards de perfil
+  // (partners/MemberCard) continuam existindo no código e na HOME —
+  // aqui apenas não são renderizados.
   const byCouncil = (council: CouncilType) =>
     COUNCILS.filter((m: CouncilMember) => m.council === council && m.active !== false).sort(byCouncilOrder);
+  const curadoresNames = byCouncil('curadores');
   const administracaoNames = byCouncil('administracao');
   const executivoNames = byCouncil('executivo');
-  const curadoresNames = byCouncil('curadores');
   const fiscalNames = byCouncil('fiscal');
-  const assignedIds = new Set(
-    [...presidente, ...direcao, ...secretario, ...vogais, ...conselhoFiscal, ...conselhoCuradores]
-      .map(member => member.id)
-  );
-  const semCargoDefinido = governanceMembers
-    .filter(member => !assignedIds.has(member.id))
-    .sort(byDisplayOrder);
 
   if (loading) return <PremiumLoader />;
 
@@ -188,24 +107,6 @@ export const AdminPage = () => {
       </section>
 
       <SectionWrapper className="py-20 md:py-28">
-        <TierSection
-          title="Presidente"
-          members={presidente}
-          size="large"
-          cols="grid-cols-1 max-w-2xl"
-        />
-        <TierSection
-          title="Direção e Secretariado"
-          members={[...direcao, ...secretario]}
-          size="medium"
-          cols="sm:grid-cols-2 lg:grid-cols-3 max-w-4xl"
-        />
-        <TierSection
-          title="Vogais"
-          members={vogais}
-          size="small"
-          cols="sm:grid-cols-2 lg:grid-cols-4"
-        />
         <CouncilNameSection
           title="Conselho de Curadores"
           subtitle="Órgão consultivo e de orientação estratégica"
@@ -230,19 +131,6 @@ export const AdminPage = () => {
           members={fiscalNames}
           emptyMessage="A composição do Conselho Fiscal será divulgada em breve."
         />
-        <TierSection
-          title="Governança"
-          subtitle="Perfis sem cargo definido"
-          members={semCargoDefinido}
-          size="medium"
-          cols="sm:grid-cols-2 lg:grid-cols-3"
-        />
-
-        {!presidente.length && !direcao.length && !secretario.length && !vogais.length && !semCargoDefinido.length && (
-          <div className="py-20 text-center border border-dashed border-white/10 rounded-3xl">
-            <p className="text-white/40 text-sm">A sincronizar membros...</p>
-          </div>
-        )}
       </SectionWrapper>
     </div>
   );
