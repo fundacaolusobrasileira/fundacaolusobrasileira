@@ -6,6 +6,7 @@ import { Calendar, Users, MapPin, BarChart3, TrendingUp, Image, Plus, Search, Ed
 import { EVENTS, PARTNERS, PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, ESTATUTOS_LEADS, FLB_STATE_EVENT, isEditor, isAdmin } from '../../store/app.store';
 import { UserManagerModal } from './UserManagerModal';
 import { BenefitsManagerSection } from './BenefitsManagerSection';
+import { CouncilManagerSection } from './CouncilManagerSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { updatePreCadastro, deletePreCadastro, syncPreCadastros } from '../../services/precadastros.service';
@@ -411,6 +412,8 @@ export const DashboardPage = () => {
         </div>
 
         <BenefitsManagerSection />
+
+        <CouncilManagerSection />
 
         {/* Estatutos Downloads — leads capturados no botão de download da página de Documentação */}
         <div className="mt-6 animate-fadeInUpSlow delay-300">

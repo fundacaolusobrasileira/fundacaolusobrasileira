@@ -1,5 +1,5 @@
 // store/app.store.ts
-import type { Event, Partner, PreCadastro, PendingMediaSubmission, ActivityLogItem, AuthSession, EstatutosLead } from '../types';
+import type { Event, Partner, PreCadastro, PendingMediaSubmission, ActivityLogItem, AuthSession, EstatutosLead, CouncilMember } from '../types';
 
 export const FLB_STATE_EVENT = 'flb_state_update';
 export const FLB_TOAST_EVENT = 'flb_toast_event';
@@ -10,6 +10,7 @@ export const PRECADASTROS: PreCadastro[] = [];
 export const PENDING_MEDIA_SUBMISSIONS: PendingMediaSubmission[] = [];
 export const ACTIVITY_LOG: ActivityLogItem[] = [];
 export const ESTATUTOS_LEADS: EstatutosLead[] = [];
+export const COUNCILS: CouncilMember[] = [];
 export let AUTH_SESSION: AuthSession = { isLoggedIn: false, role: 'viewer' };
 export let AUTH_LOADING = true;
 export let EVENTS_LOADING = true;

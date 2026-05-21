@@ -95,3 +95,17 @@ export type CadastroInput = z.infer<typeof CadastroSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type PreCadastroInput = z.infer<typeof PreCadastroSchema>;
 export type ColaborarInput = z.infer<typeof ColaborarSchema>;
+
+// Conselhos (Curadores / Fiscal) — apenas nomes editáveis no Dashboard.
+export const CouncilMemberSchema = z.object({
+  council: z.enum(['curadores', 'fiscal'], { message: 'Conselho inválido' }),
+  name: z.string()
+    .trim()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(120, 'Nome muito longo'),
+  role: z.string().max(60, 'Cargo muito longo').optional().nullable(),
+  order: z.number().int().min(0, 'Ordem não pode ser negativa'),
+  active: z.boolean(),
+});
+
+export type CouncilMemberInput = z.infer<typeof CouncilMemberSchema>;

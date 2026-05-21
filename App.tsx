@@ -9,6 +9,7 @@ const SmartInviteModal = lazy(() =>
 import { AppRouter } from './router';
 import { supabase } from './supabaseClient';
 import { syncMembers } from './services/members.service';
+import { syncCouncils } from './services/councils.service';
 import { syncEvents } from './services/events.service';
 import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
@@ -34,6 +35,7 @@ const clearEditorOnlyState = () => {
 // --- Initial Load ---
 
 syncMembers();
+syncCouncils();
 syncEvents();
 
 // --- Auth Listener ---
@@ -62,6 +64,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     }
 
     syncMembers();
+    syncCouncils();
     syncEvents();
     clearEditorOnlyState();
 
@@ -97,6 +100,7 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     setAuthLoading(false);
     clearEditorOnlyState();
     syncMembers();
+    syncCouncils();
     syncEvents();
   }
 

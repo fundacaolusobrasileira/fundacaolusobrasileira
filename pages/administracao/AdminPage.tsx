@@ -1,13 +1,13 @@
 // pages/administracao/AdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { PARTNERS, FLB_STATE_EVENT } from '../../store/app.store';
+import { PARTNERS, COUNCILS, FLB_STATE_EVENT } from '../../store/app.store';
 import { MemberCard } from '../../components/domain/MemberCard';
 import { Reveal } from '../../components/ui/Reveal';
 import { Badge } from '../../components/ui/Badge';
 import { SectionWrapper } from '../../components/ui/Layout';
 import { PremiumLoader } from '../../components/ui/Loaders';
-import type { Partner, MemberTier } from '../../types';
+import type { Partner, MemberTier, CouncilMember, CouncilType } from '../../types';
 
 interface TierSectionProps {
   title: string;
@@ -66,6 +66,60 @@ const TierSection: React.FC<TierSectionProps> = ({
   );
 };
 
+/**
+ * Conselho de Curadores e Conselho Fiscal são listados APENAS por nome
+ * (sem foto, sem card de perfil, sem link). Os dados vêm da tabela isolada
+ * `council_members` (store COUNCILS), por isso nomes que também são membros
+ * do Conselho de Administração podem repetir aqui sem conflito.
+ */
+interface CouncilNameSectionProps {
+  title: string;
+  subtitle?: string;
+  members: CouncilMember[];
+  emptyMessage: string;
+}
+
+const CouncilNameSection: React.FC<CouncilNameSectionProps> = ({ title, subtitle, members, emptyMessage }) => (
+  <div className="mb-16 md:mb-20">
+    <Reveal>
+      <div className="flex items-center gap-4 mb-8">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-sand-500">{title}</h2>
+          {subtitle && <p className="text-sm text-white/40 font-light mt-0.5">{subtitle}</p>}
+        </div>
+        <div className="h-px bg-white/10 flex-grow"></div>
+      </div>
+    </Reveal>
+    {members.length ? (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {members.map((m, idx) => (
+          <Reveal key={m.id} delay={idx * 40}>
+            <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+              <span className="h-1.5 w-1.5 rounded-full bg-sand-400/70 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-white/90 font-light leading-snug">{m.name}</p>
+                {m.role && (
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sand-500/80 mt-0.5">{m.role}</p>
+                )}
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    ) : (
+      <Reveal>
+        <div className="py-10 px-6 text-center border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-sand-400 mb-2">Em breve</p>
+          <p className="text-white/50 text-sm font-light max-w-xl mx-auto leading-relaxed">{emptyMessage}</p>
+        </div>
+      </Reveal>
+    )}
+  </div>
+);
+
+const byCouncilOrder = (a: CouncilMember, b: CouncilMember) =>
+  (a.order - b.order) || a.name.localeCompare(b.name);
+
 const byDisplayOrder = (a: Partner, b: Partner) => {
   if (Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1;
   if ((a.order || 99) !== (b.order || 99)) return (a.order || 99) - (b.order || 99);
@@ -97,6 +151,11 @@ export const AdminPage = () => {
   const vogais = byTier('vogal');
   const conselhoFiscal = byTier('conselho-fiscal');
   const conselhoCuradores = byTier('conselho-curadores');
+  // Conselhos listados só por nome (tabela council_members → store COUNCILS).
+  const byCouncil = (council: CouncilType) =>
+    COUNCILS.filter((m: CouncilMember) => m.council === council && m.active !== false).sort(byCouncilOrder);
+  const curadoresNames = byCouncil('curadores');
+  const fiscalNames = byCouncil('fiscal');
   const assignedIds = new Set(
     [...presidente, ...direcao, ...secretario, ...vogais, ...conselhoFiscal, ...conselhoCuradores]
       .map(member => member.id)
@@ -145,22 +204,16 @@ export const AdminPage = () => {
           size="small"
           cols="sm:grid-cols-2 lg:grid-cols-4"
         />
-        <TierSection
+        <CouncilNameSection
           title="Conselho Fiscal"
           subtitle="Órgão de fiscalização da Fundação"
-          members={conselhoFiscal}
-          size="medium"
-          cols="sm:grid-cols-2 lg:grid-cols-3"
-          showEmptyPlaceholder
+          members={fiscalNames}
           emptyMessage="A composição do Conselho Fiscal será divulgada em breve."
         />
-        <TierSection
+        <CouncilNameSection
           title="Conselho de Curadores"
           subtitle="Órgão consultivo e de orientação estratégica"
-          members={conselhoCuradores}
-          size="medium"
-          cols="sm:grid-cols-2 lg:grid-cols-3"
-          showEmptyPlaceholder
+          members={curadoresNames}
           emptyMessage="A composição do Conselho de Curadores será divulgada em breve."
         />
         <TierSection
