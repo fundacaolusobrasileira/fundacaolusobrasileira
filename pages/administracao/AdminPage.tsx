@@ -1,18 +1,20 @@
 // pages/administracao/AdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { COUNCILS, FLB_STATE_EVENT } from '../../store/app.store';
+import { PARTNERS, COUNCILS, FLB_STATE_EVENT } from '../../store/app.store';
+import { MemberCard } from '../../components/domain/MemberCard';
 import { Reveal } from '../../components/ui/Reveal';
 import { Badge } from '../../components/ui/Badge';
 import { SectionWrapper } from '../../components/ui/Layout';
 import { PremiumLoader } from '../../components/ui/Loaders';
-import type { CouncilMember, CouncilType } from '../../types';
+import type { Partner, CouncilMember, CouncilType } from '../../types';
 
 /**
- * Todos os conselhos (Curadores, Administração, Executivo e Fiscal) são
- * listados APENAS por nome + função (sem foto, sem card de perfil, sem link).
- * Os dados vêm da tabela isolada `council_members` (store COUNCILS), por isso
- * a mesma pessoa pode aparecer em mais de um conselho sem conflito.
+ * O Conselho de Administração é exibido com CARDS de perfil (foto + link),
+ * enquanto Executivo, Fiscal e Curadores são listas de nome + função.
+ * A composição (nome/cargo/ordem) vem da tabela `council_members` (store
+ * COUNCILS); os cards reaproveitam a foto/bio/perfil do partner com o mesmo
+ * nome quando este existe.
  */
 interface CouncilNameSectionProps {
   title: string;
@@ -62,6 +64,74 @@ const CouncilNameSection: React.FC<CouncilNameSectionProps> = ({ title, subtitle
 const byCouncilOrder = (a: CouncilMember, b: CouncilMember) =>
   (a.order - b.order) || a.name.localeCompare(b.name);
 
+// Nome oficial → nome antigo no partner (até o rename no banco ser aplicado),
+// para reaproveitar foto/perfil mesmo durante a transição.
+const ADMIN_NAME_ALIASES: Record<string, string> = {
+  'Álvaro Ricardo Villaverde Covões Gávea': 'Álvaro Covões',
+  'Pedro Luís Bernardes Ribeiro': 'Pedro Ribeiro',
+  'João Carvalho': 'João Pedro Carvalho',
+  'Nuno Maria Pinto de Magalhães Fernandes Thomaz': 'Nuno Fernandes Thomaz',
+};
+
+// Converte um membro do conselho (nome/cargo oficiais) num objeto de card,
+// reaproveitando foto/bio/id do partner correspondente quando existir. Quem
+// não tem partner (ex.: membros novos) vira card só com nome + cargo.
+const toCardMember = (cm: CouncilMember): Partner => {
+  const p = PARTNERS.find(x => x.name === cm.name)
+    || (ADMIN_NAME_ALIASES[cm.name] ? PARTNERS.find(x => x.name === ADMIN_NAME_ALIASES[cm.name]) : undefined);
+  if (p) return { ...p, name: cm.name, role: cm.role || p.role, tier: undefined };
+  return {
+    id: `council-${cm.id}`,
+    name: cm.name,
+    role: cm.role || undefined,
+    category: 'Governança',
+    type: 'pessoa',
+  } as Partner;
+};
+
+interface CouncilCardSectionProps {
+  title: string;
+  subtitle?: string;
+  members: Partner[];
+}
+
+const CouncilCardSection: React.FC<CouncilCardSectionProps> = ({ title, subtitle, members }) => {
+  if (!members.length) return null;
+  const presidente = members.filter(m => (m.role || '').toLowerCase() === 'presidente');
+  const others = members.filter(m => (m.role || '').toLowerCase() !== 'presidente');
+  return (
+    <div className="mb-16 md:mb-20">
+      <Reveal>
+        <div className="flex items-center gap-4 mb-8">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-sand-500">{title}</h2>
+            {subtitle && <p className="text-sm text-white/40 font-light mt-0.5">{subtitle}</p>}
+          </div>
+          <div className="h-px bg-white/10 flex-grow"></div>
+        </div>
+      </Reveal>
+      {presidente.length > 0 && (
+        <div className="max-w-2xl mb-4">
+          {presidente.map(m => (
+            <Reveal key={m.id}>
+              <MemberCard member={m} size="large" showExpandable />
+            </Reveal>
+          ))}
+        </div>
+      )}
+      {others.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          {others.map((m, idx) => (
+            <Reveal key={m.id} delay={idx * 60} className="h-full">
+              <MemberCard member={m} size="medium" showExpandable />
+            </Reveal>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AdminPage = () => {
   usePageMeta('Administração – Fundação Luso-Brasileira', 'Conselho de Administração e estrutura de governança.');
   const [loading, setLoading] = useState(true);
@@ -74,16 +144,13 @@ export const AdminPage = () => {
     return () => { clearTimeout(t); window.removeEventListener(FLB_STATE_EVENT, handler); };
   }, []);
 
-  // A página Pessoas exibe SOMENTE listas de nomes dos conselhos
-  // (tabela council_members → store COUNCILS). Os cards de perfil
-  // (partners/MemberCard) continuam existindo no código e na HOME —
-  // aqui apenas não são renderizados.
   const byCouncil = (council: CouncilType) =>
     COUNCILS.filter((m: CouncilMember) => m.council === council && m.active !== false).sort(byCouncilOrder);
-  const curadoresNames = byCouncil('curadores');
-  const administracaoNames = byCouncil('administracao');
+  // Conselho de Administração → cards (com foto/perfil); os restantes → listas.
+  const administracaoCards = byCouncil('administracao').map(toCardMember);
   const executivoNames = byCouncil('executivo');
   const fiscalNames = byCouncil('fiscal');
+  const curadoresNames = byCouncil('curadores');
 
   if (loading) return <PremiumLoader />;
 
@@ -107,17 +174,10 @@ export const AdminPage = () => {
       </section>
 
       <SectionWrapper className="py-20 md:py-28">
-        <CouncilNameSection
-          title="Conselho de Curadores"
-          subtitle="Órgão consultivo e de orientação estratégica"
-          members={curadoresNames}
-          emptyMessage="A composição do Conselho de Curadores será divulgada em breve."
-        />
-        <CouncilNameSection
+        <CouncilCardSection
           title="Conselho de Administração"
-          subtitle="Composição oficial · órgão de administração da Fundação"
-          members={administracaoNames}
-          emptyMessage="A composição do Conselho de Administração será divulgada em breve."
+          subtitle="Órgão de administração da Fundação"
+          members={administracaoCards}
         />
         <CouncilNameSection
           title="Conselho Executivo"
@@ -130,6 +190,12 @@ export const AdminPage = () => {
           subtitle="Órgão de fiscalização da Fundação"
           members={fiscalNames}
           emptyMessage="A composição do Conselho Fiscal será divulgada em breve."
+        />
+        <CouncilNameSection
+          title="Conselho de Curadores"
+          subtitle="Órgão consultivo e de orientação estratégica"
+          members={curadoresNames}
+          emptyMessage="A composição do Conselho de Curadores será divulgada em breve."
         />
       </SectionWrapper>
     </div>

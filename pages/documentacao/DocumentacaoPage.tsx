@@ -50,11 +50,6 @@ const GROUP_DEFS: DocGroupDef[] = [
     description: 'Regulamento interno em vigor.',
     category: 'regulamento-interno',
   },
-  {
-    title: 'Órgãos Sociais',
-    description: 'Identificação dos titulares dos órgãos previstos nos estatutos.',
-    category: 'orgaos-sociais',
-  },
 ];
 
 // Combina os documentos estáticos (ex.: Estatutos) com os do banco, por categoria.
