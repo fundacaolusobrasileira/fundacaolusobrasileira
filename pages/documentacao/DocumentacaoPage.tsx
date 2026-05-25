@@ -53,19 +53,22 @@ const GROUP_DEFS: DocGroupDef[] = [
 ];
 
 // Combina os documentos estáticos (ex.: Estatutos) com os do banco, por categoria.
-const buildGroup = (def: DocGroupDef): DocGroup => ({
-  title: def.title,
-  description: def.description,
-  docs: [
-    ...(def.staticDocs ?? []),
-    ...getDocumentsByCategory(def.category).map<DocItem>(d => ({
-      label: d.year ? `${d.title} (${d.year})` : d.title,
-      file: d.file_url,
-      year: d.year,
-      gated: d.gated,
-    })),
-  ],
-});
+// O item estático é apenas FALLBACK: assim que existir o documento no banco
+// (gerível no Dashboard), ele substitui o estático — evitando duplicação.
+const buildGroup = (def: DocGroupDef): DocGroup => {
+  const dbDocs = getDocumentsByCategory(def.category).map<DocItem>(d => ({
+    label: d.year ? `${d.title} (${d.year})` : d.title,
+    file: d.file_url,
+    year: d.year,
+    gated: d.gated,
+  }));
+  const staticDocs = dbDocs.length === 0 ? (def.staticDocs ?? []) : [];
+  return {
+    title: def.title,
+    description: def.description,
+    docs: [...staticDocs, ...dbDocs],
+  };
+};
 
 type GatedDownloadModalProps = {
   isOpen: boolean;

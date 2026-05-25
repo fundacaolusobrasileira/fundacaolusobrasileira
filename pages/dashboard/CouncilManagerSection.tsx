@@ -1,8 +1,10 @@
 // pages/dashboard/CouncilManagerSection.tsx
-// Gestão (CRUD) dos nomes do Conselho de Curadores e do Conselho Fiscal.
-// Apenas nomes — não perfis. Dados na tabela isolada `council_members`.
+// Gestão (CRUD) dos nomes dos Conselhos (Administração, Executivo, Fiscal,
+// Curadores). Apenas nomes — não perfis. Dados na tabela `council_members`.
+// UX: cada conselho mostra poucos nomes (com "ver todos") e há uma busca
+// global por nome/cargo, para manter o painel limpo mesmo com listas longas.
 import React, { useEffect, useState } from 'react';
-import { Landmark, Plus, Trash2, Check, X, Pencil } from 'lucide-react';
+import { Landmark, Plus, Trash2, Check, X, Pencil, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { COUNCILS, FLB_STATE_EVENT } from '../../store/app.store';
 import { createCouncilMember, updateCouncilMember, deleteCouncilMember } from '../../services/councils.service';
 import type { CouncilMember, CouncilType } from '../../types';
@@ -16,10 +18,19 @@ const COUNCIL_LABELS: Record<CouncilType, { title: string; hint: string }> = {
 
 const COUNCIL_ORDER: CouncilType[] = ['administracao', 'executivo', 'fiscal', 'curadores'];
 
+// Quantos nomes mostrar por conselho antes de "ver todos".
+const COLLAPSE_LIMIT = 5;
+
 const inputCls =
   'w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/10 transition-all';
 
-const CouncilGroup: React.FC<{ council: CouncilType }> = ({ council }) => {
+const matchesQuery = (m: CouncilMember, q: string) => {
+  if (!q) return true;
+  const needle = q.trim().toLowerCase();
+  return m.name.toLowerCase().includes(needle) || (m.role || '').toLowerCase().includes(needle);
+};
+
+const CouncilGroup: React.FC<{ council: CouncilType; query: string }> = ({ council, query }) => {
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,11 +40,19 @@ const CouncilGroup: React.FC<{ council: CouncilType }> = ({ council }) => {
   const [editRole, setEditRole] = useState('');
 
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const label = COUNCIL_LABELS[council];
-  const members = COUNCILS
+  const allMembers = COUNCILS
     .filter(m => m.council === council)
     .sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+
+  const searching = query.trim().length > 0;
+  const filtered = allMembers.filter(m => matchesQuery(m, query));
+  // Em busca: mostra todos os correspondentes. Sem busca: recolhe ao limite.
+  const visible = searching ? filtered : (showAll ? allMembers : allMembers.slice(0, COLLAPSE_LIMIT));
+  const hiddenCount = allMembers.length - COLLAPSE_LIMIT;
+  const headerCount = searching ? filtered.length : allMembers.length;
 
   const handleAdd = async () => {
     if (newName.trim().length < 2 || busy) return;
@@ -71,16 +90,19 @@ const CouncilGroup: React.FC<{ council: CouncilType }> = ({ council }) => {
       <div className="px-4 py-3 border-b border-slate-100 bg-white/60">
         <p className="text-sm font-semibold text-brand-900">{label.title}</p>
         <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5">
-          {label.hint} · {members.length} {members.length === 1 ? 'nome' : 'nomes'}
+          {label.hint} · {searching ? `${headerCount} de ${allMembers.length}` : `${headerCount} ${headerCount === 1 ? 'nome' : 'nomes'}`}
         </p>
       </div>
 
       {/* Lista */}
       <div className="divide-y divide-slate-100">
-        {members.length === 0 && (
+        {allMembers.length === 0 && (
           <p className="px-4 py-6 text-center text-slate-400 text-xs">Nenhum nome ainda. Adicione abaixo.</p>
         )}
-        {members.map(m => (
+        {allMembers.length > 0 && searching && filtered.length === 0 && (
+          <p className="px-4 py-6 text-center text-slate-400 text-xs">Nenhum nome corresponde à busca.</p>
+        )}
+        {visible.map(m => (
           <div key={m.id} className="px-4 py-2.5 flex items-center gap-2">
             {editingId === m.id ? (
               <>
@@ -153,6 +175,18 @@ const CouncilGroup: React.FC<{ council: CouncilType }> = ({ council }) => {
         ))}
       </div>
 
+      {/* Ver todos / ver menos (apenas sem busca e quando há nomes ocultos) */}
+      {!searching && hiddenCount > 0 && (
+        <button
+          onClick={() => setShowAll(v => !v)}
+          className="w-full px-4 py-2 border-t border-slate-100 bg-white/40 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-brand-900 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5"
+        >
+          {showAll
+            ? <><ChevronUp size={13} /> Ver menos</>
+            : <><ChevronDown size={13} /> Ver todos ({allMembers.length})</>}
+        </button>
+      )}
+
       {/* Adicionar */}
       <div className="px-4 py-3 border-t border-slate-100 bg-white/40 flex flex-col sm:flex-row gap-2">
         <input
@@ -181,24 +215,45 @@ const CouncilGroup: React.FC<{ council: CouncilType }> = ({ council }) => {
 
 export const CouncilManagerSection = () => {
   const [, setTick] = useState(0);
+  const [query, setQuery] = useState('');
+
   useEffect(() => {
     const handler = () => setTick(v => v + 1);
     window.addEventListener(FLB_STATE_EVENT, handler);
     return () => window.removeEventListener(FLB_STATE_EVENT, handler);
   }, []);
 
+  const totalNames = COUNCILS.length;
+
   return (
     <div className="mt-6 animate-fadeInUpSlow delay-300">
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-sm">
+        <div className="p-5 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/50 backdrop-blur-sm">
           <h3 className="font-medium text-brand-900 flex items-center gap-2">
             <Landmark size={16} /> Conselhos da Fundação
-            <span className="ml-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome &amp; função</span>
+            <span className="ml-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{totalNames} nomes</span>
           </h3>
+          <div className="relative w-full sm:w-64">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Buscar nome ou cargo..."
+              className="w-full pl-9 pr-8 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/10 transition-all placeholder:text-slate-400"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-900 transition-colors"
+                title="Limpar busca"
+              ><X size={14} /></button>
+            )}
+          </div>
         </div>
         <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
           {COUNCIL_ORDER.map(council => (
-            <CouncilGroup key={council} council={council} />
+            <CouncilGroup key={council} council={council} query={query} />
           ))}
         </div>
       </div>
