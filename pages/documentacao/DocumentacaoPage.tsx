@@ -21,11 +21,10 @@ type DocGroup = {
   docs: DocItem[];
 };
 
-const ESTATUTOS_FILE = '/Estatutos.pdf';
-
-// Definição fixa das secções. Os documentos de cada secção vêm do banco
-// (tabela institutional_documents → store DOCUMENTS); o Estatutos mantém
-// também um item estático garantido, para nunca depender só do banco.
+// Definição fixa das secções. Os documentos de cada secção vêm inteiramente
+// do banco (tabela institutional_documents → store DOCUMENTS), geridos no
+// Dashboard. `staticDocs` continua disponível como fallback opcional, mas
+// nenhuma secção usa item fixo — incluindo Estatutos, que agora é só upload.
 type DocGroupDef = {
   title: string;
   description: string;
@@ -38,7 +37,6 @@ const GROUP_DEFS: DocGroupDef[] = [
     title: 'Estatutos',
     description: 'Versão consolidada dos estatutos em vigor da Fundação Luso-Brasileira.',
     category: 'estatutos',
-    staticDocs: [{ label: 'Estatutos em vigor', file: ESTATUTOS_FILE, gated: true }],
   },
   {
     title: 'Relatórios Anuais',
