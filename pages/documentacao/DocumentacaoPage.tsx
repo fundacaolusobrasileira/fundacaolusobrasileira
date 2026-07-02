@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, ChevronDown, ChevronUp, Lock, CheckCircle, Loader2 } from 'lucide-react';
+import { FileText, Download, ChevronDown, ChevronUp, Lock, CheckCircle } from 'lucide-react';
 import { SectionWrapper, Reveal, Modal, ModalBody, Button, Input } from '../../components/ui';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { createEstatutosLead } from '../../services/estatutos-leads.service';
@@ -11,7 +11,6 @@ type DocItem = {
   label: string;
   file: string;
   year?: number | null;
-  /** When true the document is gated behind a name/email capture modal */
   gated?: boolean;
 };
 
@@ -21,10 +20,6 @@ type DocGroup = {
   docs: DocItem[];
 };
 
-// Definição fixa das secções. Os documentos de cada secção vêm inteiramente
-// do banco (tabela institutional_documents → store DOCUMENTS), geridos no
-// Dashboard. `staticDocs` continua disponível como fallback opcional, mas
-// nenhuma secção usa item fixo — incluindo Estatutos, que agora é só upload.
 type DocGroupDef = {
   title: string;
   description: string;
@@ -32,15 +27,20 @@ type DocGroupDef = {
   staticDocs?: DocItem[];
 };
 
+const isLegacyEstatutosDoc = (category: DocumentCategory, title: string, fileUrl: string) =>
+  category === 'estatutos' &&
+  title.trim().toLowerCase() === 'estatutos em vigor' &&
+  fileUrl.trim() === '/Estatutos.pdf';
+
 const GROUP_DEFS: DocGroupDef[] = [
   {
     title: 'Estatutos',
-    description: 'Versão consolidada dos estatutos em vigor da Fundação Luso-Brasileira.',
+    description: 'Versao consolidada dos estatutos em vigor da Fundacao Luso-Brasileira.',
     category: 'estatutos',
   },
   {
-    title: 'Relatórios Anuais',
-    description: 'Relatórios de atividades, demonstrações financeiras, parecer do Conselho Fiscal e atas de aprovação.',
+    title: 'Relatorios Anuais',
+    description: 'Relatorios de atividades, demonstracoes financeiras, parecer do Conselho Fiscal e atas de aprovacao.',
     category: 'relatorios-anuais',
   },
   {
@@ -50,17 +50,18 @@ const GROUP_DEFS: DocGroupDef[] = [
   },
 ];
 
-// Combina os documentos estáticos (ex.: Estatutos) com os do banco, por categoria.
-// O item estático é apenas FALLBACK: assim que existir o documento no banco
-// (gerível no Dashboard), ele substitui o estático — evitando duplicação.
 const buildGroup = (def: DocGroupDef): DocGroup => {
-  const dbDocs = getDocumentsByCategory(def.category).map<DocItem>(d => ({
-    label: d.year ? `${d.title} (${d.year})` : d.title,
-    file: d.file_url,
-    year: d.year,
-    gated: d.gated,
-  }));
+  const dbDocs = getDocumentsByCategory(def.category)
+    .map<DocItem>(d => ({
+      label: d.year ? `${d.title} (${d.year})` : d.title,
+      file: d.file_url,
+      year: d.year,
+      gated: d.gated,
+    }))
+    .filter(doc => !isLegacyEstatutosDoc(def.category, doc.label, doc.file));
+
   const staticDocs = dbDocs.length === 0 ? (def.staticDocs ?? []) : [];
+
   return {
     title: def.title,
     description: def.description,
@@ -102,7 +103,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
     const result = await createEstatutosLead({ name, email, document: label });
     setLoading(false);
     if (!result.success) {
-      setError(result.error || 'Não foi possível concluir o pedido. Tente novamente.');
+      setError(result.error || 'Nao foi possivel concluir o pedido. Tente novamente.');
       return;
     }
     setStep('ready');
@@ -122,9 +123,9 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
                 {label}
               </h2>
               <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                Para descarregar este documento, preencha o seu nome completo e email. <span className="font-medium text-brand-900">Não é necessário criar conta.</span>
+                Para descarregar este documento, preencha o seu nome completo e email. <span className="font-medium text-brand-900">Nao e necessario criar conta.</span>
                 <br />
-                <span className="text-slate-500">Na próxima etapa terá acesso ao botão de download.</span>
+                <span className="text-slate-500">Na proxima etapa tera acesso ao botao de download.</span>
               </p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -162,7 +163,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
                 {loading ? 'A registar...' : 'Continuar para o download'}
               </Button>
               <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                Os seus dados são utilizados apenas pela Fundação Luso-Brasileira para fins de transparência e contacto institucional.
+                Os seus dados sao utilizados apenas pela Fundacao Luso-Brasileira para fins de transparencia e contacto institucional.
               </p>
             </form>
           </>
@@ -175,7 +176,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
               Tudo certo, {name.split(' ')[0]}!
             </h2>
             <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-              O documento está pronto para ser descarregado. Clique no botão abaixo.
+              O documento esta pronto para ser descarregado. Clique no botao abaixo.
             </p>
             <a
               href={file}
@@ -189,7 +190,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
               <Download size={14} /> Descarregar {label}
             </a>
             <p className="text-[10px] text-slate-400 mt-4">
-              Caso o download não inicie automaticamente, clique novamente no botão acima.
+              Caso o download nao inicie automaticamente, clique novamente no botao acima.
             </p>
           </div>
         )}
@@ -228,7 +229,7 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
       {open && (
         <div className="border-t border-slate-100 px-6 py-5 bg-slate-50/50">
           {group.docs.length === 0 ? (
-            <p className="text-sm text-slate-400 italic">Documento em preparação — disponível em breve.</p>
+            <p className="text-sm text-slate-400 italic">Documento em preparacao - disponivel em breve.</p>
           ) : (
             <ul className="space-y-3">
               {group.docs.map(doc => (
@@ -237,7 +238,7 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
                     <span className="text-sm text-slate-700 font-medium truncate">{doc.label}</span>
                     {doc.gated && (
                       <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-sand-700 bg-sand-100 px-2 py-0.5 rounded-full">
-                        <Lock size={9} /> Identificação necessária
+                        <Lock size={9} /> Identificacao necessaria
                       </span>
                     )}
                   </div>
@@ -271,15 +272,14 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
 
 export const DocumentacaoPage = () => {
   usePageMeta(
-    'Documentação Institucional – Fundação Luso-Brasileira',
-    'Acesso público a documentos legais, estatutos, relatórios e regulamentos da Fundação Luso-Brasileira.'
+    'Documentacao Institucional - Fundacao Luso-Brasileira',
+    'Acesso publico a documentos legais, estatutos, relatorios e regulamentos da Fundacao Luso-Brasileira.'
   );
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeDoc, setActiveDoc] = useState<DocItem | null>(null);
   const [, setTick] = useState(0);
 
-  // Re-renderiza quando os documentos chegam do banco (sync assíncrono).
   useEffect(() => {
     const handler = () => setTick(v => v + 1);
     window.addEventListener(FLB_STATE_EVENT, handler);
@@ -301,14 +301,14 @@ export const DocumentacaoPage = () => {
       <SectionWrapper className="relative z-10 max-w-4xl mx-auto px-6 md:px-12">
         <header className="mb-16 md:mb-20 border-b border-slate-200 pb-12">
           <Reveal>
-            <p className="text-xs font-bold uppercase tracking-widest text-sand-500 mb-4">Transparência</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-sand-500 mb-4">Transparencia</p>
             <h1 className="text-4xl md:text-6xl font-serif text-brand-900 tracking-tight leading-[1.1] mb-6">
-              Documentação<br />Institucional
+              Documentacao<br />Institucional
             </h1>
           </Reveal>
           <Reveal delay={100}>
             <p className="text-lg text-slate-500 font-light max-w-2xl leading-relaxed">
-              Acesso público aos documentos legais e institucionais da Fundação Luso-Brasileira, em cumprimento das obrigações de transparência previstas na lei.
+              Acesso publico aos documentos legais e institucionais da Fundacao Luso-Brasileira, em cumprimento das obrigacoes de transparencia previstas na lei.
             </p>
           </Reveal>
         </header>
@@ -328,7 +328,7 @@ export const DocumentacaoPage = () => {
 
         <div className="mt-16 pt-10 border-t border-slate-200 text-center md:text-left">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Fundação Luso-Brasileira — Documentação Oficial
+            Fundacao Luso-Brasileira - Documentacao Oficial
           </p>
         </div>
       </SectionWrapper>

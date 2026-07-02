@@ -644,4 +644,29 @@ export const HomePage = () => {
             </Reveal>
 
             <Reveal delay={100}>
-                <h2 className="text-4xl md:text-6xl font-light tracki
+                <h2 className="text-4xl md:text-6xl font-light tracking-tight mb-6 leading-[1.1]">
+                   Um legado em movimento.
+                </h2>
+            </Reveal>
+
+            <Reveal delay={200}>
+                <p className="text-lg md:text-xl text-white/60 font-light mb-10 leading-relaxed max-w-xl mx-auto">
+                   Junte-se a nós para preservar a história e impulsionar a inovação entre as nossas nações.
+                </p>
+            </Reveal>
+
+            <Reveal delay={300}>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                   <Link to="/precadastro">
+                      <Button variant="gold" className="px-8 py-4 rounded-full text-xs hover:scale-105 transition-transform duration-300">
+                         Tornar-se Membro
+                      </Button>
+                   </Link>
+                </div>
+            </Reveal>
+         </div>
+      </section>
+
+    </main>
+  );
+};
