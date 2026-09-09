@@ -86,7 +86,7 @@ export const createPreCadastro = async (data: Partial<PreCadastro>) => {
     showToast('Enviado com sucesso!', 'success');
     return { success: true };
   } else {
-    console.error('createPreCadastro error:', error);
+    if (import.meta.env.DEV) console.error('createPreCadastro error:', error);
     showToast('Erro ao enviar.', 'error');
     return null;
   }
@@ -218,7 +218,7 @@ export const convertPreCadastroToMember = async (id: string): Promise<boolean> =
     showToast('Convertido em membro com sucesso.', 'success');
     return true;
   } catch (err) {
-    console.error('Conversion failed:', err);
+    if (import.meta.env.DEV) console.error('Conversion failed:', err);
     showToast('Erro na conversão.', 'error');
     return false;
   }

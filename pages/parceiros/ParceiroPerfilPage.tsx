@@ -11,6 +11,7 @@ import { Badge } from '../../components/ui/Badge';
 import { PremiumLoader } from '../../components/ui/Loaders';
 import { Reveal } from '../../components/ui/Reveal';
 import type { PartnerSeed } from '../../data/partners.data';
+import type { Partner } from '../../types';
 
 const slugifyPartnerName = (name: string) =>
   name
@@ -23,7 +24,9 @@ const slugifyPartnerName = (name: string) =>
 export const ParceiroPerfilPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [partner, setPartner] = useState<PartnerSeed | null>(null);
+  // `find()` devolve de PARTNERS (Partner, vindo do banco) ou de PARTNERS_SEED
+  // (PartnerSeed). O estado tem de aceitar os dois: Partner não tem `bioFull`.
+  const [partner, setPartner] = useState<Partner | PartnerSeed | null>(null);
 
   usePageMeta(
     partner ? `${partner.name} – Parceiros` : 'Parceiro',
@@ -44,9 +47,18 @@ export const ParceiroPerfilPage = () => {
 
   if (!partner) return <PremiumLoader />;
 
+  // `pageRoute` só existe no seed estático; parceiros vindos do banco não o têm.
+  const pageRoute = 'pageRoute' in partner ? partner.pageRoute : undefined;
+
+  // O seed usa `bioFull`; o banco guarda o texto longo em `full`. Ler só `bioFull`
+  // rebentava a página inteira para qualquer parceiro do banco (TypeError em
+  // .split de undefined) — confirmado em produção.
+  const bioText =
+    ('bioFull' in partner ? partner.bioFull : partner.full) || partner.bio || '';
+
   // If this partner has a custom dedicated page, redirect there
-  if (partner.pageRoute && partner.pageRoute !== `/parceiros/${id}`) {
-    navigate(partner.pageRoute, { replace: true });
+  if (pageRoute && pageRoute !== `/parceiros/${id}`) {
+    navigate(pageRoute, { replace: true });
     return null;
   }
 
@@ -108,7 +120,7 @@ export const ParceiroPerfilPage = () => {
                 <span className="w-8 h-px bg-sand-400" /> Sobre
               </h2>
               <div className="prose prose-slate max-w-none">
-                {partner.bioFull.split('\n\n').map((para, i) => (
+                {bioText.split('\n\n').filter(p => p.trim()).map((para, i) => (
                   <p key={i} className="text-base text-slate-600 font-light leading-relaxed mb-5">
                     {para.trim()}
                   </p>

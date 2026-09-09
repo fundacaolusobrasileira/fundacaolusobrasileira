@@ -32,3 +32,4 @@ dist-ssr
 /.claude
 test-results/
 playwright-report/
+.vercel

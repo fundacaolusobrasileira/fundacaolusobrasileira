@@ -34,7 +34,11 @@ const evaluateAuthBypass = (): BypassDecision => {
 
 type ProfilesResult = { ok: true; data: UserProfile[] } | { ok: false; data: UserProfile[]; error: string };
 type AdminCapabilities = { partnerLinking: boolean };
-type ProfilesSuccessResult = { ok: true; data: UserProfile[]; capabilities: AdminCapabilities };
+// `error?: never` documenta que um resultado bem-sucedido NUNCA transporta erro,
+// e mantém a propriedade acessível na união. Sem isto, o estreitamento por
+// discriminante booleano falha neste projeto (corre sem `strictNullChecks`) e
+// consumidores legítimos como UserManagerModal:172 não compilam.
+type ProfilesSuccessResult = { ok: true; data: UserProfile[]; capabilities: AdminCapabilities; error?: never };
 type ProfilesErrorResult = { ok: false; data: UserProfile[]; error: string; capabilities: AdminCapabilities };
 type ProfilesResultWithCapabilities = ProfilesSuccessResult | ProfilesErrorResult;
 
@@ -69,7 +73,7 @@ const finalizeExistingProfileByEmail = async (opts: {
       .maybeSingle();
 
     if (error) {
-      console.error('[finalizeExistingProfileByEmail] profile lookup failed:', error);
+      if (import.meta.env.DEV) console.error('[finalizeExistingProfileByEmail] profile lookup failed:', error);
       return { ok: false, error: error.message };
     }
 
@@ -86,7 +90,7 @@ const finalizeExistingProfileByEmail = async (opts: {
         .eq('id', data.id);
 
       if (updateError) {
-        console.error('[finalizeExistingProfileByEmail] profile update failed:', updateError);
+        if (import.meta.env.DEV) console.error('[finalizeExistingProfileByEmail] profile update failed:', updateError);
         return { ok: false, error: updateError.message };
       }
 
@@ -147,7 +151,7 @@ const waitForProfileByUserId = async (userId: string): Promise<boolean> => {
 
     if (data?.id) return true;
     if (error) {
-      console.error('[waitForProfileByUserId] profile lookup failed:', error);
+      if (import.meta.env.DEV) console.error('[waitForProfileByUserId] profile lookup failed:', error);
       return false;
     }
     if (attempt < PROFILE_READY_RETRIES - 1) {
@@ -170,7 +174,8 @@ export const resolveUserRole = async (userId: string): Promise<'admin' | 'editor
 
   const timeoutPromise = new Promise<'viewer'>((resolve) =>
     setTimeout(() => {
-      console.warn(`[AUTH] resolveUserRole timed out after ${ROLE_TIMEOUT_MS}ms for user=${userId}`);
+      // Sem `userId` (identificador pessoal) fora de DEV.
+      if (import.meta.env.DEV) console.warn(`[AUTH] resolveUserRole timed out after ${ROLE_TIMEOUT_MS}ms for user=${userId}`);
       resolve('viewer');
     }, ROLE_TIMEOUT_MS)
   );
@@ -251,7 +256,7 @@ export const signUp = async (email: string, password: string, name: string, type
         role: 'membro'
       }, { onConflict: 'user_id' });
       if (profileError) {
-        console.error('signUp profile upsert failed:', profileError);
+        if (import.meta.env.DEV) console.error('signUp profile upsert failed:', profileError);
       }
     }
     logActivity('Novo cadastro', email);
@@ -275,7 +280,10 @@ export const fetchAllProfiles = async (): Promise<ProfilesResultWithCapabilities
     .select('id, user_id, name, email, role, type, phone, created_at')
     .order('created_at', { ascending: false });
 
-  let data = primaryProfilesQuery.data;
+  // `phone` é opcional em UserProfile precisamente porque pode não existir nesta
+  // base. No fallback a chave fica AUSENTE (undefined), e não `null`: undefined
+  // significa "a coluna não existe", null significaria "existe e está vazia".
+  let data: UserProfile[] | null = primaryProfilesQuery.data;
   let error = primaryProfilesQuery.error;
 
   if (error && isMissingProfilesColumnError(error.message, 'phone')) {
@@ -389,7 +397,7 @@ export const convertPreCadastroToAccount = async (opts: {
     return createUserViaAdminFunction(opts);
   }
   if ('refused' in bypass && bypass.refused) {
-    console.error('[convertPreCadastroToAccount] auth bypass refused:', bypass.reason);
+    if (import.meta.env.DEV) console.error('[convertPreCadastroToAccount] auth bypass refused:', bypass.reason);
     showToast(bypass.reason, 'error');
     return { ok: false, error: bypass.reason };
   }
@@ -430,7 +438,8 @@ export const convertPreCadastroToAccount = async (opts: {
   // and locks the email out of recovery flows.
   if (!data.user.id) {
     const message = 'Este email já está registado mas não confirmado. Peça ao utilizador para confirmar via link no email recebido.';
-    console.error('[convertPreCadastroToAccount] signUp returned user with null id (likely duplicate unconfirmed email):', opts.email);
+    // LGPD/RGPD: nunca logar o email. O identificador fica no toast para o operador.
+    if (import.meta.env.DEV) console.error('[convertPreCadastroToAccount] signUp returned user with null id (likely duplicate unconfirmed email)');
     showToast(message, 'error');
     return { ok: false, error: message };
   }
@@ -438,7 +447,7 @@ export const convertPreCadastroToAccount = async (opts: {
   const profileReady = await waitForProfileByUserId(data.user.id);
   if (!profileReady) {
     const message = 'Conta criada, mas o perfil ainda não ficou disponível. Tente novamente em alguns segundos para concluir a configuração.';
-    console.error('[convertPreCadastroToAccount] profile not ready for user:', data.user.id);
+    if (import.meta.env.DEV) console.error('[convertPreCadastroToAccount] profile not ready for user:', data.user.id);
     showToast(message, 'error');
     return { ok: false, error: message };
   }
@@ -452,7 +461,7 @@ export const convertPreCadastroToAccount = async (opts: {
   }).eq('user_id', data.user.id);
 
   if (profileError) {
-    console.error('[convertPreCadastroToAccount] profile update:', profileError);
+    if (import.meta.env.DEV) console.error('[convertPreCadastroToAccount] profile update:', profileError);
     showToast('Conta criada, mas erro no perfil. Verifique em Utilizadores.', 'error');
     return { ok: false, error: profileError.message };
   }

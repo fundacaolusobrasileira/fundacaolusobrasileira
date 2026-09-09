@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fundacao Luso-Brasileira - sitemap.
+
+  LIMITACAO CONHECIDA E DELIBERADA:
+  a aplicacao usa HashRouter. Rotas como /#/eventos ou /#/parceiros nao sao
+  URLs distintas para os motores de busca - o fragmento (#) nunca e enviado
+  ao servidor, e o Google descarta-o ao canonicalizar. Listar URLs com "#"
+  aqui seria inutil e pode ser interpretado como spam de sitemap.
+
+  Por isso este sitemap contem APENAS a home. A solucao real e migrar de
+  HashRouter para BrowserRouter (com rewrite SPA na Vercel), o que passaria a
+  dar URLs reais e indexaveis por pagina. Essa migracao NAO faz parte desta
+  alteracao.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.fundacaolusobrasileira.pt/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

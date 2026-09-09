@@ -1198,7 +1198,7 @@ export const MemberEditorModal = ({ isOpen, onClose, member }: any) => {
                     }
                 }
             } catch (err) {
-                console.error('handleSave error:', err);
+                if (import.meta.env.DEV) console.error('handleSave error:', err);
                 showToast('Erro ao salvar membro.', 'error');
             } finally {
                 setLoading(false);

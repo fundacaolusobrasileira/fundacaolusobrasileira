@@ -182,7 +182,7 @@ export const DashboardMediaGerirPage = () => {
                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {communityPublished.map(item => (
                      <div key={item.id} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm hover:shadow-lg transition-all border border-green-100 animate-fade-in-up-small">
-                        <img src={item.type === 'video' ? (item.thumbnailUrl || item.url) : item.url} className="w-full h-full object-cover" alt="" />
+                        <img src={item.url} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-2">
                            <p className="text-xs font-bold mb-1">{item.authorName}</p>
                            <p className="text-[10px] text-white/70">Comunidade</p>
@@ -196,7 +196,7 @@ export const DashboardMediaGerirPage = () => {
 
                   {officialPublished.map(item => (
                      <div key={item.id} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm hover:shadow-lg transition-all opacity-80 hover:opacity-100 animate-fade-in-up-small">
-                        <img src={item.type === 'video' ? (item.thumbnailUrl || item.url) : item.url} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all" alt="" />
+                        <img src={item.url} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all" alt="" />
                         <div className="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                            <p className="text-white text-[10px] font-bold uppercase tracking-widest">Oficial</p>
                         </div>

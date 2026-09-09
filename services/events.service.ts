@@ -223,7 +223,7 @@ export const addMediaToEvent = async (eventId: string, file: File) => {
       showToast('Erro ao guardar mídia no evento.', 'error');
     }
   } catch (e: any) {
-    console.error('Failed to add media', e);
+    if (import.meta.env.DEV) console.error('Failed to add media', e);
     showToast(`Erro no upload: ${e?.message || 'erro desconhecido'}`, 'error');
   }
 };

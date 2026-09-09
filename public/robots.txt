@@ -1,0 +1,9 @@
+# Fundacao Luso-Brasileira - https://www.fundacaolusobrasileira.pt
+# A aplicacao usa HashRouter: todas as rotas (/#/eventos, /#/parceiros, ...)
+# sao servidas pelo mesmo documento HTML. Nao existem URLs individuais
+# rastreaveis, por isso nao ha nada de util a bloquear nem a listar.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.fundacaolusobrasileira.pt/sitemap.xml

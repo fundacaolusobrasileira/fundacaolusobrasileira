@@ -50,7 +50,7 @@ export const submitCommunityMedia = async (
     .single();
 
   if (error || !data) {
-    console.error('submitCommunityMedia error:', error);
+    if (import.meta.env.DEV) console.error('submitCommunityMedia error:', error);
     showToast('Erro ao enviar mídia.', 'error');
     return null;
   }

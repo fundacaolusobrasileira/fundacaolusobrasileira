@@ -46,7 +46,10 @@ async function seed() {
       if (error.message.toLowerCase().includes('already registered') || error.message.includes('already been registered')) {
         // User exists — fetch their ID to upsert profile
         const { data: existing } = await admin.auth.admin.listUsers();
-        const found = existing?.users.find(u => u.email === user.email);
+        // listUsers devolve uma união (sucesso | erro) cujo `users` colapsa para
+        // never[] no `.find`. Alargar o tipo aqui resolve sem cast.
+        const users: Array<{ id: string; email?: string }> = existing?.users ?? [];
+        const found = users.find(u => u.email === user.email);
         if (!found) { console.log(`[seed] SKIP  ${user.email} — exists but ID not found`); continue; }
         userId = found.id;
         console.log(`[seed] EXISTS ${user.email} (id: ${userId})`);

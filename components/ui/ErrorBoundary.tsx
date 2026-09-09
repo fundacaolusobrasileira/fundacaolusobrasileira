@@ -11,6 +11,12 @@ interface State {
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
+  // O projeto não tem `@types/react` instalado, pelo que `React.Component` não
+  // traz `props`/`state` tipados. Estas declarações não emitem código (`declare`)
+  // e continuam corretas caso `@types/react` venha a ser adicionado.
+  declare props: Props;
+  declare state: State;
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };

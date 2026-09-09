@@ -13,6 +13,14 @@ export interface PartnerSeed {
   country?: string;
   tags?: string[];
   pageRoute?: string;
+  /** Igual a `Partner.active`: ausente/`true` = visível. Filtrado em ParceirosPage. */
+  active?: boolean;
+  /**
+   * Igual a `Partner.featured`. ParceirosPage:64,68 lê este campo para ordenar e
+   * para montar a secção "Destaques". Sem ele no tipo do seed, o fallback para
+   * PARTNERS_SEED deixava a secção vazia e a ordenação sem efeito.
+   */
+  featured?: boolean;
 }
 
 export const PARTNERS_SEED: PartnerSeed[] = [

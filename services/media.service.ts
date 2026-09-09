@@ -64,6 +64,6 @@ export const deleteMediaBlob = async (url: string): Promise<void> => {
     const fileName = path ? decodeURIComponent(path) : '';
     if (fileName) await supabase.storage.from('media').remove([fileName]);
   } catch (e) {
-    console.error('Error deleting media', e);
+    if (import.meta.env.DEV) console.error('Error deleting media', e);
   }
 };

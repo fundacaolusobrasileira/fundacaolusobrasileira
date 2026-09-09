@@ -4,17 +4,60 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { PremiumLoader } from './components/ui/Loaders';
 import { AUTH_SESSION, AUTH_LOADING, FLB_STATE_EVENT, isEditor } from './store/app.store';
 
-class ChunkErrorBoundary extends React.Component<{ children: React.ReactNode }, { errored: boolean }> {
-  state = { errored: false };
-  static getDerivedStateFromError() { return { errored: true }; }
+const isChunkLoadError = (error: Error) =>
+  error.message.includes('dynamically imported module') ||
+  error.message.includes('Loading chunk') ||
+  error.message.includes('Importing a module script failed');
+
+/**
+ * Trata APENAS falhas de carregamento de chunk (deploy novo invalidou o asset).
+ * Qualquer outro erro é relançado para o ErrorBoundary global, que mostra UI ao
+ * utilizador — este boundary nunca pode resultar em ecrã branco silencioso.
+ */
+export class ChunkErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { chunkErrored: boolean }
+> {
+  // Ver nota em components/ui/ErrorBoundary.tsx: sem `@types/react`, `props` não
+  // vem tipado da classe base. `declare` não altera o runtime.
+  declare props: { children: React.ReactNode };
+  state = { chunkErrored: false };
+
+  static getDerivedStateFromError(error: Error) {
+    if (isChunkLoadError(error)) return { chunkErrored: true };
+    // Não é erro de chunk: não absorve — deixa subir para o ErrorBoundary global.
+    throw error;
+  }
+
   componentDidCatch(error: Error) {
-    const isChunkError = error.message.includes('dynamically imported module') || error.message.includes('Loading chunk');
-    if (isChunkError && !sessionStorage.getItem('chunk_reload')) {
+    if (isChunkLoadError(error) && !sessionStorage.getItem('chunk_reload')) {
       sessionStorage.setItem('chunk_reload', '1');
       window.location.reload();
     }
   }
-  render() { return this.state.errored ? null : this.props.children; }
+
+  render() {
+    if (this.state.chunkErrored) {
+      // O reload automático já foi tentado (ou já tinha sido gasto nesta sessão):
+      // mostrar recuperação manual em vez de ecrã branco.
+      return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-6 text-center">
+          <h1 className="text-2xl font-serif text-brand-900">Atualizacao disponivel</h1>
+          <p className="max-w-md text-slate-500 font-light">
+            Esta pagina foi atualizada enquanto tinha o site aberto. Recarregue para continuar.
+          </p>
+          <button
+            type="button"
+            onClick={() => { sessionStorage.removeItem('chunk_reload'); window.location.reload(); }}
+            className="px-5 py-2.5 rounded-full bg-brand-900 text-white text-sm hover:bg-brand-800 transition-colors"
+          >
+            Recarregar pagina
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 const ProtectedRoute = ({ children, requireEditor = false }: { children: React.ReactNode; requireEditor?: boolean }) => {
@@ -56,7 +99,17 @@ const BeneficiosPage = lazy(() => import('./pages/beneficios/BeneficiosPage').th
 const LegaltechSpacePage = lazy(() => import('./pages/legaltech-space/LegaltechSpacePage').then(m => ({ default: m.LegaltechSpacePage })));
 const ParceiroPerfilPage = lazy(() => import('./pages/parceiros/ParceiroPerfilPage').then(m => ({ default: m.ParceiroPerfilPage })));
 
-export const AppRouter = () => (
+/** Liberta o "1 reload por sessão" assim que a app monta sem falha de chunk. */
+const useClearChunkReloadFlag = () => {
+  useEffect(() => {
+    const id = window.setTimeout(() => sessionStorage.removeItem('chunk_reload'), 5000);
+    return () => window.clearTimeout(id);
+  }, []);
+};
+
+export const AppRouter = () => {
+  useClearChunkReloadFlag();
+  return (
   <ChunkErrorBoundary>
   <Suspense fallback={<PremiumLoader />}>
     <Routes>
@@ -87,4 +140,5 @@ export const AppRouter = () => (
     </Routes>
   </Suspense>
   </ChunkErrorBoundary>
-);
+  );
+};

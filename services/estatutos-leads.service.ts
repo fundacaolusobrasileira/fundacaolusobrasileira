@@ -37,7 +37,7 @@ export const createEstatutosLead = async (
   const { error } = await supabase.from('estatutos_leads').insert([payload]);
 
   if (error) {
-    console.error('createEstatutosLead error:', error);
+    if (import.meta.env.DEV) console.error('createEstatutosLead error:', error);
     return { success: false, error: 'Não foi possível registar o pedido. Tente novamente.' };
   }
 

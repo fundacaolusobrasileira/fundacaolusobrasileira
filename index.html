@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-PT" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fundação Luso-Brasileira</title>
     <meta name="description" content="Website institucional da Fundação Luso-Brasileira." />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https://*.supabase.co; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self';">
     <!-- Favicons (emblema circular da Fundação) -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -17,11 +17,12 @@
     <meta property="og:title" content="Fundação Luso-Brasileira" />
     <meta property="og:description" content="Conectando Portugal e Brasil através da cultura e inovação." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://fundacaolusobrasileira.vercel.app/" />
+    <meta property="og:url" content="https://www.fundacaolusobrasileira.pt/" />
     <meta property="og:site_name" content="Fundação Luso-Brasileira" />
-    <meta property="og:locale" content="pt_BR" />
-    <meta property="og:image" content="https://fundacaolusobrasileira.vercel.app/og-image.png" />
-    <meta property="og:image:secure_url" content="https://fundacaolusobrasileira.vercel.app/og-image.png" />
+    <meta property="og:locale" content="pt_PT" />
+    <meta property="og:locale:alternate" content="pt_BR" />
+    <meta property="og:image" content="https://www.fundacaolusobrasileira.pt/og-image.png" />
+    <meta property="og:image:secure_url" content="https://www.fundacaolusobrasileira.pt/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -30,7 +31,57 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Fundação Luso-Brasileira" />
     <meta name="twitter:description" content="Conectando Portugal e Brasil através da cultura e inovação." />
-    <meta name="twitter:image" content="https://fundacaolusobrasileira.vercel.app/og-image.png" />
+    <meta name="twitter:image" content="https://www.fundacaolusobrasileira.pt/og-image.png" />
+
+    <!-- Canonical: HashRouter -> todas as rotas partilham o mesmo documento; a home e a unica URL canonica. -->
+    <link rel="canonical" href="https://www.fundacaolusobrasileira.pt/" />
+
+    <!-- JSON-LD. Todos os dados vem do repo (LegalPage.tsx, Footer.tsx). Nada inventado. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "NGO",
+      "name": "Fundação Luso-Brasileira",
+      "url": "https://www.fundacaolusobrasileira.pt/",
+      "logo": "https://www.fundacaolusobrasileira.pt/logo-flb.webp",
+      "image": "https://www.fundacaolusobrasileira.pt/og-image.png",
+      "description": "Conectando Portugal e Brasil através da cultura e inovação.",
+      "email": "geral@fundacaolusobrasileira.pt",
+      "sameAs": [
+        "https://www.instagram.com/fundacao.lusobrasileira",
+        "https://www.facebook.com/Fund.LusoBrasileira"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Rua de S. Marçal, n.º 77/79, Freguesia de Santo António",
+        "addressLocality": "Lisboa",
+        "addressCountry": "PT"
+      },
+      "location": [
+        {
+          "@type": "Place",
+          "name": "Sede - Lisboa",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Rua de S. Marçal, n.º 77/79, Freguesia de Santo António",
+            "addressLocality": "Lisboa",
+            "addressCountry": "PT"
+          }
+        },
+        {
+          "@type": "Place",
+          "name": "São Paulo",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Rua General Jardim, n.º 808, 6.º andar",
+            "addressLocality": "São Paulo",
+            "postalCode": "01223-010",
+            "addressCountry": "BR"
+          }
+        }
+      ]
+    }
+    </script>
 
     <link rel="preload" as="image" href="/logo-flb.webp" fetchpriority="high">
     <link rel="preconnect" href="https://fonts.googleapis.com">

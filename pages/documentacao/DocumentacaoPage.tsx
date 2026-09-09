@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileText, Download, ChevronDown, ChevronUp, Lock, CheckCircle } from 'lucide-react';
 import { SectionWrapper, Reveal, Modal, ModalBody, Button, Input } from '../../components/ui';
 import { usePageMeta } from '../../hooks/usePageMeta';
@@ -8,6 +8,7 @@ import { showToast, FLB_STATE_EVENT } from '../../store/app.store';
 import type { DocumentCategory } from '../../types';
 
 type DocItem = {
+  title: string;
   label: string;
   file: string;
   year?: number | null;
@@ -32,6 +33,44 @@ const isLegacyEstatutosDoc = (category: DocumentCategory, title: string, fileUrl
   title.trim().toLowerCase() === 'estatutos em vigor' &&
   fileUrl.trim() === '/Estatutos.pdf';
 
+const slugify = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const getDownloadFilename = (sourceUrl: string, fallbackLabel: string) => {
+  try {
+    const url = new URL(sourceUrl, window.location.origin);
+    const fromPath = url.pathname.split('/').pop()?.trim();
+    if (fromPath) return decodeURIComponent(fromPath);
+  } catch {
+    // Fallback below.
+  }
+  const safeLabel = fallbackLabel.trim().replace(/\s+/g, '-');
+  return (safeLabel || 'documento') + '.pdf';
+};
+
+export const downloadDocument = async (sourceUrl: string, fallbackLabel: string) => {
+  const response = await fetch(sourceUrl, { mode: 'cors' });
+  if (!response.ok) {
+    throw new Error('Falha ao descarregar o ficheiro (' + response.status + ').');
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = getDownloadFilename(sourceUrl, fallbackLabel);
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+};
+
 const GROUP_DEFS: DocGroupDef[] = [
   {
     title: 'Estatutos',
@@ -48,17 +87,21 @@ const GROUP_DEFS: DocGroupDef[] = [
     description: 'Regulamento interno em vigor.',
     category: 'regulamento-interno',
   },
+  // A categoria `orgaos-sociais` é suportada no dashboard, mas não é publicada
+  // aqui porque a página pública só expõe o conjunto documental efetivamente
+  // mostrado ao visitante neste momento.
 ];
 
-const buildGroup = (def: DocGroupDef): DocGroup => {
+export const buildGroup = (def: DocGroupDef): DocGroup => {
   const dbDocs = getDocumentsByCategory(def.category)
     .map<DocItem>(d => ({
+      title: d.title,
       label: d.year ? `${d.title} (${d.year})` : d.title,
       file: d.file_url,
       year: d.year,
       gated: d.gated,
     }))
-    .filter(doc => !isLegacyEstatutosDoc(def.category, doc.label, doc.file));
+    .filter(doc => !isLegacyEstatutosDoc(def.category, doc.title, doc.file));
 
   const staticDocs = dbDocs.length === 0 ? (def.staticDocs ?? []) : [];
 
@@ -81,7 +124,9 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
   const reset = () => {
     setStep('form');
@@ -89,12 +134,23 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
     setEmail('');
     setError(null);
     setLoading(false);
+    setDownloading(false);
   };
 
   const handleClose = () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
     reset();
     onClose();
   };
+
+  useEffect(() => () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +164,22 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
     }
     setStep('ready');
     showToast('Dados registados com sucesso.', 'success');
+  };
+
+  const handleDownload = async () => {
+    setError(null);
+    setDownloading(true);
+    try {
+      await downloadDocument(file, label);
+      showToast('A iniciar download...', 'info');
+      closeTimerRef.current = window.setTimeout(handleClose, 600);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Nao foi possivel descarregar o documento.';
+      setError(message);
+      showToast(message, 'error');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -178,17 +250,15 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
             <p className="text-slate-600 text-sm mt-2 leading-relaxed">
               O documento esta pronto para ser descarregado. Clique no botao abaixo.
             </p>
-            <a
-              href={file}
-              download
-              onClick={() => {
-                showToast('A iniciar download...', 'info');
-                setTimeout(handleClose, 600);
-              }}
+            {error && <p className="mt-4 text-red-600 text-xs" role="alert">{error}</p>}
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={downloading}
               className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-900 text-white text-xs font-medium uppercase tracking-wide hover:bg-black transition-colors"
             >
-              <Download size={14} /> Descarregar {label}
-            </a>
+              <Download size={14} /> {downloading ? 'A descarregar...' : `Descarregar ${label}`}
+            </button>
             <p className="text-[10px] text-slate-400 mt-4">
               Caso o download nao inicie automaticamente, clique novamente no botao acima.
             </p>
@@ -203,15 +273,22 @@ type DocGroupCardProps = {
   group: DocGroup;
   defaultOpen?: boolean;
   onRequestDownload: (doc: DocItem) => void;
+  onDirectDownload: (doc: DocItem) => Promise<void>; 
 };
 
-const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onRequestDownload }) => {
+const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onRequestDownload, onDirectDownload }) => {
   const [open, setOpen] = useState(!!defaultOpen);
+  const panelId = `doc-panel-${slugify(group.title)}`;
+  const buttonId = `doc-button-${slugify(group.title)}`;
 
   return (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden">
+    <section className="border border-slate-200 rounded-2xl overflow-hidden">
       <button
+        id={buttonId}
+        type="button"
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
         className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-slate-50 transition-colors"
       >
         <div className="flex items-center gap-4">
@@ -227,38 +304,29 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
       </button>
 
       {open && (
-        <div className="border-t border-slate-100 px-6 py-5 bg-slate-50/50">
+        <div id={panelId} role="region" aria-labelledby={buttonId} className="border-t border-slate-100 px-6 py-5 bg-slate-50/50">
           {group.docs.length === 0 ? (
             <p className="text-sm text-slate-400 italic">Documento em preparacao - disponivel em breve.</p>
           ) : (
             <ul className="space-y-3">
               {group.docs.map(doc => (
-                <li key={doc.file} className="flex items-center justify-between gap-4 p-3 bg-white rounded-xl border border-slate-100">
+                <li key={`${doc.title}-${doc.file}-${doc.year ?? 'na'}`} className="flex items-center justify-between gap-4 p-3 bg-white rounded-xl border border-slate-100">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-sm text-slate-700 font-medium truncate">{doc.label}</span>
                     {doc.gated && (
-                      <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-sand-700 bg-sand-100 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-sand-700 bg-sand-100 px-2 py-0.5 rounded-full whitespace-nowrap">
                         <Lock size={9} /> Identificacao necessaria
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {doc.gated ? (
-                      <button
-                        onClick={() => onRequestDownload(doc)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-900 hover:bg-brand-800 transition-colors px-3 py-1.5 rounded-lg"
-                      >
-                        <Download size={13} /> Baixar
-                      </button>
-                    ) : (
-                      <a
-                        href={doc.file}
-                        download
-                        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-900 hover:bg-brand-800 transition-colors px-3 py-1.5 rounded-lg"
-                      >
-                        <Download size={13} /> Baixar
-                      </a>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => (doc.gated ? onRequestDownload(doc) : onDirectDownload(doc))}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-900 hover:bg-brand-800 transition-colors px-3 py-1.5 rounded-lg"
+                    >
+                      <Download size={13} /> Baixar
+                    </button>
                   </div>
                 </li>
               ))}
@@ -266,7 +334,7 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
@@ -278,19 +346,46 @@ export const DocumentacaoPage = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeDoc, setActiveDoc] = useState<DocItem | null>(null);
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
+  const docsSignatureRef = useRef('');
 
   useEffect(() => {
-    const handler = () => setTick(v => v + 1);
+    const buildSignature = () =>
+      GROUP_DEFS.map(def =>
+        getDocumentsByCategory(def.category)
+          .map(d => `${d.id}:${d.title}:${d.file_url}:${d.year ?? ''}:${d.gated ? 1 : 0}:${d.active ? 1 : 0}:${d.order}`)
+          .join('|')
+      ).join('||');
+
+    docsSignatureRef.current = buildSignature();
+
+    const handler = () => {
+      const nextSignature = buildSignature();
+      if (nextSignature !== docsSignatureRef.current) {
+        docsSignatureRef.current = nextSignature;
+        setTick(v => v + 1);
+      }
+    };
+
     window.addEventListener(FLB_STATE_EVENT, handler);
     return () => window.removeEventListener(FLB_STATE_EVENT, handler);
   }, []);
 
-  const groups = GROUP_DEFS.map(buildGroup);
+  const groups = useMemo(() => GROUP_DEFS.map(buildGroup), [tick]);
 
   const requestDownload = (doc: DocItem) => {
     setActiveDoc(doc);
     setModalOpen(true);
+  };
+
+  const handleDirectDownload = async (doc: DocItem) => {
+    try {
+      await downloadDocument(doc.file, doc.label);
+      showToast('A iniciar download...', 'info');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Nao foi possivel descarregar o documento.';
+      showToast(message, 'error');
+    }
   };
 
   return (
@@ -321,6 +416,7 @@ export const DocumentacaoPage = () => {
                 group={group}
                 defaultOpen={i === 0}
                 onRequestDownload={requestDownload}
+                onDirectDownload={handleDirectDownload}
               />
             ))}
           </div>

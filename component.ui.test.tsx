@@ -39,6 +39,9 @@ vi.mock('./store/app.store', () => ({
   PARTNERS: [],
   PRECADASTROS: [],
   PENDING_MEDIA_SUBMISSIONS: [],
+  // AUTH_SESSION acima e' role 'editor': isEditor -> true, isAdmin -> false.
+  // Assinaturas reais em store/app.store.ts: () => boolean.
+  isAdmin: vi.fn(() => false),
   isEditor: vi.fn(() => true),
   showToast: vi.fn(),
   generateId: vi.fn(() => 'test-id'),

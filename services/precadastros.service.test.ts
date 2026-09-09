@@ -42,8 +42,9 @@ const mockFrom = vi.fn<any>(() => ({
   delete: mockDelete,
 }));
 
-const mockCreateMember = vi.fn<any>().mockResolvedValue({ id: 'new-member-1', name: '' });
-const mockUpdateMember = vi.fn<any>().mockResolvedValue(true);
+// Vitest 4: vi.fn<T> exige um tipo de função; Mock<any> não é invocável.
+const mockCreateMember = vi.fn<(...args: any[]) => any>().mockResolvedValue({ id: 'new-member-1', name: '' });
+const mockUpdateMember = vi.fn<(...args: any[]) => any>().mockResolvedValue(true);
 
 vi.mock('../supabaseClient', () => ({ supabase: { from: mockFrom } }));
 vi.mock('./members.service', () => ({

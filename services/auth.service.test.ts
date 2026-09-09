@@ -17,7 +17,9 @@ const mockProfilesUpsert = vi.fn<any>().mockResolvedValue({ error: null });
 let profilesLinkResult: any = { data: [], error: null };
 let partnersSelectResult: any = { data: [], error: null };
 const mockPartnersSelect = vi.fn<any>(() => Promise.resolve(partnersSelectResult));
-const mockProfilesLinkSelect = vi.fn<any>(() => Promise.resolve(profilesLinkResult));
+// Vitest 4: vi.fn<T> exige que T seja um tipo de função. `vi.fn<any>` produz
+// Mock<any>, que não é invocável — só falha nos mocks que são chamados direto.
+const mockProfilesLinkSelect = vi.fn<(...args: any[]) => any>(() => Promise.resolve(profilesLinkResult));
 const mockFrom = vi.fn<any>((table: string) => {
   if (table === 'profiles') {
     return {
@@ -405,7 +407,7 @@ describe('admin user management (integration)', () => {
 
   it('convertPreCadastroToAccount allows local auth bypass in production-like E2E builds', async () => {
     vi.stubEnv('VITE_AUTH_BYPASS_CREATE_USER', 'true');
-    vi.stubEnv('PROD', 'true');
+    vi.stubEnv('PROD', true);
     vi.stubEnv('VITE_AUTH_BYPASS_URL', '/__e2e__');
     mockGetSession.mockResolvedValue({ data: { session: { access_token: 'tok-admin' } } });
     const fetchSpy = vi.fn().mockResolvedValue({
@@ -431,7 +433,7 @@ describe('admin user management (integration)', () => {
   // M-1: production guard — bypass MUST still be refused for non-local endpoints
   it('convertPreCadastroToAccount refuses auth bypass when running in production with remote bypass URL', async () => {
     vi.stubEnv('VITE_AUTH_BYPASS_CREATE_USER', 'true');
-    vi.stubEnv('PROD', 'true');
+    vi.stubEnv('PROD', true);
     vi.stubEnv('VITE_AUTH_BYPASS_URL', 'https://bypass.example.com');
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);

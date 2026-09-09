@@ -17,7 +17,9 @@ export const PartnerGalleryEditor = ({ gallery, albums, onChange }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    // `e.target.files` é FileList | null. O `|| []` misturava FileList com never[],
+    // e o Array.from resultante inferia unknown[] — daí o erro em saveMediaBlob.
+    const files: File[] = e.target.files ? Array.from(e.target.files) : [];
     if (!files.length) return;
     setUploading(true);
     try {
@@ -25,7 +27,7 @@ export const PartnerGalleryEditor = ({ gallery, albums, onChange }: Props) => {
       for (const file of files) {
         const url = await saveMediaBlob(file);
         newItems.push({
-          id: generateId(),
+          id: generateId('media'),
           kind: 'image',
           srcType: 'url',
           url,
@@ -57,7 +59,7 @@ export const PartnerGalleryEditor = ({ gallery, albums, onChange }: Props) => {
     const title = newAlbumTitle.trim();
     if (!title) return;
     const album: PartnerAlbum = {
-      id: generateId(),
+      id: generateId('album'),
       title,
       createdAt: new Date().toISOString(),
     };

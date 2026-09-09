@@ -33,15 +33,23 @@ export default defineConfig(() => {
         setupFiles: ['./src/test/setup.ts'],
         exclude: ['**/node_modules/**', 'tests/rls/**', 'tests/e2e/**'],
         coverage: {
-          provider: 'v8',
+          // 'v8' literal (nao 'string') — necessario para o tipo CoverageOptions.
+          provider: 'v8' as const,
           include: ['services/**', 'validation/**', 'utils/**'],
           exclude: ['**/node_modules/**', '**/*.test.ts', '**/*.spec.ts'],
           thresholds: {
-            'services/': { statements: 80, branches: 75 },
-            'validation/': { statements: 100 },
-            'utils/': { statements: 100 },
+            // Chaves de threshold por diretorio SAO globs. As chaves antigas
+            // ('services/', 'validation/', 'utils/') nao casavam nenhum ficheiro,
+            // portanto os limites nunca eram avaliados — configuracao morta.
+            '**/services/**': { statements: 80, branches: 75 },
+            '**/validation/**': { statements: 100 },
+            '**/utils/**': { statements: 100 },
           },
-          reporter: ['text', 'lcov'],
+          reporter: ['text', 'lcov', 'html'],
+          reportsDirectory: './coverage',
+          // Sem isto o relatorio NAO e' escrito quando ha testes a falhar
+          // (era a causa de 'coverage/' nunca ser criado).
+          reportOnFailure: true,
         },
       }
     };
