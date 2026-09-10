@@ -45,8 +45,6 @@ syncEvents();
 let authGeneration = 0;
 
 const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-  const generation = ++authGeneration;
-
   if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
     // On SIGNED_IN (token refresh), skip re-resolving if we already have a non-viewer role
     // for the same user — resolveUserRole can timeout and would downgrade the role to viewer.
@@ -64,6 +62,13 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
       notifyState();
       return;
     }
+
+    // O contador só avança DEPOIS do early-return acima. Se avançasse antes,
+    // um SIGNED_IN que retornasse cedo invalidava o INITIAL_SESSION que estava
+    // a meio do `await resolveUserRole`: esse abortava no teste de geração sem
+    // nunca chamar setAuthLoading(false), e AUTH_LOADING ficava true para
+    // sempre — PremiumLoader eterno em todas as rotas protegidas.
+    const generation = ++authGeneration;
 
     syncMembers();
     syncCouncils();
