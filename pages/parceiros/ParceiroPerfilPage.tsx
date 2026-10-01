@@ -81,7 +81,7 @@ export const ParceiroPerfilPage = () => {
           <Reveal>
             <button
               onClick={() => navigate('/parceiros')}
-              className="inline-flex items-center gap-2 text-white/40 hover:text-white text-xs font-medium tracking-wide mb-10 transition-colors"
+              className="inline-flex items-center gap-2 text-white/70 hover:text-white text-xs font-medium tracking-wide mb-10 transition-colors"
             >
               <ArrowLeft size={14} /> Todos os Parceiros
             </button>

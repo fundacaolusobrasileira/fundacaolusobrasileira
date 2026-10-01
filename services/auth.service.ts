@@ -3,7 +3,11 @@ import { setAuthSession, AUTH_SESSION, isAdmin, notifyState, showToast, logActiv
 import { LoginSchema, CadastroSchema } from '../validation/schemas';
 import type { UserProfile } from '../types';
 
+// Orçamento TOTAL para resolver o papel do utilizador, repartido pelas
+// tentativas. O total mantém-se em 3s para não alongar o arranque da app.
 const ROLE_TIMEOUT_MS = 3000;
+const ROLE_ATTEMPTS = 2;
+const ROLE_ATTEMPT_TIMEOUT_MS = ROLE_TIMEOUT_MS / ROLE_ATTEMPTS;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AUTH_BYPASS_URL = import.meta.env.VITE_AUTH_BYPASS_URL || 'http://127.0.0.1:8787';
 
@@ -161,30 +165,99 @@ const waitForProfileByUserId = async (userId: string): Promise<boolean> => {
   return false;
 };
 
-export const resolveUserRole = async (userId: string): Promise<'admin' | 'editor' | 'viewer'> => {
-  const queryPromise = supabase
-    .from('profiles')
-    .select('role')
-    .eq('user_id', userId)
-    .single()
-    .then(({ data: profile }) =>
-      profile?.role === 'admin' ? 'admin' as const :
-      profile?.role === 'editor' ? 'editor' as const : 'viewer' as const
-    );
+export type UserRole = 'admin' | 'editor' | 'viewer';
 
-  const timeoutPromise = new Promise<'viewer'>((resolve) =>
-    setTimeout(() => {
-      // Sem `userId` (identificador pessoal) fora de DEV.
-      if (import.meta.env.DEV) console.warn(`[AUTH] resolveUserRole timed out after ${ROLE_TIMEOUT_MS}ms for user=${userId}`);
-      resolve('viewer');
-    }, ROLE_TIMEOUT_MS)
-  );
+// P1: distinguir "o utilizador é mesmo viewer" de "não conseguimos saber".
+// Tipo PLANO de propósito: este projeto corre sem `strictNullChecks` e o
+// estreitamento de uniões por discriminante booleano falha aqui (ver nota em
+// ProfilesSuccessResult). Os consumidores leem `resolved` diretamente.
+export type RoleResolution = {
+  role: UserRole;
+  resolved: boolean;
+  reason?: 'timeout' | 'error';
+};
 
-  try {
-    return await Promise.race([queryPromise, timeoutPromise]);
-  } catch {
-    return 'viewer';
+// `.single()` devolve erro quando não há linha — isso NÃO é falha de
+// infraestrutura: é um utilizador autenticado sem perfil elevado.
+const isMissingProfileRowError = (error: any): boolean =>
+  error?.code === 'PGRST116'
+  || /\b(0|no|multiple \(or no\)) rows\b/i.test(error?.message || '');
+
+const attemptResolveUserRole = (userId: string): Promise<RoleResolution> => {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const queryPromise: Promise<RoleResolution> = (async () => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && !isMissingProfileRowError(error)) {
+        // Sem `userId` (identificador pessoal) fora de DEV.
+        if (import.meta.env.DEV) console.error('[AUTH] resolveUserRole query failed:', error);
+        return { role: 'viewer' as const, resolved: false, reason: 'error' as const };
+      }
+
+      return {
+        role:
+          profile?.role === 'admin' ? 'admin' as const :
+          profile?.role === 'editor' ? 'editor' as const : 'viewer' as const,
+        resolved: true,
+      };
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('[AUTH] resolveUserRole threw:', err);
+      return { role: 'viewer' as const, resolved: false, reason: 'error' as const };
+    }
+  })();
+
+  const timeoutPromise = new Promise<RoleResolution>((resolve) => {
+    timer = setTimeout(() => {
+      if (import.meta.env.DEV) console.warn(`[AUTH] resolveUserRole timed out after ${ROLE_ATTEMPT_TIMEOUT_MS}ms`);
+      resolve({ role: 'viewer' as const, resolved: false, reason: 'timeout' as const });
+    }, ROLE_ATTEMPT_TIMEOUT_MS);
+  });
+
+  return Promise.race([queryPromise, timeoutPromise]).finally(() => {
+    // Liberta o timer quando a query ganha a corrida (evitava manter a closure viva 3s).
+    if (timer) clearTimeout(timer);
+  });
+};
+
+// Resolve o papel com 1 retry. No caminho normal (sucesso à primeira) continua
+// a ser exatamente 1 query — a segunda tentativa só ocorre após erro/timeout.
+export const resolveUserRoleDetailed = async (userId: string): Promise<RoleResolution> => {
+  let outcome: RoleResolution = { role: 'viewer', resolved: false, reason: 'error' };
+  for (let attempt = 0; attempt < ROLE_ATTEMPTS; attempt += 1) {
+    outcome = await attemptResolveUserRole(userId);
+    if (outcome.resolved) return outcome;
   }
+  return outcome;
+};
+
+// Compatibilidade: devolve apenas o papel. NÃO usar em decisões de sessão —
+// um 'viewer' devolvido aqui pode significar "falhámos a confirmar".
+// Para isso existe `resolveUserRoleDetailed`.
+export const resolveUserRole = async (userId: string): Promise<UserRole> =>
+  (await resolveUserRoleDetailed(userId)).role;
+
+// Decide o papel final da sessão a partir da resolução e do papel anterior.
+// Função pura: quem chama é que decide notificar o utilizador (ver App.tsx).
+// Regra: falha de infraestrutura NUNCA reduz privilégio já conhecido para o
+// MESMO utilizador; sem papel anterior, fica restrito mas sinalizado.
+export const decideSessionRole = (
+  resolution: RoleResolution,
+  userId: string,
+  previous: { userId?: string; role: UserRole },
+): { role: UserRole; keptPrevious: boolean; unconfirmed: boolean } => {
+  if (resolution.resolved) {
+    return { role: resolution.role, keptPrevious: false, unconfirmed: false };
+  }
+  if (previous && previous.userId === userId && previous.role !== 'viewer') {
+    return { role: previous.role, keptPrevious: true, unconfirmed: true };
+  }
+  return { role: 'viewer', keptPrevious: false, unconfirmed: true };
 };
 
 export const loginAsEditor = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {

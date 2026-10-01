@@ -181,7 +181,7 @@ export const HomePage = () => {
         onTouchEnd={() => setIsHoveringHero(false)}
         className="relative z-30 pt-36 pb-24 md:pt-64 md:pb-48 px-6 bg-brand-900 min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center group"
         style={{ '--mouse-ratio': '0.5', '--mouse-x': '50%', '--mouse-y': '50%' } as React.CSSProperties}
-        aria-label="Introducao"
+        aria-label="Introdução"
       >
         {/* Layer 1: Ambient Background (Blurred & Dark) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
@@ -267,7 +267,7 @@ export const HomePage = () => {
             <div className="flex flex-col items-start md:items-center mb-8 md:mb-10">
                 <img
                   src="/logo-flb.webp"
-                  alt="Logo Fundacao Luso-Brasileira"
+                  alt="Logótipo da Fundação Luso-Brasileira"
                   width={224}
                   height={224}
                   fetchPriority="high"

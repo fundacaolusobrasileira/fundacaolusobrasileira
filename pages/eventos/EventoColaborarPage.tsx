@@ -73,7 +73,7 @@ export const EventoColaborarPage = () => {
     });
   }, [isLoggedIn]);
 
-  usePageMeta("Colaborar – Fundacao Luso-Brasileira", event ? `Enviar memoria do evento ${event.title}` : "Enviar memoria");
+  usePageMeta("Colaborar – Fundação Luso-Brasileira", event ? `Enviar memória do evento ${event.title}` : "Enviar memória");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,12 +188,12 @@ export const EventoColaborarPage = () => {
                 <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border border-green-500/20">
                    <CheckCircle size={40} />
                 </div>
-                <h1 className="text-3xl font-light text-white mb-4 tracking-tight">Memoria Recebida</h1>
-                <p className="text-white/60 text-lg font-light mb-10 max-w-lg mx-auto leading-relaxed">
-                   Sua foto ou video foi enviado para curadoria. <br/>Apos aprovacao, ele aparecera na Galeria da Comunidade deste evento.
+                <h1 className="text-3xl font-light text-white mb-4 tracking-tight">Memória Recebida</h1>
+                <p className="text-white/70 text-lg font-light mb-10 max-w-lg mx-auto leading-relaxed">
+                   A sua foto ou vídeo foi enviado para curadoria. <br/>Após aprovação, aparecerá na Galeria da Comunidade deste evento.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                   <Button variant="white" onClick={() => navigate(`/eventos/${id}`)}>Ver pagina do evento</Button>
+                   <Button variant="white" onClick={() => navigate(`/eventos/${id}`)}>Ver página do evento</Button>
                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => { setSuccess(false); setFormData({...formData, url: '', message: ''}); setPreviewUrl(''); }}>Enviar outra</Button>
                 </div>
              </Card>
@@ -202,9 +202,9 @@ export const EventoColaborarPage = () => {
                 <Card variant="dark" className="p-8 md:p-12 rounded-[2.5rem] shadow-2xl bg-white/5 backdrop-blur-xl relative overflow-hidden animate-fadeInUpSlow border-white/10 mb-8">
 
                     <div className="text-center mb-10">
-                    <Badge variant="gold" className="mb-4">Colaboracao</Badge>
-                    <h1 className="text-3xl md:text-4xl font-light text-white mb-3 tracking-tight">Adicionar Memoria</h1>
-                    <p className="text-white/50 font-light text-lg">
+                    <Badge variant="gold" className="mb-4">Colaboração</Badge>
+                    <h1 className="text-3xl md:text-4xl font-light text-white mb-3 tracking-tight">Adicionar Memória</h1>
+                    <p className="text-white/70 font-light text-lg">
                         {event.title}
                     </p>
                     </div>
@@ -212,7 +212,7 @@ export const EventoColaborarPage = () => {
                     <form onSubmit={handleSubmit} className="space-y-8">
 
                     <div className="space-y-3">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Tipo de Midia</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 ml-2">Tipo de Mídia</label>
                         <div className="flex gap-4">
                             <button
                             type="button"
@@ -228,14 +228,14 @@ export const EventoColaborarPage = () => {
                             className={`flex-1 py-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${formData.type === 'video' ? 'bg-sand-400 text-brand-900 border-sand-400 shadow-lg scale-[1.02]' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
                             >
                             <Video size={20} />
-                            <span className="text-xs font-bold uppercase tracking-wider">Video</span>
+                            <span className="text-xs font-bold uppercase tracking-wider">Vídeo</span>
                             </button>
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-end mb-2 px-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40">Foto ou Video da Memoria</label>
+                            <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70">Foto ou Vídeo da Memória</label>
                             <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
                                 <button type="button" disabled={uploadingMedia} onClick={() => setUploadMode('upload')} className={`transition-colors pb-1 border-b-2 disabled:opacity-40 ${uploadMode === 'upload' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Upload</button>
                                 <button type="button" disabled={uploadingMedia} onClick={() => setUploadMode('link')} className={`transition-colors pb-1 border-b-2 disabled:opacity-40 ${uploadMode === 'link' ? 'text-sand-400 border-sand-400' : 'text-white/40 border-transparent hover:text-white'}`}>Link URL</button>
@@ -262,7 +262,7 @@ export const EventoColaborarPage = () => {
                                     ) : (
                                         <>
                                             <FileUp size={24} className="text-white/40 group-hover:text-sand-400 transition-colors" />
-                                            <span className="text-xs text-white/50 font-light group-hover:text-white transition-colors">
+                                            <span className="text-xs text-white/70 font-light group-hover:text-white transition-colors">
                                                 Clique para carregar do dispositivo
                                             </span>
                                         </>
@@ -288,8 +288,8 @@ export const EventoColaborarPage = () => {
                             </div>
                         )}
 
-                        <p className="text-[10px] text-white/30 ml-3 font-light pt-1">* {uploadMode === 'upload' ? 'Suportamos JPG, PNG, WEBP e MP4 ate 5MB. Documentos nao sao aceitos neste fluxo.' : 'Cole o link direto da imagem ou video.'}</p>
-                        <p className="text-[10px] text-white/30 ml-3 font-light">Apos aprovacao, a contribuicao aparecera na Galeria da Comunidade da pagina deste evento.</p>
+                        <p className="text-[10px] text-white/70 ml-3 font-light pt-1">* {uploadMode === 'upload' ? 'Suportamos JPG, PNG, WEBP e MP4 até 5MB. Documentos não são aceites neste fluxo.' : 'Cole o link direto da imagem ou vídeo.'}</p>
+                        <p className="text-[10px] text-white/70 ml-3 font-light">Após aprovação, a contribuição aparecerá na Galeria da Comunidade da página deste evento.</p>
                         {uploadingMedia && (
                             <div className="flex items-center gap-2 text-xs text-sand-200 ml-3 pt-1" role="status" aria-live="polite">
                                 <Loader2 size={14} className="animate-spin" />
@@ -314,17 +314,17 @@ export const EventoColaborarPage = () => {
                     {!isLoggedIn ? (
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Seu Nome</label>
+                                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 ml-2">Seu Nome</label>
                                 <Input aria-label="Nome" required variant="dark" value={formData.authorName} onChange={(e: any) => setFormData({...formData, authorName: e.target.value})} placeholder="Como quer ser identificado" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Seu Email</label>
+                                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 ml-2">Seu Email</label>
                                 <Input aria-label="E-mail" required variant="dark" type="email" value={formData.email} onChange={(e: any) => setFormData({...formData, email: e.target.value})} placeholder="Para contato" />
                             </div>
                         </div>
                     ) : (
                         <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">Envio autenticado</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 mb-2">Envio autenticado</p>
                             <p className="text-sm text-white/70 font-light">
                                 Você está a enviar esta memória como <span className="text-white font-medium">{loggedUserIdentity.name || 'membro autenticado'}</span>
                                 {loggedUserIdentity.email ? <> · <span className="text-white/60">{loggedUserIdentity.email}</span></> : null}
@@ -333,14 +333,14 @@ export const EventoColaborarPage = () => {
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 ml-2">Mensagem</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 ml-2">Mensagem</label>
                         <textarea
                             aria-label="Mensagem"
                             rows={3}
                             value={formData.message}
                             onChange={e => setFormData({...formData, message: e.target.value})}
                             className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-sand-400 focus:ring-1 focus:ring-sand-400/20 outline-none transition-all placeholder-white/20 text-base font-light text-white"
-                            placeholder="Conte uma breve historia sobre este momento..."
+                            placeholder="Conte uma breve história sobre este momento..."
                         />
                     </div>
 
@@ -358,7 +358,7 @@ export const EventoColaborarPage = () => {
                                 onChange={e => setFormData({...formData, agreedToTerms: e.target.checked})}
                             />
                             <span className="text-xs text-white/60 leading-relaxed group-hover:text-white/80 transition-colors select-none">
-                                Concordo que esta midia pode ser utilizada nos canais da Fundacao e aceito os <Link to="/termos" target="_blank" className="text-sand-400 hover:underline">Termos de Uso</Link>.
+                                Concordo que esta mídia pode ser utilizada nos canais da Fundação e aceito os <Link to="/termos" target="_blank" className="text-sand-400 hover:underline">Termos de Uso</Link>.
                             </span>
                         </label>
 
@@ -376,7 +376,7 @@ export const EventoColaborarPage = () => {
                                     onChange={e => setFormData({...formData, subscribeNewsletter: e.target.checked})}
                                 />
                                 <span className="text-xs text-white/60 leading-relaxed group-hover:text-white/80 transition-colors select-none">
-                                    Quero receber novidades e atualizacoes da Fundacao por e-mail.
+                                    Quero receber novidades e atualizações da Fundação por e-mail.
                                 </span>
                             </label>
                         )}
@@ -384,14 +384,14 @@ export const EventoColaborarPage = () => {
 
                     <div className="pt-4">
                         {!isLoggedIn && (
-                          <p className="text-white/30 text-[10px] text-center mb-4 font-light leading-relaxed">
+                          <p className="text-white/70 text-[10px] text-center mb-4 font-light leading-relaxed">
                             Ao enviar, ficará registado como colaborador da Fundação.<br />
                             O seu envio será analisado antes de ser publicado.
                           </p>
                         )}
                         {error && <p className="text-red-400 text-xs text-center mb-4 font-medium animate-pulse">{error}</p>}
                         <Button variant="gold" type="submit" className="w-full text-xs rounded-2xl py-5 shadow-[0_0_20px_rgba(201,175,136,0.15)] hover:shadow-[0_0_30px_rgba(201,175,136,0.3)]" disabled={submitting || uploadingMedia}>
-                            {submitting ? 'Enviando...' : uploadingMedia ? 'Aguarde o upload...' : 'Enviar Memoria'}
+                            {submitting ? 'A enviar...' : uploadingMedia ? 'Aguarde o upload...' : 'Enviar Memória'}
                         </Button>
                     </div>
                     </form>
@@ -400,10 +400,10 @@ export const EventoColaborarPage = () => {
                 {/* Member Invite Section */}
                 {!isLoggedIn && (
                 <div className="max-w-xl mx-auto text-center animate-fadeInUpSlow delay-100">
-                    <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/40 mb-4">
-                        <UserPlus size={12} /> Comunidade
+                    <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/70 mb-4">
+                        <UserPlus size={12} aria-hidden="true" /> Comunidade
                     </div>
-                    <p className="text-white/50 text-sm font-light mb-4">
+                    <p className="text-white/70 text-sm font-light mb-4">
                         Deseja participar mais ativamente das nossas iniciativas?
                     </p>
                     <Link to="/precadastro">

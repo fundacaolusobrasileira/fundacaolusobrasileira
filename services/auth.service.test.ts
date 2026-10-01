@@ -234,6 +234,128 @@ describe('resolveUserRole (integration)', () => {
 });
 
 // ============================================================================
+// P1 — resolveUserRoleDetailed / decideSessionRole
+// Falha de infraestrutura NUNCA pode rebaixar um admin a viewer em silêncio.
+// ============================================================================
+describe('resolveUserRoleDetailed (P1 — sem degradação silenciosa)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('caminho de sucesso: 1 única query e resolved:true', async () => {
+    mockProfileSingle.mockResolvedValue({ data: { role: 'admin' }, error: null });
+    const { resolveUserRoleDetailed } = await import('./auth.service');
+    const result = await resolveUserRoleDetailed('user-p1-ok');
+    expect(result.role).toBe('admin');
+    expect(result.resolved).toBe(true);
+    expect(mockProfileSingle).toHaveBeenCalledTimes(1);
+  });
+
+  it('erro da query NÃO devolve viewer como facto (resolved:false) e tenta 2 vezes', async () => {
+    mockProfileSingle.mockResolvedValue({ data: null, error: { code: 'PGRST301', message: 'JWT expired' } });
+    const { resolveUserRoleDetailed } = await import('./auth.service');
+    const result = await resolveUserRoleDetailed('user-p1-err');
+    expect(result.resolved).toBe(false);
+    expect(result.reason).toBe('error');
+    expect(mockProfileSingle).toHaveBeenCalledTimes(2);
+  });
+
+  it('exceção da query devolve resolved:false', async () => {
+    mockProfileSingle.mockRejectedValue(new Error('Network error'));
+    const { resolveUserRoleDetailed } = await import('./auth.service');
+    const result = await resolveUserRoleDetailed('user-p1-throw');
+    expect(result.role).toBe('viewer');
+    expect(result.resolved).toBe(false);
+  });
+
+  it('utilizador sem perfil elevado (no rows) é um facto: resolved:true, viewer', async () => {
+    mockProfileSingle.mockResolvedValue({
+      data: null,
+      error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' },
+    });
+    const { resolveUserRoleDetailed } = await import('./auth.service');
+    const result = await resolveUserRoleDetailed('user-p1-norow');
+    expect(result.role).toBe('viewer');
+    expect(result.resolved).toBe(true);
+    expect(mockProfileSingle).toHaveBeenCalledTimes(1);
+  });
+
+  it('retry: segunda tentativa bem-sucedida resolve o papel real', async () => {
+    mockProfileSingle
+      .mockResolvedValueOnce({ data: null, error: { code: 'PGRST301', message: 'JWT expired' } })
+      .mockResolvedValueOnce({ data: { role: 'admin' }, error: null });
+    const { resolveUserRoleDetailed } = await import('./auth.service');
+    const result = await resolveUserRoleDetailed('user-p1-retry');
+    expect(result.role).toBe('admin');
+    expect(result.resolved).toBe(true);
+    expect(mockProfileSingle).toHaveBeenCalledTimes(2);
+  });
+
+  it('timeout total de 3s devolve resolved:false com reason timeout', async () => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    try {
+      mockProfileSingle.mockImplementation(() => new Promise(() => {})); // nunca resolve
+      const { resolveUserRoleDetailed } = await import('./auth.service');
+      const pending = resolveUserRoleDetailed('user-p1-timeout');
+      await vi.advanceTimersByTimeAsync(3001);
+      const result = await pending;
+      expect(result.role).toBe('viewer');
+      expect(result.resolved).toBe(false);
+      expect(result.reason).toBe('timeout');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('decideSessionRole (P1 — preservação de privilégio)', () => {
+  it('mantém o papel anterior do MESMO utilizador quando a resolução falha', async () => {
+    const { decideSessionRole } = await import('./auth.service');
+    const decision = decideSessionRole(
+      { role: 'viewer', resolved: false, reason: 'timeout' },
+      'user-1',
+      { userId: 'user-1', role: 'admin' },
+    );
+    expect(decision.role).toBe('admin');
+    expect(decision.keptPrevious).toBe(true);
+    expect(decision.unconfirmed).toBe(true);
+  });
+
+  it('não herda papel de OUTRO utilizador: fica viewer e sinaliza', async () => {
+    const { decideSessionRole } = await import('./auth.service');
+    const decision = decideSessionRole(
+      { role: 'viewer', resolved: false, reason: 'error' },
+      'user-2',
+      { userId: 'user-1', role: 'admin' },
+    );
+    expect(decision.role).toBe('viewer');
+    expect(decision.keptPrevious).toBe(false);
+    expect(decision.unconfirmed).toBe(true);
+  });
+
+  it('sem papel anterior e falha: viewer restrito mas sinalizado ao utilizador', async () => {
+    const { decideSessionRole } = await import('./auth.service');
+    const decision = decideSessionRole(
+      { role: 'viewer', resolved: false, reason: 'timeout' },
+      'user-3',
+      { role: 'viewer' },
+    );
+    expect(decision.role).toBe('viewer');
+    expect(decision.unconfirmed).toBe(true);
+  });
+
+  it('resolução bem-sucedida manda sempre — inclui despromoção legítima', async () => {
+    const { decideSessionRole } = await import('./auth.service');
+    const decision = decideSessionRole(
+      { role: 'viewer', resolved: true },
+      'user-4',
+      { userId: 'user-4', role: 'admin' },
+    );
+    expect(decision.role).toBe('viewer');
+    expect(decision.unconfirmed).toBe(false);
+  });
+});
+
+// ============================================================================
 // INTEGRATION — admin user management
 // ============================================================================
 describe('admin user management (integration)', () => {

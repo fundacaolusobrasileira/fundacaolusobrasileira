@@ -2227,7 +2227,11 @@ export const Lightbox = ({ isOpen, onClose, media, currentIndex, onNext, onPrev 
             <div className="h-20 border-t border-white/10 flex items-center justify-center gap-2 overflow-x-auto px-4">
                 {media.map((m: any, idx: number) => (
                     <button key={idx} onClick={() => { if(idx !== currentIndex) { /* Logic to jump could be added here but simple navigation is mostly prev/next */ } }} className={`h-12 w-12 rounded-lg overflow-hidden border-2 transition-all ${idx === currentIndex ? 'border-brand-500 scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}>
-                        <img src={m.type === 'video' ? (m.thumbnailUrl || m.src) : m.src} className="w-full h-full object-cover" alt="" />
+                        {m.type === 'video' ? (
+                            <video src={m.src} className="w-full h-full object-cover bg-slate-900" muted playsInline preload="metadata" aria-label={m.caption || 'Vídeo'} />
+                        ) : (
+                            <img src={m.src} className="w-full h-full object-cover" alt={m.caption || ''} />
+                        )}
                     </button>
                 ))}
             </div>

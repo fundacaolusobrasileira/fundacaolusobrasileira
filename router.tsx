@@ -98,6 +98,7 @@ const DocumentacaoPage = lazy(() => import('./pages/documentacao/DocumentacaoPag
 const BeneficiosPage = lazy(() => import('./pages/beneficios/BeneficiosPage').then(m => ({ default: m.BeneficiosPage })));
 const LegaltechSpacePage = lazy(() => import('./pages/legaltech-space/LegaltechSpacePage').then(m => ({ default: m.LegaltechSpacePage })));
 const ParceiroPerfilPage = lazy(() => import('./pages/parceiros/ParceiroPerfilPage').then(m => ({ default: m.ParceiroPerfilPage })));
+const ContactoPage = lazy(() => import('./pages/contacto/ContactoPage').then(m => ({ default: m.ContactoPage })));
 
 /** Liberta o "1 reload por sessão" assim que a app monta sem falha de chunk. */
 const useClearChunkReloadFlag = () => {
@@ -136,6 +137,8 @@ export const AppRouter = () => {
       <Route path="/privacidade" element={<PrivacyPage />} />
       <Route path="/termos" element={<TermsPage />} />
       <Route path="/documentacao" element={<DocumentacaoPage />} />
+      <Route path="/contacto" element={<ContactoPage />} />
+      <Route path="/contato" element={<Navigate to="/contacto" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   </Suspense>

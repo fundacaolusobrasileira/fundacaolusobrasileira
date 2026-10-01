@@ -74,12 +74,12 @@ export const downloadDocument = async (sourceUrl: string, fallbackLabel: string)
 const GROUP_DEFS: DocGroupDef[] = [
   {
     title: 'Estatutos',
-    description: 'Versao consolidada dos estatutos em vigor da Fundacao Luso-Brasileira.',
+    description: 'Versão consolidada dos estatutos em vigor da Fundação Luso-Brasileira.',
     category: 'estatutos',
   },
   {
-    title: 'Relatorios Anuais',
-    description: 'Relatorios de atividades, demonstracoes financeiras, parecer do Conselho Fiscal e atas de aprovacao.',
+    title: 'Relatórios Anuais',
+    description: 'Relatórios de atividades, demonstrações financeiras, parecer do Conselho Fiscal e atas de aprovação.',
     category: 'relatorios-anuais',
   },
   {
@@ -159,7 +159,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
     const result = await createEstatutosLead({ name, email, document: label });
     setLoading(false);
     if (!result.success) {
-      setError(result.error || 'Nao foi possivel concluir o pedido. Tente novamente.');
+      setError(result.error || 'Não foi possível concluir o pedido. Tente novamente.');
       return;
     }
     setStep('ready');
@@ -174,7 +174,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
       showToast('A iniciar download...', 'info');
       closeTimerRef.current = window.setTimeout(handleClose, 600);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Nao foi possivel descarregar o documento.';
+      const message = err instanceof Error ? err.message : 'Não foi possível descarregar o documento.';
       setError(message);
       showToast(message, 'error');
     } finally {
@@ -195,9 +195,9 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
                 {label}
               </h2>
               <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                Para descarregar este documento, preencha o seu nome completo e email. <span className="font-medium text-brand-900">Nao e necessario criar conta.</span>
+                Para descarregar este documento, preencha o seu nome completo e email. <span className="font-medium text-brand-900">Não é necessário criar conta.</span>
                 <br />
-                <span className="text-slate-500">Na proxima etapa tera acesso ao botao de download.</span>
+                <span className="text-slate-500">Na próxima etapa terá acesso ao botão de download.</span>
               </p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -235,7 +235,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
                 {loading ? 'A registar...' : 'Continuar para o download'}
               </Button>
               <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                Os seus dados sao utilizados apenas pela Fundacao Luso-Brasileira para fins de transparencia e contacto institucional.
+                Os seus dados são utilizados apenas pela Fundação Luso-Brasileira para fins de transparência e contacto institucional.
               </p>
             </form>
           </>
@@ -248,7 +248,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
               Tudo certo, {name.split(' ')[0]}!
             </h2>
             <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-              O documento esta pronto para ser descarregado. Clique no botao abaixo.
+              O documento está pronto para ser descarregado. Clique no botão abaixo.
             </p>
             {error && <p className="mt-4 text-red-600 text-xs" role="alert">{error}</p>}
             <button
@@ -260,7 +260,7 @@ const GatedDownloadModal: React.FC<GatedDownloadModalProps> = ({ isOpen, onClose
               <Download size={14} /> {downloading ? 'A descarregar...' : `Descarregar ${label}`}
             </button>
             <p className="text-[10px] text-slate-400 mt-4">
-              Caso o download nao inicie automaticamente, clique novamente no botao acima.
+              Caso o download não inicie automaticamente, clique novamente no botão acima.
             </p>
           </div>
         )}
@@ -306,7 +306,21 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
       {open && (
         <div id={panelId} role="region" aria-labelledby={buttonId} className="border-t border-slate-100 px-6 py-5 bg-slate-50/50">
           {group.docs.length === 0 ? (
-            <p className="text-sm text-slate-400 italic">Documento em preparacao - disponivel em breve.</p>
+            <div className="text-sm text-slate-500 font-light leading-relaxed">
+              <p>
+                Este documento ainda não se encontra disponível para descarregamento nesta página.
+              </p>
+              <p className="mt-2">
+                Pode solicitar uma cópia através do email institucional{' '}
+                <a
+                  href="mailto:geral@fundacaolusobrasileira.pt"
+                  className="font-medium text-brand-900 underline underline-offset-2 hover:text-brand-800 transition-colors"
+                >
+                  geral@fundacaolusobrasileira.pt
+                </a>
+                , indicando o documento pretendido.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-3">
               {group.docs.map(doc => (
@@ -315,7 +329,7 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
                     <span className="text-sm text-slate-700 font-medium truncate">{doc.label}</span>
                     {doc.gated && (
                       <span className="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-sand-700 bg-sand-100 px-2 py-0.5 rounded-full whitespace-nowrap">
-                        <Lock size={9} /> Identificacao necessaria
+                        <Lock size={9} /> Identificação necessária
                       </span>
                     )}
                   </div>
@@ -340,8 +354,8 @@ const DocGroupCard: React.FC<DocGroupCardProps> = ({ group, defaultOpen, onReque
 
 export const DocumentacaoPage = () => {
   usePageMeta(
-    'Documentacao Institucional - Fundacao Luso-Brasileira',
-    'Acesso publico a documentos legais, estatutos, relatorios e regulamentos da Fundacao Luso-Brasileira.'
+    'Documentação Institucional - Fundação Luso-Brasileira',
+    'Acesso público a documentos legais, estatutos, relatórios e regulamentos da Fundação Luso-Brasileira.'
   );
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -383,7 +397,7 @@ export const DocumentacaoPage = () => {
       await downloadDocument(doc.file, doc.label);
       showToast('A iniciar download...', 'info');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Nao foi possivel descarregar o documento.';
+      const message = err instanceof Error ? err.message : 'Não foi possível descarregar o documento.';
       showToast(message, 'error');
     }
   };
@@ -396,14 +410,14 @@ export const DocumentacaoPage = () => {
       <SectionWrapper className="relative z-10 max-w-4xl mx-auto px-6 md:px-12">
         <header className="mb-16 md:mb-20 border-b border-slate-200 pb-12">
           <Reveal>
-            <p className="text-xs font-bold uppercase tracking-widest text-sand-500 mb-4">Transparencia</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-sand-500 mb-4">Transparência</p>
             <h1 className="text-4xl md:text-6xl font-serif text-brand-900 tracking-tight leading-[1.1] mb-6">
-              Documentacao<br />Institucional
+              Documentação<br />Institucional
             </h1>
           </Reveal>
           <Reveal delay={100}>
             <p className="text-lg text-slate-500 font-light max-w-2xl leading-relaxed">
-              Acesso publico aos documentos legais e institucionais da Fundacao Luso-Brasileira, em cumprimento das obrigacoes de transparencia previstas na lei.
+              Acesso público aos documentos legais e institucionais da Fundação Luso-Brasileira, em cumprimento das obrigações de transparência previstas na lei.
             </p>
           </Reveal>
         </header>
@@ -424,7 +438,7 @@ export const DocumentacaoPage = () => {
 
         <div className="mt-16 pt-10 border-t border-slate-200 text-center md:text-left">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Fundacao Luso-Brasileira - Documentacao Oficial
+            Fundação Luso-Brasileira - Documentação Oficial
           </p>
         </div>
       </SectionWrapper>

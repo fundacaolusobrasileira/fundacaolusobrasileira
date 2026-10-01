@@ -164,7 +164,7 @@ export const LoginModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
         <div className="text-center mb-6">
           <div className="w-12 h-12 bg-sand-400/20 text-sand-600 rounded-full flex items-center justify-center mx-auto mb-4"><Lock size={24} /></div>
           <h2 id="login-title" className="text-2xl font-light text-brand-900">Acesso Restrito</h2>
-          <p className="text-slate-600 text-sm mt-1">Ãrea exclusiva para editores.</p>
+          <p className="text-slate-600 text-sm mt-1">Área exclusiva para editores.</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -173,7 +173,7 @@ export const LoginModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
           </div>
           <div>
             <label htmlFor="login-password" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-1">Senha</label>
-            <Input id="login-password" type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
+            <Input id="login-password" type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
           {error && <p className="text-red-600 text-xs text-center" role="alert">{error}</p>}
           <Button type="submit" className="w-full" isLoading={loading}>{loading ? 'Entrando...' : 'Entrar'}</Button>
@@ -189,7 +189,7 @@ export const AccessDeniedModal = ({ isOpen, onClose, onLogin }: any) => (
     <ModalBody className="text-center">
       <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6"><Lock size={32} /></div>
       <h3 id="access-denied-title" className="text-xl font-medium text-slate-900 mb-2">Acesso Negado</h3>
-      <p className="text-slate-600 text-sm mb-6">VocÃª precisa de permissÃµes de editor para realizar esta aÃ§Ã£o.</p>
+      <p className="text-slate-600 text-sm mb-6">Você precisa de permissões de editor para realizar esta ação.</p>
       <div className="flex gap-3"><Button variant="ghost" onClick={onClose} className="flex-1">Cancelar</Button><Button onClick={() => { onClose(); onLogin(); }} className="flex-1">Entrar</Button></div>
     </ModalBody>
   </Modal>
@@ -198,8 +198,8 @@ export const AccessDeniedModal = ({ isOpen, onClose, onLogin }: any) => (
 // --- Confirm Dialog ---
 export const ConfirmDialog = ({
   isOpen,
-  title = 'Confirmar exclusÃ£o',
-  description = 'Esta aÃ§Ã£o Ã© permanente e nÃ£o pode ser desfeita.',
+  title = 'Confirmar exclusão',
+  description = 'Esta ação é permanente e não pode ser desfeita.',
   onConfirm,
   onCancel,
   confirmLabel = 'Excluir definitivamente'

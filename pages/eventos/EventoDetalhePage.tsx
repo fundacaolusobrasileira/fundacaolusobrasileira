@@ -51,8 +51,8 @@ export const EventoDetalhePage = () => {
   }, [id]);
 
   usePageMeta(
-    event ? `Evento: ${event.title}` : "Evento nao encontrado",
-    event ? `Veja detalhes, fotos e videos do evento ${event.title} da Fundacao Luso-Brasileira.` : ""
+    event ? `Evento: ${event.title}` : "Evento não encontrado",
+    event ? `Veja detalhes, fotos e vídeos do evento ${event.title} da Fundação Luso-Brasileira.` : ""
   );
 
   const handleDeleteClick = () => {
@@ -120,7 +120,7 @@ export const EventoDetalhePage = () => {
      return (
         <div className="min-h-screen bg-page flex items-center justify-center">
            <Card className="p-12 text-center max-w-lg border border-slate-200">
-              <h2 className="text-3xl font-light text-slate-900 mb-4">Evento nao encontrado</h2>
+              <h1 className="text-3xl font-light text-slate-900 mb-4">Evento não encontrado</h1>
               <Button onClick={() => navigate('/eventos')} className="gap-2"><ArrowLeft size={16}/> Voltar para Agenda</Button>
            </Card>
         </div>
@@ -169,9 +169,9 @@ export const EventoDetalhePage = () => {
                        <Camera size={28} />
                     </div>
                     <h3 className="text-lg font-medium text-brand-900 mb-2 relative z-10">Esteve presente?</h3>
-                    <p className="text-slate-500 font-light text-sm mb-8 relative z-10">Contribua com o acervo digital enviando fotos ou videos. Apos curadoria, o material aprovado aparece na Galeria da Comunidade.</p>
+                    <p className="text-slate-500 font-light text-sm mb-8 relative z-10">Contribua com o acervo digital enviando fotos ou vídeos. Após curadoria, o material aprovado aparece na Galeria da Comunidade.</p>
                     <Button onClick={() => navigate(`/eventos/${id}/colaborar`)} className="w-full relative z-10 text-xs">
-                       Adicionar Memoria
+                       Adicionar Memória
                     </Button>
                  </div>
               </div>
@@ -196,7 +196,7 @@ export const EventoDetalhePage = () => {
               {(event as any).experience && (
                 <div className="mb-10">
                   <h2 className="text-[10px] font-bold uppercase tracking-widest text-sand-500 mb-4 flex items-center gap-2">
-                    <span className="w-4 h-px bg-sand-400"></span> Experiencia
+                    <span className="w-4 h-px bg-sand-400"></span> Experiência
                   </h2>
                   <ExpandableText
                     summary={(event as any).experience.length > 200 ? (event as any).experience.slice(0, 200) + '...' : (event as any).experience}
@@ -263,7 +263,7 @@ export const EventoDetalhePage = () => {
                   ) : (
                       <div className="bg-white border border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
                           <ImageIcon className="mx-auto text-slate-300 mb-4" size={32} />
-                          <p className="text-slate-500 font-light mb-6">A galeria oficial deste evento ainda nao foi publicada.</p>
+                          <p className="text-slate-500 font-light mb-6">A galeria oficial deste evento ainda não foi publicada.</p>
                           {isEditor() && (
                               <Button onClick={handleEditClick} variant="outline" className="text-xs">
                                   <Plus size={14} className="mr-2"/> Adicionar Imagens
@@ -296,7 +296,7 @@ export const EventoDetalhePage = () => {
             onClick={() => navigate(`/eventos/${id}/colaborar`)}
             className="pointer-events-auto bg-brand-900 text-white px-8 py-4 rounded-full shadow-premium flex items-center gap-3 text-xs font-bold uppercase tracking-wider hover:scale-105 active:scale-95 transition-all border border-white/10 backdrop-blur-md"
          >
-            <Upload size={16} /> Adicionar Memoria
+            <Upload size={16} aria-hidden="true" /> Adicionar Memória
          </button>
       </div>
 
@@ -313,8 +313,8 @@ export const EventoDetalhePage = () => {
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
       <ConfirmDialog
         isOpen={isDeleting}
-        title="Confirmar exclusao"
-        description="Esta acao e permanente e nao pode ser desfeita."
+        title="Confirmar exclusão"
+        description="Esta ação é permanente e não pode ser desfeita."
         confirmLabel="Excluir definitivamente"
         onConfirm={confirmDelete}
         onCancel={() => setIsDeleting(false)}

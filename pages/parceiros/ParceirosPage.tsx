@@ -94,7 +94,7 @@ export const ParceirosPage = () => {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Pesquisar parceiro por nome, categoria..."
-                className="w-full bg-white/10 backdrop-blur border border-white/15 rounded-full py-4 pl-12 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-sand-400/60 focus:bg-white/15 transition-all duration-300"
+                className="w-full bg-white/10 backdrop-blur border border-white/15 rounded-full py-4 pl-12 pr-10 text-sm text-white placeholder:text-white/70 focus:outline-none focus:border-sand-400/60 focus:bg-white/15 transition-all duration-300"
               />
               {search && (
                 <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors p-1" aria-label="Limpar pesquisa">
@@ -224,7 +224,7 @@ export const ParceirosPage = () => {
       {/* CTA */}
       <section className="bg-brand-900 py-20 text-center px-6">
         <Reveal>
-          <p className="text-white/50 text-sm font-light mb-4">Interessado em fazer parte da nossa rede?</p>
+          <p className="text-white/70 text-sm font-light mb-4">Interessado em fazer parte da nossa rede?</p>
           <Link
             to="/precadastro"
             className="inline-flex items-center gap-2 px-6 py-3 bg-sand-400 text-brand-900 text-xs font-bold uppercase tracking-widest rounded-full hover:bg-sand-300 transition-colors"

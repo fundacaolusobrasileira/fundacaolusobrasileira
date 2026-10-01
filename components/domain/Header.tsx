@@ -1,5 +1,5 @@
 // components/domain/Header.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowRight, LogOut } from 'lucide-react';
 import { AUTH_SESSION, FLB_STATE_EVENT } from '../../store/app.store';
@@ -10,6 +10,7 @@ export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const [authTick, setAuthTick] = useState(0);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -18,6 +19,7 @@ export const Header = () => {
     { name: 'Eventos', path: '/eventos' },
     { name: 'Parceiros', path: '/parceiros' },
     { name: 'Benefícios', path: '/beneficios' },
+    { name: 'Contacto', path: '/contacto' },
   ];
 
   useEffect(() => {
@@ -26,10 +28,56 @@ export const Header = () => {
     return () => window.removeEventListener(FLB_STATE_EVENT, handleAuthUpdate);
   }, []);
 
+  /**
+   * Menu mobile: mesmo contrato de acessibilidade do `Modal`
+   * (components/ui/Modals.tsx) — Escape fecha, o scroll do body fica bloqueado
+   * enquanto está aberto e o foco regressa ao botão que o abriu.
+   */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const bodyOverflow = document.body.style.overflow;
+    const htmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = bodyOverflow;
+      document.documentElement.style.overflow = htmlOverflow;
+      menuButtonRef.current?.focus?.();
+    };
+  }, [isOpen]);
+
+  /** Salta para o conteúdo principal da rota atual sem depender do HashRouter. */
+  const skipToContent = () => {
+    const target = document.querySelector<HTMLElement>('main, [role="main"], h1');
+    if (!target) return;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus();
+    target.scrollIntoView({ block: 'start' });
+  };
+
   if (['/login', '/cadastro'].includes(location.pathname)) return null;
 
   return (
     <>
+      <button
+        type="button"
+        onClick={skipToContent}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:px-5 focus:py-3 focus:rounded-full focus:bg-white focus:text-brand-900 focus:text-xs focus:font-bold focus:uppercase focus:tracking-widest focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-sand-400"
+      >
+        Saltar para o conteúdo
+      </button>
+
       <header className="fixed top-0 w-full z-50 bg-brand-900 py-4 md:py-5 border-b border-white/10">
         <div className="max-w-[1800px] mx-auto px-6 lg:px-12 relative">
           <div className="flex justify-between items-center h-14 md:h-16">
@@ -37,7 +85,7 @@ export const Header = () => {
               <BrandLogo variant="original" />
             </Link>
 
-            <nav className="hidden md:flex items-center gap-12" aria-label="Navegação Principal">
+            <nav className="hidden md:flex items-center gap-6 lg:gap-10" aria-label="Navegação Principal">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -87,12 +135,14 @@ export const Header = () => {
 
             <div className="md:hidden">
               <button
+                ref={menuButtonRef}
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-2 text-white focus:outline-none focus:ring-2 focus:ring-sand-400 rounded-md"
                 aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
                 aria-expanded={isOpen}
               >
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
+                {isOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
               </button>
             </div>
           </div>
@@ -102,8 +152,8 @@ export const Header = () => {
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-[60] bg-brand-900/85 backdrop-blur-xl flex flex-col animate-in slide-in-from-right duration-700 text-white">
           <div className="flex justify-end p-6">
-            <button onClick={() => setIsOpen(false)} className="p-2 text-white/80 hover:text-white" aria-label="Fechar menu">
-              <X size={24} />
+            <button type="button" onClick={() => setIsOpen(false)} className="p-2 text-white/80 hover:text-white focus:outline-none focus:ring-2 focus:ring-sand-400 rounded-md" aria-label="Fechar menu">
+              <X size={24} aria-hidden="true" />
             </button>
           </div>
           <nav className="flex-grow flex flex-col justify-center px-10 space-y-8" aria-label="Navegação Mobile">

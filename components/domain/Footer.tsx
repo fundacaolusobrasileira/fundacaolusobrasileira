@@ -36,26 +36,42 @@ export const Footer = () => {
         <div className="grid md:grid-cols-12 gap-12 mb-20">
           <div className="md:col-span-3 space-y-8">
             <BrandLogo variant="original" />
-            <p className="text-white/40 font-light max-w-sm leading-relaxed text-sm">
+            <p className="text-white/70 font-light max-w-sm leading-relaxed text-sm">
               Promovendo a cultura, educação e inovação entre Portugal, Brasil e o mundo lusófono.
             </p>
             <div className="flex gap-4">
-              <SocialIcons links={{ instagram: 'https://www.instagram.com/fundacao.lusobrasileira', facebook: 'https://www.facebook.com/Fund.LusoBrasileira', linkedin: 'https://linkedin.com' }} variant="light" size="sm" />
+              {/* LinkedIn removido: o repositório não tem URL real da página da Fundação
+                  (era o placeholder https://linkedin.com). Reponha o ícone assim que o
+                  endereço oficial for conhecido. */}
+              <SocialIcons links={{ instagram: 'https://www.instagram.com/fundacao.lusobrasileira', facebook: 'https://www.facebook.com/Fund.LusoBrasileira' }} variant="light" size="sm" />
             </div>
+            <address className="not-italic text-white/70 font-light text-sm leading-relaxed space-y-1">
+              <p>
+                <a
+                  href="mailto:geral@fundacaolusobrasileira.pt"
+                  className="hover:text-sand-400 transition-colors focus:outline-none focus:text-sand-400"
+                >
+                  geral@fundacaolusobrasileira.pt
+                </a>
+              </p>
+              <p>Rua de S. Marçal, n.º 77/79 — Lisboa, Portugal</p>
+              <p>Rua General Jardim, n.º 808, 6.º andar — São Paulo, Brasil</p>
+            </address>
           </div>
 
           <div className="md:col-span-2 space-y-6">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white/30">Fundação</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white/60">Fundação</h4>
             <ul className="space-y-4 text-sm font-light text-white/60">
-              <li><Link to="/" className="hover:text-sand-400 transition-colors">Sobre Nós</Link></li>
+              <li><Link to="/quem-somos" className="hover:text-sand-400 transition-colors">Sobre Nós</Link></li>
               <li><Link to="/membros" className="hover:text-sand-400 transition-colors">Pessoas</Link></li>
               <li><Link to="/parceiros" className="hover:text-sand-400 transition-colors">Parceiros</Link></li>
               <li><Link to="/eventos" className="hover:text-sand-400 transition-colors">Agenda</Link></li>
+              <li><Link to="/contacto" className="hover:text-sand-400 transition-colors">Contacto</Link></li>
             </ul>
           </div>
 
           <div className="md:col-span-2 space-y-6">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white/30">Legal</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white/60">Legal</h4>
             <ul className="space-y-4 text-sm font-light text-white/60">
               <li><Link to="/termos" className="hover:text-sand-400 transition-colors">Termos de Uso</Link></li>
               <li><Link to="/privacidade" className="hover:text-sand-400 transition-colors">Privacidade</Link></li>
@@ -64,7 +80,7 @@ export const Footer = () => {
           </div>
 
           <div className="md:col-span-2 space-y-6">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white/30">Documentação</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white/60">Documentação</h4>
             <ul className="space-y-4 text-sm font-light text-white/60">
               <li>
                 <Link to="/documentacao" className="hover:text-sand-400 transition-colors">
@@ -90,8 +106,8 @@ export const Footer = () => {
           </div>
 
           <div className="md:col-span-3 space-y-6">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white/30">Newsletter</h4>
-            <p className="text-white/40 font-light text-sm">Receba atualizações sobre eventos e iniciativas.</p>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white/60">Newsletter</h4>
+            <p className="text-white/70 font-light text-sm">Receba atualizações sobre eventos e iniciativas.</p>
             {subscribed ? (
               <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm flex items-center gap-2">
                 <Check size={16} /> Inscrito com sucesso.
@@ -101,24 +117,28 @@ export const Footer = () => {
                 <input
                   type="email"
                   placeholder="seu@email.com"
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sand-400 flex-grow placeholder:text-white/20"
+                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sand-400 flex-grow placeholder:text-white/60"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
                 />
-                <button type="submit" className="bg-sand-400 text-brand-900 px-4 py-3 rounded-xl font-bold hover:bg-white transition-colors">
-                  <ArrowRight size={16} />
+                <button
+                  type="submit"
+                  aria-label="Subscrever a newsletter"
+                  className="bg-sand-400 text-brand-900 px-4 py-3 rounded-xl font-bold hover:bg-white transition-colors"
+                >
+                  <ArrowRight size={16} aria-hidden="true" />
                 </button>
               </form>
             )}
           </div>
         </div>
 
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/20 font-light">
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/60 font-light">
           <p>&copy; {new Date().getFullYear()} Fundação Luso-Brasileira. Todos os direitos reservados.</p>
           <p className="text-center">
             Plataforma desenvolvida por{' '}
-            <Link to="/legaltech-space" className="text-white/40 font-medium hover:text-sand-400 transition-colors">
+            <Link to="/legaltech-space" className="text-white/80 font-medium hover:text-sand-400 transition-colors">
               LEGALTECH SPACE GROUP
             </Link>{' '}
             — Parceira Tecnológica

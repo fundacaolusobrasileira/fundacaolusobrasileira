@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { assertSafeE2ETarget } from './guardTestTarget';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const serviceRoleKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY!;
+const { supabaseUrl, serviceRoleKey } = assertSafeE2ETarget();
 
 const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },

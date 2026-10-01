@@ -21,6 +21,10 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
+    // Mobile: a maior parte do tráfego institucional chega por telemóvel e
+    // até aqui NENHUM projeto cobria viewports pequenos.
+    { name: 'iphone-15', use: { ...devices['iPhone 15'] } },
+    { name: 'pixel-7',   use: { ...devices['Pixel 7'] } },
   ],
 
   // Start vite preview before running E2E tests

@@ -16,7 +16,7 @@ const LegalPageLayout = ({ title, subtitle, children }: { title: string, subtitl
     useEffect(() => { window.scrollTo(0, 0); }, []);
 
     return (
-        <div className="min-h-screen bg-page pt-32 pb-20 relative overflow-hidden">
+        <main id="conteudo-principal" tabIndex={-1} className="min-h-screen bg-page pt-32 pb-20 relative overflow-hidden outline-none">
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-900/5 rounded-full blur-[120px] -mr-40 -mt-40 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-sand-400/5 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none"></div>
 
@@ -40,11 +40,11 @@ const LegalPageLayout = ({ title, subtitle, children }: { title: string, subtitl
 
                 <div className="mt-20 pt-10 border-t border-slate-200 text-center md:text-left">
                     <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                        Fundacao Luso-Brasileira - Documento Oficial
+                        Fundação Luso-Brasileira - Documento Oficial
                     </p>
                 </div>
             </SectionWrapper>
-        </div>
+        </main>
     );
 };
 
@@ -76,103 +76,103 @@ const LegalLocale = ({ locale, sections, delay = 0 }: LegalLocaleBlock & { delay
 
 const privacyLocales: LegalLocaleBlock[] = [
     {
-        locale: 'Portugues de Portugal (PT-PT)',
+        locale: 'Português de Portugal (PT-PT)',
         sections: [
             {
-                title: 'Identificacao',
+                title: 'Identificação',
                 body: (
                     <>
-                        <p><strong>Ultima atualizacao:</strong> 11/06/2026</p>
-                        <p><strong>Responsavel pelo tratamento:</strong> Fundacao Luso-Brasileira</p>
-                        <p>Rua de S. Marcal, n.o 77/79, Freguesia de Santo Antonio, concelho de Lisboa, com o numero de identificacao e pessoa coletiva 503.071.706 - Portugal - geral@fundacaolusobrasileira.pt</p>
+                        <p><strong>Última atualização:</strong> 11/06/2026</p>
+                        <p><strong>Responsável pelo tratamento:</strong> Fundação Luso-Brasileira</p>
+                        <p>Rua de S. Marçal, n.º 77/79, Freguesia de Santo António, concelho de Lisboa, com o número de identificação de pessoa coletiva 503.071.706 - Portugal - geral@fundacaolusobrasileira.pt</p>
                     </>
                 ),
             },
-            { title: 'Introducao', body: <p>A Fundacao Luso-Brasileira respeita a privacidade dos utilizadores, membros, parceiros e visitantes do seu sitio e plataformas digitais. A presente Politica descreve como recolhemos, utilizamos, conservamos e protegemos os dados pessoais, em conformidade com o Regulamento (UE) 2016/679 (RGPD) e a Lei n.o 58/2019, bem como, quando aplicavel, com a Lei n.o 13.709/2018 do Brasil (LGPD).</p> },
-            { title: 'Encarregado de Protecao de Dados', body: <p>Para questoes relativas a dados pessoais pode contactar o Encarregado de Protecao de Dados atraves de geral@fundacaolusobrasileira.pt.</p> },
-            { title: 'Dados recolhidos', body: <p>Recolhemos dados fornecidos voluntariamente (nome, e-mail, telefone, informacoes institucionais e dados enviados em formularios de pre-registo, eventos ou contacto) e dados tecnicos de navegacao (endereco IP, tipo de dispositivo e navegador).</p> },
-            { title: 'Finalidades e fundamentos juridicos', body: <p>Tratamos os dados para fins institucionais: comunicacao, gestao de eventos e de membros, pre-registos, envio de informacoes e cumprimento de obrigacoes legais. Os fundamentos juridicos sao, consoante o caso: consentimento, execucao de contrato ou diligencias pre-contratuais, cumprimento de obrigacao legal e interesse legitimo (artigo 6.o do RGPD).</p> },
-            { title: 'Partilha de dados', body: <p>A Fundacao nao comercializa dados pessoais. A partilha ocorre apenas quando necessaria a execucao de atividades institucionais, ao cumprimento de obrigacoes legais ou mediante consentimento do titular, com subcontratantes vinculados por dever de confidencialidade.</p> },
-            { title: 'Transferencias internacionais', body: <p>Por ser uma entidade luso-brasileira, podem ocorrer transferencias de dados entre Portugal/Uniao Europeia e o Brasil. Tais transferencias assentam em decisao de adequacao ou noutras garantias adequadas previstas nos artigos 44.o a 49.o do RGPD.</p> },
-            { title: 'Conservacao', body: <p>Os dados sao conservados apenas pelo periodo necessario as finalidades indicadas ou pelos prazos legais aplicaveis, sendo depois eliminados ou anonimizados.</p> },
-            { title: 'Direitos dos titulares', body: <p>Pode exercer os direitos de acesso, retificacao, atualizacao, apagamento, limitacao, oposicao e portabilidade, bem como retirar o consentimento. Pode ainda apresentar reclamacao a Comissao Nacional de Protecao de Dados (CNPD), em Portugal, ou a ANPD, no Brasil.</p> },
-            { title: 'Cookies', body: <p>Utilizamos cookies essenciais ao funcionamento do sitio e, mediante o seu consentimento, cookies analiticos. Pode aceitar, recusar ou configurar os cookies nao essenciais atraves do nosso aviso de cookies e nas definicoes do navegador.</p> },
-            { title: 'Seguranca', body: <p>Adotamos medidas tecnicas e organizativas adequadas para proteger os dados contra acessos nao autorizados, perda, uso indevido ou divulgacao indevida.</p> },
-            { title: 'Menores', body: <p>O tratamento de dados de menores observa as exigencias legais aplicaveis, podendo exigir consentimento ou autorizacao de quem exerca as responsabilidades parentais.</p> },
-            { title: 'Alteracoes e contacto', body: <p>Esta Politica pode ser atualizada periodicamente; recomendamos a consulta regular. Para esclarecimentos: geral@fundacaolusobrasileira.pt.</p> },
+            { title: 'Introdução', body: <p>A Fundação Luso-Brasileira respeita a privacidade dos utilizadores, membros, parceiros e visitantes do seu sítio e plataformas digitais. A presente Política descreve como recolhemos, utilizamos, conservamos e protegemos os dados pessoais, em conformidade com o Regulamento (UE) 2016/679 (RGPD) e a Lei n.º 58/2019, bem como, quando aplicável, com a Lei n.º 13.709/2018 do Brasil (LGPD).</p> },
+            { title: 'Encarregado de Proteção de Dados', body: <p>Para questões relativas a dados pessoais pode contactar o Encarregado de Proteção de Dados através de geral@fundacaolusobrasileira.pt.</p> },
+            { title: 'Dados recolhidos', body: <p>Recolhemos dados fornecidos voluntariamente (nome, e-mail, telefone, informações institucionais e dados enviados em formulários de pré-registo, eventos ou contacto) e dados técnicos de navegação (endereço IP, tipo de dispositivo e navegador).</p> },
+            { title: 'Finalidades e fundamentos jurídicos', body: <p>Tratamos os dados para fins institucionais: comunicação, gestão de eventos e de membros, pré-registos, envio de informações e cumprimento de obrigações legais. Os fundamentos jurídicos são, consoante o caso: consentimento, execução de contrato ou diligências pré-contratuais, cumprimento de obrigação legal e interesse legítimo (artigo 6.º do RGPD).</p> },
+            { title: 'Partilha de dados', body: <p>A Fundação não comercializa dados pessoais. A partilha ocorre apenas quando necessária à execução de atividades institucionais, ao cumprimento de obrigações legais ou mediante consentimento do titular, com subcontratantes vinculados por dever de confidencialidade.</p> },
+            { title: 'Transferências internacionais', body: <p>Por ser uma entidade luso-brasileira, podem ocorrer transferências de dados entre Portugal/União Europeia e o Brasil. Tais transferências assentam em decisão de adequação ou noutras garantias adequadas previstas nos artigos 44.º a 49.º do RGPD.</p> },
+            { title: 'Conservação', body: <p>Os dados são conservados apenas pelo período necessário às finalidades indicadas ou pelos prazos legais aplicáveis, sendo depois eliminados ou anonimizados.</p> },
+            { title: 'Direitos dos titulares', body: <p>Pode exercer os direitos de acesso, retificação, atualização, apagamento, limitação, oposição e portabilidade, bem como retirar o consentimento. Pode ainda apresentar reclamação à Comissão Nacional de Proteção de Dados (CNPD), em Portugal, ou à ANPD, no Brasil.</p> },
+            { title: 'Cookies', body: <p>Utilizamos cookies essenciais ao funcionamento do sítio e, mediante o seu consentimento, cookies analíticos. Pode aceitar, recusar ou configurar os cookies não essenciais através do nosso aviso de cookies e nas definições do navegador.</p> },
+            { title: 'Segurança', body: <p>Adotamos medidas técnicas e organizativas adequadas para proteger os dados contra acessos não autorizados, perda, uso indevido ou divulgação indevida.</p> },
+            { title: 'Menores', body: <p>O tratamento de dados de menores observa as exigências legais aplicáveis, podendo exigir consentimento ou autorização de quem exerça as responsabilidades parentais.</p> },
+            { title: 'Alterações e contacto', body: <p>Esta Política pode ser atualizada periodicamente; recomendamos a consulta regular. Para esclarecimentos: geral@fundacaolusobrasileira.pt.</p> },
         ],
     },
     {
-        locale: 'Portugues do Brasil (PT-BR)',
+        locale: 'Português do Brasil (PT-BR)',
         sections: [
             {
-                title: 'Identificacao',
+                title: 'Identificação',
                 body: (
                     <>
-                        <p><strong>Ultima atualizacao:</strong> 11/06/2026</p>
-                        <p><strong>Controlador:</strong> Fundacao Luso-Brasileira</p>
-                        <p>Rua General Jardim, no 808, 6o andar, CEP 01223-010 - Sao Paulo, Brasil<br />CNPJ 57.018.427/0001-34 - geral@fundacaolusobrasileira.pt</p>
+                        <p><strong>Última atualização:</strong> 11/06/2026</p>
+                        <p><strong>Controlador:</strong> Fundação Luso-Brasileira</p>
+                        <p>Rua General Jardim, n.º 808, 6.º andar, CEP 01223-010 - São Paulo, Brasil<br />CNPJ 57.018.427/0001-34 - geral@fundacaolusobrasileira.pt</p>
                     </>
                 ),
             },
-            { title: 'Introducao', body: <p>A Fundacao Luso-Brasileira respeita a privacidade dos usuarios, membros, parceiros e visitantes do seu site e plataformas digitais. Esta Politica descreve como coletamos, utilizamos, armazenamos e protegemos os dados pessoais, em conformidade com a Lei no 13.709/2018 (LGPD) e, quando aplicavel, com o Regulamento (UE) 2016/679 (RGPD) e a Lei no 58/2019 de Portugal.</p> },
+            { title: 'Introdução', body: <p>A Fundação Luso-Brasileira respeita a privacidade dos usuários, membros, parceiros e visitantes do seu site e plataformas digitais. Esta Política descreve como coletamos, utilizamos, armazenamos e protegemos os dados pessoais, em conformidade com a Lei n.º 13.709/2018 (LGPD) e, quando aplicável, com o Regulamento (UE) 2016/679 (RGPD) e a Lei n.º 58/2019 de Portugal.</p> },
             { title: 'Encarregado (DPO)', body: <p>Para assuntos relativos a dados pessoais, fale com o Encarregado pelo Tratamento de Dados Pessoais em geral@fundacaolusobrasileira.pt.</p> },
-            { title: 'Dados coletados', body: <p>Coletamos dados fornecidos voluntariamente (nome, e-mail, telefone, informacoes institucionais e dados enviados em formularios de pre-cadastro, eventos ou contato) e dados tecnicos de navegacao (endereco IP, tipo de dispositivo e navegador).</p> },
-            { title: 'Finalidades e bases legais', body: <p>Tratamos os dados para fins institucionais: comunicacao, gestao de eventos e de membros, pre-cadastros, envio de informacoes e cumprimento de obrigacoes legais. As bases legais sao, conforme o caso: consentimento, execucao de contrato, cumprimento de obrigacao legal e legitimo interesse (art. 7o da LGPD).</p> },
-            { title: 'Compartilhamento', body: <p>A Fundacao nao comercializa dados pessoais. O compartilhamento ocorre apenas quando necessario a execucao de atividades institucionais, ao cumprimento de obrigacoes legais ou mediante consentimento do titular, com operadores obrigados a confidencialidade.</p> },
-            { title: 'Transferencias internacionais', body: <p>Por ser uma entidade luso-brasileira, pode haver transferencia de dados entre o Brasil e Portugal/Uniao Europeia. Tais transferencias observam as garantias previstas nos arts. 33 a 36 da LGPD e nos arts. 44 a 49 do RGPD.</p> },
-            { title: 'Retencao', body: <p>Os dados sao mantidos apenas pelo tempo necessario as finalidades informadas ou pelos prazos legais aplicaveis, sendo depois eliminados ou anonimizados.</p> },
-            { title: 'Direitos dos titulares', body: <p>Voce pode exercer os direitos de acesso, correcao, atualizacao, exclusao, anonimizacao, portabilidade, oposicao e revogacao do consentimento, entre outros previstos no art. 18 da LGPD. Pode tambem apresentar reclamacao a Autoridade Nacional de Protecao de Dados (ANPD) ou a CNPD, em Portugal.</p> },
-            { title: 'Cookies', body: <p>Utilizamos cookies essenciais ao funcionamento do site e, mediante consentimento, cookies analiticos. Voce pode aceitar, recusar ou configurar os cookies nao essenciais por meio do aviso de cookies e das configuracoes do navegador.</p> },
-            { title: 'Seguranca', body: <p>Adotamos medidas tecnicas e organizacionais adequadas para proteger os dados contra acessos nao autorizados, perda, uso indevido ou divulgacao indevida.</p> },
-            { title: 'Criancas e adolescentes', body: <p>O tratamento de dados de criancas e adolescentes observa o art. 14 da LGPD, podendo exigir o consentimento especifico de pelo menos um dos pais ou responsavel legal.</p> },
-            { title: 'Alteracoes e contato', body: <p>Esta Politica pode ser atualizada periodicamente; recomendamos a consulta regular. Para duvidas: geral@fundacaolusobrasileira.pt.</p> },
+            { title: 'Dados coletados', body: <p>Coletamos dados fornecidos voluntariamente (nome, e-mail, telefone, informações institucionais e dados enviados em formulários de pré-cadastro, eventos ou contato) e dados técnicos de navegação (endereço IP, tipo de dispositivo e navegador).</p> },
+            { title: 'Finalidades e bases legais', body: <p>Tratamos os dados para fins institucionais: comunicação, gestão de eventos e de membros, pré-cadastros, envio de informações e cumprimento de obrigações legais. As bases legais são, conforme o caso: consentimento, execução de contrato, cumprimento de obrigação legal e legítimo interesse (art. 7.º da LGPD).</p> },
+            { title: 'Compartilhamento', body: <p>A Fundação não comercializa dados pessoais. O compartilhamento ocorre apenas quando necessário à execução de atividades institucionais, ao cumprimento de obrigações legais ou mediante consentimento do titular, com operadores obrigados à confidencialidade.</p> },
+            { title: 'Transferências internacionais', body: <p>Por ser uma entidade luso-brasileira, pode haver transferência de dados entre o Brasil e Portugal/União Europeia. Tais transferências observam as garantias previstas nos arts. 33 a 36 da LGPD e nos arts. 44 a 49 do RGPD.</p> },
+            { title: 'Retenção', body: <p>Os dados são mantidos apenas pelo tempo necessário às finalidades informadas ou pelos prazos legais aplicáveis, sendo depois eliminados ou anonimizados.</p> },
+            { title: 'Direitos dos titulares', body: <p>Você pode exercer os direitos de acesso, correção, atualização, exclusão, anonimização, portabilidade, oposição e revogação do consentimento, entre outros previstos no art. 18 da LGPD. Pode também apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD) ou à CNPD, em Portugal.</p> },
+            { title: 'Cookies', body: <p>Utilizamos cookies essenciais ao funcionamento do site e, mediante consentimento, cookies analíticos. Você pode aceitar, recusar ou configurar os cookies não essenciais por meio do aviso de cookies e das configurações do navegador.</p> },
+            { title: 'Segurança', body: <p>Adotamos medidas técnicas e organizacionais adequadas para proteger os dados contra acessos não autorizados, perda, uso indevido ou divulgação indevida.</p> },
+            { title: 'Crianças e adolescentes', body: <p>O tratamento de dados de crianças e adolescentes observa o art. 14 da LGPD, podendo exigir o consentimento específico de pelo menos um dos pais ou responsável legal.</p> },
+            { title: 'Alterações e contato', body: <p>Esta Política pode ser atualizada periodicamente; recomendamos a consulta regular. Para dúvidas: geral@fundacaolusobrasileira.pt.</p> },
         ],
     },
 ];
 
 const termsLocales: LegalLocaleBlock[] = [
     {
-        locale: 'Portugues de Portugal (PT-PT)',
+        locale: 'Português de Portugal (PT-PT)',
         sections: [
-            { title: 'Identificacao', body: <><p><strong>Ultima atualizacao:</strong> 11/06/2026</p><p><strong>Entidade:</strong> Fundacao Luso-Brasileira</p></> },
-            { title: 'Aceitacao', body: <p>Ao aceder e utilizar este sitio, o utilizador aceita os presentes Termos de Uso. Caso nao concorde, recomenda-se que nao utilize os servicos e conteudos disponibilizados.</p> },
-            { title: 'Finalidade do sitio', body: <p>O sitio tem carater institucional, informativo e cultural, destinado a divulgar iniciativas, eventos, projetos e conteudos relativos a cooperacao entre Portugal, o Brasil e a lusofonia.</p> },
-            { title: 'Uso adequado', body: <p>O utilizador compromete-se a utilizar o sitio de forma etica, legal e responsavel, nao praticando atos que comprometam a seguranca, a integridade ou o funcionamento da plataforma.</p> },
-            { title: 'Propriedade intelectual', body: <p>Os conteudos do sitio (textos, imagens, marcas, logotipos e materiais institucionais) estao protegidos por direitos de autor e pertencem a Fundacao Luso-Brasileira ou aos seus parceiros, sendo vedada a reproducao sem autorizacao previa.</p> },
-            { title: 'Ligacoes externas', body: <p>O sitio pode conter ligacoes para paginas externas. A Fundacao nao se responsabiliza pelo conteudo, politicas ou praticas desses sitios.</p> },
-            { title: 'Limitacao de responsabilidade', body: <p>A Fundacao esforca-se por manter as informacoes atualizadas e corretas, mas, na medida permitida pela lei aplicavel, nao se responsabiliza por eventuais erros, indisponibilidades temporarias ou danos decorrentes do uso do sitio. Esta clausula nao afasta os direitos imperativos dos consumidores.</p> },
-            { title: 'Protecao de dados', body: <p>O tratamento de dados pessoais rege-se pela Politica de Privacidade da Fundacao, que faz parte integrante destes Termos.</p> },
-            { title: 'Alteracoes', body: <p>A Fundacao pode alterar estes Termos a qualquer momento; as alteracoes relevantes serao assinaladas com a respetiva data, recomendando-se a consulta periodica desta pagina.</p> },
-            { title: 'Lei aplicavel e foro', body: <p>Estes Termos regem-se pela lei portuguesa e, quando aplicavel, pela lei brasileira, sem prejuizo das normas imperativas de protecao do consumidor do pais de residencia do utilizador. O foro competente e o legalmente estabelecido.</p> },
-            { title: 'Contacto', body: <p>Para esclarecimentos sobre estes Termos, utilize os canais oficiais de contacto da Fundacao: geral@fundacaolusobrasileira.pt.</p> },
+            { title: 'Identificação', body: <><p><strong>Última atualização:</strong> 11/06/2026</p><p><strong>Entidade:</strong> Fundação Luso-Brasileira</p></> },
+            { title: 'Aceitação', body: <p>Ao aceder e utilizar este sítio, o utilizador aceita os presentes Termos de Uso. Caso não concorde, recomenda-se que não utilize os serviços e conteúdos disponibilizados.</p> },
+            { title: 'Finalidade do sítio', body: <p>O sítio tem caráter institucional, informativo e cultural, destinado a divulgar iniciativas, eventos, projetos e conteúdos relativos à cooperação entre Portugal, o Brasil e a lusofonia.</p> },
+            { title: 'Uso adequado', body: <p>O utilizador compromete-se a utilizar o sítio de forma ética, legal e responsável, não praticando atos que comprometam a segurança, a integridade ou o funcionamento da plataforma.</p> },
+            { title: 'Propriedade intelectual', body: <p>Os conteúdos do sítio (textos, imagens, marcas, logótipos e materiais institucionais) estão protegidos por direitos de autor e pertencem à Fundação Luso-Brasileira ou aos seus parceiros, sendo vedada a reprodução sem autorização prévia.</p> },
+            { title: 'Ligações externas', body: <p>O sítio pode conter ligações para páginas externas. A Fundação não se responsabiliza pelo conteúdo, políticas ou práticas desses sítios.</p> },
+            { title: 'Limitação de responsabilidade', body: <p>A Fundação esforça-se por manter as informações atualizadas e corretas, mas, na medida permitida pela lei aplicável, não se responsabiliza por eventuais erros, indisponibilidades temporárias ou danos decorrentes do uso do sítio. Esta cláusula não afasta os direitos imperativos dos consumidores.</p> },
+            { title: 'Proteção de dados', body: <p>O tratamento de dados pessoais rege-se pela Política de Privacidade da Fundação, que faz parte integrante destes Termos.</p> },
+            { title: 'Alterações', body: <p>A Fundação pode alterar estes Termos a qualquer momento; as alterações relevantes serão assinaladas com a respetiva data, recomendando-se a consulta periódica desta página.</p> },
+            { title: 'Lei aplicável e foro', body: <p>Estes Termos regem-se pela lei portuguesa e, quando aplicável, pela lei brasileira, sem prejuízo das normas imperativas de proteção do consumidor do país de residência do utilizador. O foro competente é o legalmente estabelecido.</p> },
+            { title: 'Contacto', body: <p>Para esclarecimentos sobre estes Termos, utilize os canais oficiais de contacto da Fundação: geral@fundacaolusobrasileira.pt.</p> },
         ],
     },
     {
-        locale: 'Portugues do Brasil (PT-BR)',
+        locale: 'Português do Brasil (PT-BR)',
         sections: [
-            { title: 'Identificacao', body: <><p><strong>Ultima atualizacao:</strong> 11/06/2026</p><p><strong>Entidade:</strong> Fundacao Luso-Brasileira</p></> },
-            { title: 'Aceitacao', body: <p>Ao acessar e utilizar este site, o usuario concorda com os presentes Termos de Uso. Caso nao concorde, recomenda-se nao utilizar os servicos e conteudos disponibilizados.</p> },
-            { title: 'Finalidade do site', body: <p>O site tem carater institucional, informativo e cultural, com o objetivo de divulgar iniciativas, eventos, projetos e conteudos relacionados a cooperacao entre Portugal, o Brasil e a lusofonia.</p> },
-            { title: 'Uso adequado', body: <p>O usuario compromete-se a utilizar o site de forma etica, legal e responsavel, nao praticando atos que comprometam a seguranca, a integridade ou o funcionamento da plataforma.</p> },
-            { title: 'Propriedade intelectual', body: <p>Todo o conteudo do site (textos, imagens, marcas, logotipos e materiais institucionais) e protegido por direitos autorais e pertence a Fundacao Luso-Brasileira ou a seus parceiros, sendo vedada a reproducao sem autorizacao previa.</p> },
-            { title: 'Links externos', body: <p>O site pode conter links para paginas externas. A Fundacao nao se responsabiliza pelo conteudo, politicas ou praticas desses sites.</p> },
-            { title: 'Limitacao de responsabilidade', body: <p>A Fundacao empenha-se em manter as informacoes atualizadas e corretas, mas, nos limites permitidos pela lei aplicavel, nao se responsabiliza por eventuais erros, indisponibilidades temporarias ou danos decorrentes do uso do site. Esta clausula nao afasta os direitos do consumidor previstos no Codigo de Defesa do Consumidor.</p> },
-            { title: 'Protecao de dados', body: <p>O tratamento de dados pessoais rege-se pela Politica de Privacidade da Fundacao, que integra estes Termos.</p> },
-            { title: 'Alteracoes', body: <p>A Fundacao pode alterar estes Termos a qualquer momento; as alteracoes relevantes serao indicadas com a respectiva data, recomendando-se a consulta periodica desta pagina.</p> },
-            { title: 'Lei aplicavel e foro', body: <p>Estes Termos sao regidos pela legislacao brasileira e, quando aplicavel, pela legislacao portuguesa, sem prejuizo das normas imperativas de protecao do consumidor do local de residencia do usuario. Fica eleito o foro legalmente competente, salvo norma legal em contrario.</p> },
-            { title: 'Contato', body: <p>Para esclarecimentos sobre estes Termos, utilize os canais oficiais de contato da Fundacao: geral@fundacaolusobrasileira.pt.</p> },
+            { title: 'Identificação', body: <><p><strong>Última atualização:</strong> 11/06/2026</p><p><strong>Entidade:</strong> Fundação Luso-Brasileira</p></> },
+            { title: 'Aceitação', body: <p>Ao acessar e utilizar este site, o usuário concorda com os presentes Termos de Uso. Caso não concorde, recomenda-se não utilizar os serviços e conteúdos disponibilizados.</p> },
+            { title: 'Finalidade do site', body: <p>O site tem caráter institucional, informativo e cultural, com o objetivo de divulgar iniciativas, eventos, projetos e conteúdos relacionados à cooperação entre Portugal, o Brasil e a lusofonia.</p> },
+            { title: 'Uso adequado', body: <p>O usuário compromete-se a utilizar o site de forma ética, legal e responsável, não praticando atos que comprometam a segurança, a integridade ou o funcionamento da plataforma.</p> },
+            { title: 'Propriedade intelectual', body: <p>Todo o conteúdo do site (textos, imagens, marcas, logotipos e materiais institucionais) é protegido por direitos autorais e pertence à Fundação Luso-Brasileira ou a seus parceiros, sendo vedada a reprodução sem autorização prévia.</p> },
+            { title: 'Links externos', body: <p>O site pode conter links para páginas externas. A Fundação não se responsabiliza pelo conteúdo, políticas ou práticas desses sites.</p> },
+            { title: 'Limitação de responsabilidade', body: <p>A Fundação empenha-se em manter as informações atualizadas e corretas, mas, nos limites permitidos pela lei aplicável, não se responsabiliza por eventuais erros, indisponibilidades temporárias ou danos decorrentes do uso do site. Esta cláusula não afasta os direitos do consumidor previstos no Código de Defesa do Consumidor.</p> },
+            { title: 'Proteção de dados', body: <p>O tratamento de dados pessoais rege-se pela Política de Privacidade da Fundação, que integra estes Termos.</p> },
+            { title: 'Alterações', body: <p>A Fundação pode alterar estes Termos a qualquer momento; as alterações relevantes serão indicadas com a respectiva data, recomendando-se a consulta periódica desta página.</p> },
+            { title: 'Lei aplicável e foro', body: <p>Estes Termos são regidos pela legislação brasileira e, quando aplicável, pela legislação portuguesa, sem prejuízo das normas imperativas de proteção do consumidor do local de residência do usuário. Fica eleito o foro legalmente competente, salvo norma legal em contrário.</p> },
+            { title: 'Contato', body: <p>Para esclarecimentos sobre estes Termos, utilize os canais oficiais de contato da Fundação: geral@fundacaolusobrasileira.pt.</p> },
         ],
     },
 ];
 
 export const PrivacyPage = () => {
-    usePageMeta('Politica de Privacidade - Fundacao Luso-Brasileira', 'Compromisso com a transparencia, a seguranca da informacao e a protecao de dados pessoais.');
+    usePageMeta('Política de Privacidade - Fundação Luso-Brasileira', 'Compromisso com a transparência, a segurança da informação e a proteção de dados pessoais.');
 
     return (
         <LegalPageLayout
-            title="Politica de Privacidade"
-            subtitle="Versoes oficiais em portugues de Portugal e portugues do Brasil para o tratamento de dados pessoais."
+            title="Política de Privacidade"
+            subtitle="Versões oficiais em português de Portugal e português do Brasil para o tratamento de dados pessoais."
         >
             {privacyLocales.map((localeBlock, index) => (
                 <LegalLocale key={localeBlock.locale} {...localeBlock} delay={index * 100} />
@@ -182,12 +182,12 @@ export const PrivacyPage = () => {
 };
 
 export const TermsPage = () => {
-    usePageMeta('Termos de Uso - Fundacao Luso-Brasileira', 'Versoes oficiais em portugues de Portugal e portugues do Brasil.');
+    usePageMeta('Termos de Uso - Fundação Luso-Brasileira', 'Versões oficiais em português de Portugal e português do Brasil.');
 
     return (
         <LegalPageLayout
             title="Termos de Uso"
-            subtitle="Condicoes oficiais de utilizacao do site e das plataformas digitais da Fundacao Luso-Brasileira."
+            subtitle="Condições oficiais de utilização do site e das plataformas digitais da Fundação Luso-Brasileira."
         >
             {termsLocales.map((localeBlock, index) => (
                 <LegalLocale key={localeBlock.locale} {...localeBlock} delay={index * 100} />

@@ -1,16 +1,18 @@
 import { config as loadEnv } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import http from 'node:http';
+import { assertSafeE2ETarget } from './guardTestTarget';
 
 loadEnv({ path: '.env.e2e' });
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
+// Aborta se o alvo for producao ou se faltarem credenciais dedicadas.
+const { supabaseUrl, serviceRoleKey } = assertSafeE2ETarget();
+
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-const serviceRoleKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.E2E_AUTH_BYPASS_PORT || '8787');
 
-if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
-  throw new Error('E2E auth bypass server requires VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY and E2E_SUPABASE_SERVICE_ROLE_KEY.');
+if (!supabaseAnonKey) {
+  throw new Error('E2E auth bypass server requires VITE_SUPABASE_ANON_KEY (defina-a em .env.e2e).');
 }
 
 const anonClient = createClient(supabaseUrl, supabaseAnonKey, {

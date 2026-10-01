@@ -89,7 +89,7 @@ const EventCard: React.FC<{
 };
 
 export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
-  usePageMeta("Eventos da Fundacao – Cultura, Diplomacia e Inovacao", "Confira nossa programacao completa de concertos, exposicoes e seminarios.");
+  usePageMeta("Eventos da Fundação – Cultura, Diplomacia e Inovação", "Confira a nossa programação completa de concertos, exposições e seminários.");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -196,12 +196,12 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
           <div className="absolute bottom-[0%] left-[10%] w-[40vw] h-[40vw] bg-black rounded-full blur-[120px] opacity-60"></div>
         </div>
         <div className="relative z-10 text-center max-w-5xl mx-auto animate-fadeInUpSlow">
-          <Badge variant="gold" className="mb-8">Programacao</Badge>
+          <Badge variant="gold" className="mb-8">Programação</Badge>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-light text-white mb-8 tracking-tighter leading-[1.05]">
             Agenda <span className="font-serif italic text-white/40 pr-2">Cultural</span>
           </h1>
           <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
-            Concertos, exposicoes e conferencias que celebram a lusofonia.
+            Concertos, exposições e conferências que celebram a lusofonia.
           </p>
         </div>
       </section>
@@ -293,7 +293,7 @@ export const EventosPage = ({ events: eventsProp }: { events?: Event[] }) => {
       <ConfirmDialog
         isOpen={!!itemToDelete}
         title="Confirmar exclusao"
-        description="Esta acao e permanente e nao pode ser desfeita."
+        description="Esta ação é permanente e não pode ser desfeita."
         confirmLabel="Excluir definitivamente"
         onConfirm={confirmDelete}
         onCancel={() => setItemToDelete(null)}

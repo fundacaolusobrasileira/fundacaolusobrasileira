@@ -16,11 +16,11 @@ import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
 import { syncPreCadastros } from './services/precadastros.service';
 import { syncEstatutosLeads } from './services/estatutos-leads.service';
-import { resolveUserRole } from './services/auth.service';
+import { resolveUserRoleDetailed, decideSessionRole } from './services/auth.service';
 import {
   AUTH_SESSION, AUTH_LOADING,
   PRECADASTROS, PENDING_MEDIA_SUBMISSIONS, ACTIVITY_LOG, ESTATUTOS_LEADS,
-  setAuthSession, setAuthLoading, notifyState,
+  setAuthSession, setAuthLoading, notifyState, showToast,
 } from './store/app.store';
 
 // --- Data Sync ---
@@ -76,10 +76,20 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     syncEvents();
     clearEditorOnlyState();
 
-    const userRole = await resolveUserRole(session.user.id);
+    const roleResolution = await resolveUserRoleDetailed(session.user.id);
 
     if (generation !== authGeneration) {
       return;
+    }
+
+    // P1: NUNCA degradar privilégio por falha de infraestrutura. Se não
+    // conseguimos confirmar o papel, mantemos o que já tínhamos para ESTE
+    // utilizador; se não havia nenhum, ficamos restritos (seguro por omissão)
+    // mas dizemos ao utilizador em vez de o rebaixar em silêncio.
+    const decision = decideSessionRole(roleResolution, session.user.id, AUTH_SESSION);
+    const userRole = decision.role;
+    if (decision.unconfirmed && !decision.keptPrevious) {
+      showToast('Não foi possível confirmar as suas permissões. Tente recarregar a página.', 'error');
     }
 
     setAuthSession({

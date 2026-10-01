@@ -9,7 +9,7 @@ import type { Event } from '../../types';
 import { ArrowLeft, Check, AlertCircle, Eye, FolderOpen } from 'lucide-react';
 
 export const DashboardEventosPage = () => {
-  usePageMeta("Gestao de Midia – Dashboard", "Gerencie os albuns e submissoes da comunidade.");
+  usePageMeta("Gestão de Mídia – Dashboard", "Faça a gestão dos álbuns e submissões da comunidade.");
   const navigate = useNavigate();
   const [tick, setTick] = useState(0);
 
@@ -27,7 +27,7 @@ export const DashboardEventosPage = () => {
               <Button variant="ghost" onClick={() => navigate('/dashboard')} className="pl-0 text-slate-400 mb-2">
                  <ArrowLeft size={16} className="mr-2" /> Voltar ao Dashboard
               </Button>
-              <h1 className="text-3xl font-light text-slate-900">Midia de Eventos</h1>
+              <h1 className="text-3xl font-light text-slate-900">Mídia de Eventos</h1>
            </div>
         </div>
 
@@ -73,7 +73,7 @@ export const DashboardEventosPage = () => {
 
                        <Link to={`/dashboard/eventos/${event.id}/midias`}>
                           <Button variant={pendingCount > 0 ? 'primary' : 'outline'} className="py-2.5 px-6 text-sm h-auto rounded-xl">
-                             Gerir Midia
+                             Gerir Mídia
                           </Button>
                        </Link>
                     </div>
@@ -92,7 +92,7 @@ export const DashboardMediaGerirPage = () => {
   const [event, setEvent] = useState<Event | undefined>(EVENTS.find(e => e.id === id));
   const [tick, setTick] = useState(0);
 
-  usePageMeta("Curadoria de Midia", "Aprove ou reprove submissoes.");
+  usePageMeta("Curadoria de Mídia", "Aprove ou reprove submissões.");
 
   useEffect(() => {
     const handleStateUpdate = () => {
@@ -105,7 +105,7 @@ export const DashboardMediaGerirPage = () => {
     return () => window.removeEventListener(FLB_STATE_EVENT, handleStateUpdate);
   }, [id]);
 
-  if (!event) return <div className="p-20 text-center">Evento nao encontrado</div>;
+  if (!event) return <div className="p-20 text-center">Evento não encontrado</div>;
 
   const pendingItems = PENDING_MEDIA_SUBMISSIONS.filter(s => s.eventId === event.id);
   const publishedItems = event.gallery || [];
@@ -127,13 +127,13 @@ export const DashboardMediaGerirPage = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                <div>
                   <Button variant="ghost" onClick={() => navigate('/dashboard/eventos')} className="pl-0 text-slate-400 mb-2">
-                     <ArrowLeft size={16} className="mr-2" /> Voltar a lista
+                     <ArrowLeft size={16} className="mr-2" /> Voltar à lista
                   </Button>
                   <h1 className="text-3xl font-light text-slate-900">Curadoria: <span className="font-medium">{event.title}</span></h1>
                </div>
                <a href={`#/eventos/${id}`} target="_blank" rel="noreferrer">
                   <Button variant="white" className="text-sm h-auto py-3 gap-2 text-brand-900 border border-slate-200 shadow-sm hover:shadow-md">
-                     Visualizar Album <Eye size={16} />
+                     Visualizar Álbum <Eye size={16} />
                   </Button>
                </a>
             </div>
@@ -153,7 +153,7 @@ export const DashboardMediaGerirPage = () => {
                {pendingItems.length === 0 ? (
                   <div className="p-12 text-center text-slate-400 bg-white/50 rounded-3xl border border-dashed border-slate-200 animate-fade-in-up-small">
                      <Check size={40} className="mx-auto mb-4 opacity-20" />
-                     <p className="font-light">Tudo limpo! Nenhuma submissao pendente para analise.</p>
+                     <p className="font-light">Tudo limpo! Nenhuma submissão pendente para análise.</p>
                   </div>
                ) : (
                   <div className="space-y-4">
@@ -175,14 +175,25 @@ export const DashboardMediaGerirPage = () => {
                      <div className="w-8 h-8 rounded-full bg-brand-900/10 flex items-center justify-center text-brand-900">
                         <FolderOpen size={18} />
                      </div>
-                     <h2 className="text-lg font-medium text-slate-900">Publicadas no Album <span className="text-slate-400 text-sm font-normal">({publishedItems.length})</span></h2>
+                     <h2 className="text-lg font-medium text-slate-900">Publicadas no Álbum <span className="text-slate-400 text-sm font-normal">({publishedItems.length})</span></h2>
                   </div>
                </div>
 
                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {communityPublished.map(item => (
                      <div key={item.id} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm hover:shadow-lg transition-all border border-green-100 animate-fade-in-up-small">
-                        <img src={item.url} className="w-full h-full object-cover" alt="" />
+                        {item.kind === 'video' ? (
+                           <video
+                             src={item.url}
+                             className="w-full h-full object-cover bg-slate-900"
+                             muted
+                             playsInline
+                             preload="metadata"
+                             aria-label={item.caption || 'Vídeo da comunidade'}
+                           />
+                        ) : (
+                           <img src={item.url} className="w-full h-full object-cover" alt={item.caption || 'Fotografia da comunidade'} />
+                        )}
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-2">
                            <p className="text-xs font-bold mb-1">{item.authorName}</p>
                            <p className="text-[10px] text-white/70">Comunidade</p>
@@ -196,7 +207,18 @@ export const DashboardMediaGerirPage = () => {
 
                   {officialPublished.map(item => (
                      <div key={item.id} className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm hover:shadow-lg transition-all opacity-80 hover:opacity-100 animate-fade-in-up-small">
-                        <img src={item.url} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all" alt="" />
+                        {item.kind === 'video' ? (
+                           <video
+                             src={item.url}
+                             className="w-full h-full object-cover bg-slate-900 grayscale-[30%] group-hover:grayscale-0 transition-all"
+                             muted
+                             playsInline
+                             preload="metadata"
+                             aria-label={item.caption || 'Vídeo oficial do álbum'}
+                           />
+                        ) : (
+                           <img src={item.url} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all" alt={item.caption || 'Fotografia oficial do álbum'} />
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                            <p className="text-white text-[10px] font-bold uppercase tracking-widest">Oficial</p>
                         </div>
@@ -206,7 +228,7 @@ export const DashboardMediaGerirPage = () => {
                </div>
 
                {publishedItems.length === 0 && (
-                  <p className="text-slate-400 text-center italic mt-10">O album ainda esta vazio.</p>
+                  <p className="text-slate-400 text-center italic mt-10">O álbum ainda está vazio.</p>
                )}
             </div>
          </div>
