@@ -18,8 +18,8 @@ const OFFICES = [
     country: 'Portugal',
     city: 'Lisboa',
     lines: [
-      'Rua de S. Marçal, n.º 77/79',
-      'Freguesia de Santo António, concelho de Lisboa',
+      'Rua Pêro da Covilhã, 36',
+      '1400-296 Lisboa',
       'Portugal',
     ],
     registry: 'Número de identificação de pessoa coletiva 503.071.706',

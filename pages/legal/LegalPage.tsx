@@ -84,7 +84,7 @@ const privacyLocales: LegalLocaleBlock[] = [
                     <>
                         <p><strong>Última atualização:</strong> 11/06/2026</p>
                         <p><strong>Responsável pelo tratamento:</strong> Fundação Luso-Brasileira</p>
-                        <p>Rua de S. Marçal, n.º 77/79, Freguesia de Santo António, concelho de Lisboa, com o número de identificação de pessoa coletiva 503.071.706 - Portugal - geral@fundacaolusobrasileira.pt</p>
+                        <p>Rua Pêro da Covilhã, 36, 1400-296 Lisboa, com o número de identificação de pessoa coletiva 503.071.706 - Portugal - geral@fundacaolusobrasileira.pt</p>
                     </>
                 ),
             },
