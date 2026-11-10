@@ -55,7 +55,6 @@ export const Footer = () => {
                 </a>
               </p>
               <p>Rua Pêro da Covilhã, 36 — 1400-296 Lisboa, Portugal</p>
-              <p>Rua General Jardim, n.º 808, 6.º andar — São Paulo, Brasil</p>
             </address>
           </div>
 

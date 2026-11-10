@@ -573,36 +573,59 @@ const formatEventDate = (d: string) => {
   return isNaN(p.getTime()) ? d : p.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+/**
+ * Cabeçalho do evento — "cartaz ao lado".
+ *
+ * Antes: moldura fixa `aspect-[16/9]` com `object-cover`. Um cartaz vertical
+ * (9:16) era forçado a uma caixa deitada e cortado a uma tira do meio, perdendo
+ * topo e rodapé — que é onde costuma estar o essencial.
+ *
+ * Agora: o cartaz mantém a proporção original (`object-contain` + `h-auto`),
+ * ocupa uma coluna própria e o texto fica ao lado. Nada é cortado, seja a
+ * imagem vertical, quadrada ou horizontal. No telemóvel empilha, com o cartaz
+ * limitado em largura — a 9:16 uma imagem à largura toda daria uma coluna
+ * altíssima e empurraria o título para fora do ecrã.
+ */
 export const EventDetailHeader = ({ event }: { event: Event }) => {
+    const poster = event.coverImage || event.image;
+
     return (
-        <div className="relative aspect-[16/9] min-h-[320px] max-h-[620px] w-full overflow-hidden bg-brand-900">
-            <div className="absolute inset-0">
-                {(event.coverImage || event.image) && (
-                    <img
-                        src={event.coverImage || event.image}
-                        alt={event.title}
-                        className="w-full h-full object-cover object-center"
-                    />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 via-brand-900/50 to-transparent"></div>
-            </div>
-            
-            <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 pb-16 md:pb-24">
-                <div className="max-w-[1400px] mx-auto animate-fadeInUpSlow">
-                    <Badge variant="gold" className="mb-6">{event.category}</Badge>
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif text-white leading-[1.05] mb-6 drop-shadow-lg max-w-4xl">
-                        {event.title}
-                    </h1>
-                    
-                    <div className="flex flex-wrap gap-6 text-white/90">
-                         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                             <Calendar size={18} className="text-sand-400" />
-                             <span className="text-sm font-medium">{formatEventDate(event.date)} {event.time && `• ${event.time}`}</span>
-                         </div>
-                         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                             <MapPin size={18} className="text-sand-400" />
-                             <span className="text-sm font-medium">{event.location}, {event.city}</span>
-                         </div>
+        <div className="relative w-full overflow-hidden bg-brand-900">
+            {/* Brilho decorativo; substitui a fotografia de fundo que antes era cortada. */}
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'radial-gradient(90% 120% at 12% 50%, rgba(47,77,64,0.55), transparent 70%)' }}
+            />
+
+            <div className="relative max-w-[1400px] mx-auto px-6 md:px-12 py-12 md:py-20">
+                <div className="flex flex-col md:flex-row items-center gap-10 md:gap-14 animate-fadeInUpSlow">
+                    {poster && (
+                        <div className="w-full max-w-[250px] md:max-w-[340px] shrink-0">
+                            <img
+                                src={poster}
+                                alt={event.title}
+                                className="w-full h-auto max-h-[70vh] object-contain rounded-xl shadow-2xl"
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex-1 min-w-0 text-center md:text-left">
+                        <Badge variant="gold" className="mb-6">{event.category}</Badge>
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white leading-[1.05] mb-6 max-w-4xl">
+                            {event.title}
+                        </h1>
+
+                        <div className="flex flex-wrap gap-4 justify-center md:justify-start text-white/90">
+                             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                                 <Calendar size={18} className="text-sand-400" />
+                                 <span className="text-sm font-medium">{formatEventDate(event.date)} {event.time && `• ${event.time}`}</span>
+                             </div>
+                             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                                 <MapPin size={18} className="text-sand-400" />
+                                 <span className="text-sm font-medium">{event.location}, {event.city}</span>
+                             </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,272 @@
+<meta charset="utf-8">
+<title>Opções de cabeçalho — página de evento</title>
+<style>
+  :root{
+    --brand900:#0A1410; --brand800:#13211C; --brand700:#1F332B; --brand600:#2F4D40;
+    --sand400:#C9AF88; --sand300:#DBC9AD; --page:#F9FAFB;
+    --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+    --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#EDEFF1;font-family:var(--sans);color:#0f172a}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+  h1.page{font-family:var(--serif);font-size:30px;font-weight:400;margin:0 0 6px}
+  .sub{color:#64748b;font-size:14px;margin:0 0 28px;line-height:1.6}
+
+  .opt{background:#fff;border-radius:18px;overflow:hidden;margin-bottom:34px;
+       box-shadow:0 10px 30px -12px rgba(0,0,0,.25)}
+  .opt > header{padding:16px 22px;border-bottom:1px solid #e8ecef;display:flex;
+       align-items:flex-start;gap:14px;flex-wrap:wrap}
+  .tag{background:var(--brand900);color:#fff;font-size:11px;font-weight:700;
+       letter-spacing:.14em;padding:6px 11px;border-radius:999px;white-space:nowrap}
+  .tag.rec{background:var(--sand400);color:var(--brand900)}
+  .hname{font-family:var(--serif);font-size:19px;margin:0 0 3px}
+  .hdesc{font-size:13px;color:#64748b;margin:0;line-height:1.55;max-width:80ch}
+  .verdict{font-size:12px;margin:8px 0 0;line-height:1.5}
+  .ok{color:#15803d}.warn{color:#b45309}
+
+  /* ---------- cartaz 9:16 simulado (desenhado em CSS, sem imagens externas) ---------- */
+  .flyer{position:relative;aspect-ratio:9/16;background:
+      radial-gradient(120% 70% at 50% 0%,#20362c 0%,#0A1410 60%),var(--brand900);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:#fff;text-align:center;overflow:hidden}
+  .flyer::after{content:"";position:absolute;inset:0;
+      background:repeating-linear-gradient(135deg,rgba(201,175,136,.05) 0 2px,transparent 2px 9px)}
+  .flyer .kicker{font-size:.55em;letter-spacing:.3em;color:var(--sand400);
+      text-transform:uppercase;margin-bottom:.9em;position:relative;z-index:1}
+  .flyer .big{font-family:var(--serif);font-size:2.15em;line-height:.95;
+      letter-spacing:-.02em;position:relative;z-index:1}
+  .flyer .yr{font-family:var(--serif);font-size:3.1em;color:var(--sand400);
+      line-height:.9;margin-top:.08em;position:relative;z-index:1}
+  .flyer .ft{position:absolute;bottom:7%;font-size:.5em;letter-spacing:.22em;
+      color:rgba(255,255,255,.55);text-transform:uppercase;z-index:1}
+
+  .meta{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);
+      padding:8px 14px;border-radius:999px;font-size:12.5px;color:rgba(255,255,255,.92)}
+  .chip.dark{background:#fff;border-color:#e2e8f0;color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--sand400);flex:none}
+  .badge{display:inline-block;background:rgba(201,175,136,.18);color:var(--sand300);
+      border:1px solid rgba(201,175,136,.35);font-size:10px;font-weight:700;
+      letter-spacing:.17em;padding:5px 11px;border-radius:999px;text-transform:uppercase}
+  .badge.on-light{background:rgba(10,20,16,.06);color:var(--brand600);border-color:rgba(10,20,16,.12)}
+  .ttl{font-family:var(--serif);font-weight:400;color:#fff;line-height:1.04;
+      letter-spacing:-.015em;margin:16px 0 0}
+
+  /* ---------- A: cartaz ao lado ---------- */
+  .A{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:40px;
+     background:var(--brand900);padding:44px 48px;align-items:center;position:relative;overflow:hidden}
+  .A::before{content:"";position:absolute;inset:0;
+     background:radial-gradient(90% 120% at 12% 50%,rgba(47,77,64,.55),transparent 70%)}
+  .A > *{position:relative;z-index:1}
+  .A .flyer{border-radius:12px;box-shadow:0 26px 60px -18px rgba(0,0,0,.8);font-size:17px}
+  .A .ttl{font-size:46px}
+
+  /* ---------- B: fundo desfocado ---------- */
+  .B{position:relative;height:440px;background:var(--brand900);overflow:hidden;
+     display:flex;align-items:center;justify-content:center}
+  .B .bg{position:absolute;inset:-60px;filter:blur(42px) saturate(1.25);opacity:.55;
+     background:radial-gradient(60% 60% at 50% 35%,#2F4D40,#0A1410 70%)}
+  .B .veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,20,16,.96) 6%,rgba(10,20,16,.45) 55%,rgba(10,20,16,.7))}
+  .B .inner{position:relative;z-index:1;display:flex;gap:36px;align-items:center;
+     padding:0 44px;max-width:1000px;width:100%}
+  .B .flyer{height:330px;aspect-ratio:9/16;flex:none;border-radius:10px;font-size:15px;
+     box-shadow:0 20px 50px -14px rgba(0,0,0,.85)}
+  .B .ttl{font-size:40px}
+
+  /* ---------- C: faixa + cartaz em cartão ---------- */
+  .C .band{background:var(--brand900);padding:44px 48px 86px;position:relative;overflow:hidden}
+  .C .band::before{content:"";position:absolute;inset:0;
+     background:radial-gradient(70% 140% at 85% 0%,rgba(201,175,136,.14),transparent 60%)}
+  .C .band > *{position:relative;z-index:1}
+  .C .ttl{font-size:42px;max-width:17ch}
+  .C .stage{background:var(--page);padding:0 48px 44px;display:flex;gap:34px;align-items:flex-start}
+  .C .card{margin-top:-58px;background:#fff;padding:12px;border-radius:16px;
+     box-shadow:0 24px 50px -16px rgba(0,0,0,.28);flex:none}
+  .C .flyer{width:232px;border-radius:9px;font-size:12px}
+  .C .side{padding-top:28px;color:#475569;font-size:14px;line-height:1.75;max-width:52ch}
+
+  /* ---------- D: adaptativo ---------- */
+  .D{background:var(--brand900)}
+  .D .row{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .D .case{padding:22px 26px 28px;border-right:1px solid rgba(255,255,255,.1)}
+  .D .case:last-child{border-right:0}
+  .D .caseh{font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+     color:var(--sand400);margin:0 0 14px;font-weight:700}
+  .D .mini{position:relative;border-radius:10px;overflow:hidden;background:#13211C;
+     display:flex;align-items:center;justify-content:center;height:210px}
+  .D .mini .flyer{height:186px;aspect-ratio:9/16;border-radius:7px;font-size:8.5px;
+     box-shadow:0 12px 26px -10px rgba(0,0,0,.8);z-index:1}
+  .D .mini .wide{width:100%;height:100%;background:
+     linear-gradient(115deg,#1F332B,#2F4D40 45%,#0A1410);display:flex;
+     align-items:flex-end;padding:16px;color:#fff;font-family:var(--serif);font-size:19px}
+  .D .mini .blurbg{position:absolute;inset:-40px;filter:blur(34px);opacity:.5;
+     background:radial-gradient(50% 50% at 50% 40%,#2F4D40,#0A1410 72%)}
+  .D .cap{color:rgba(255,255,255,.62);font-size:12px;margin:11px 0 0;line-height:1.55}
+
+  .note{background:#fff;border-left:3px solid var(--sand400);border-radius:0 12px 12px 0;
+     padding:18px 22px;font-size:13.5px;line-height:1.7;color:#334155;margin-top:4px}
+  .note b{color:#0f172a}
+  code{background:#eef1f3;padding:1px 6px;border-radius:5px;font-size:12px}
+  @media (max-width:760px){
+    /* No telemóvel o cartaz NÃO deve ocupar a largura toda: a 9:16 isso
+       daria uma coluna altíssima e o texto cairia abaixo da dobra. */
+    .A{grid-template-columns:1fr;padding:28px 24px;justify-items:center;text-align:center}
+    .A .flyer{max-width:250px;width:100%}
+    .A .ttl{font-size:30px}
+    .A .meta{justify-content:center}
+    .B .inner{flex-direction:column;gap:22px;padding:26px;text-align:center}
+    .B{height:auto;padding:32px 0}
+    .B .flyer{height:300px}
+    .B .meta{justify-content:center}
+    .C .stage{flex-direction:column;align-items:center;padding:0 24px 36px}
+    .C .flyer{width:220px}
+    .C .side{padding-top:18px;text-align:center}
+    .C .band{padding:34px 24px 80px}
+    .C .ttl{font-size:30px}
+    .D .row{grid-template-columns:1fr}
+    .D .case{border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}
+  }
+</style>
+
+<div class="wrap">
+  <h1 class="page">Quatro formas de mostrar o cartaz 9:16</h1>
+  <p class="sub">
+    Hoje o cabeçalho é <code>aspect-[16/9]</code> com <code>object-cover</code>: um cartaz vertical
+    é cortado a uma tira do meio — perde-se o topo e o rodapé, que é onde costuma estar o essencial.
+    As quatro opções abaixo usam o seu evento real. O retângulo escuro simula o cartaz 9:16.
+  </p>
+
+  <!-- A -->
+  <section class="opt">
+    <header>
+      <span class="tag">Opção A</span>
+      <div>
+        <p class="hname">Cartaz ao lado</p>
+        <p class="hdesc">O cartaz aparece inteiro à esquerda, em 9:16, e o texto ocupa a direita. No telemóvel o cartaz fica em cima e o texto por baixo.</p>
+        <p class="verdict ok">Zero corte. O cartaz é o protagonista.</p>
+      </div>
+    </header>
+    <div class="A">
+      <div class="flyer">
+        <span class="kicker">Fundação Luso-Brasileira</span>
+        <span class="big">INVESTIR<br>COM FUTURO</span>
+        <span class="yr">2026</span>
+        <span class="ft">São Paulo · 24 Nov</span>
+      </div>
+      <div>
+        <span class="badge">Fundação</span>
+        <h2 class="ttl">Portugal &amp; Brasil:<br>Investir com Futuro</h2>
+        <div class="meta">
+          <span class="chip"><span class="dot"></span>24 de nov. de 2026 · 10:00</span>
+          <span class="chip"><span class="dot"></span>Tivoli Hotels, São Paulo</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="opt">
+    <header>
+      <span class="tag rec">Opção B · recomendada</span>
+      <div>
+        <p class="hname">Cartaz inteiro sobre fundo desfocado</p>
+        <p class="hdesc">Mantém a faixa larga que já existe, mas o cartaz aparece completo ao centro. O fundo é o próprio cartaz ampliado e desfocado, o que preenche a largura sem cortar nada.</p>
+        <p class="verdict ok">Zero corte e mantém a estética actual do site. É o padrão do Spotify e da Netflix.</p>
+      </div>
+    </header>
+    <div class="B">
+      <div class="bg"></div><div class="veil"></div>
+      <div class="inner">
+        <div class="flyer">
+          <span class="kicker">Fundação</span>
+          <span class="big">INVESTIR<br>COM FUTURO</span>
+          <span class="yr">2026</span>
+          <span class="ft">São Paulo</span>
+        </div>
+        <div>
+          <span class="badge">Fundação</span>
+          <h2 class="ttl">Portugal &amp; Brasil:<br>Investir com Futuro</h2>
+          <div class="meta">
+            <span class="chip"><span class="dot"></span>24 de nov. de 2026 · 10:00</span>
+            <span class="chip"><span class="dot"></span>Tivoli Hotels, São Paulo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="opt">
+    <header>
+      <span class="tag">Opção C</span>
+      <div>
+        <p class="hname">Faixa sóbria + cartaz em destaque</p>
+        <p class="hdesc">O título fica numa faixa sólida da cor da marca, sem imagem por trás. O cartaz surge logo abaixo, num cartão branco que sobe sobre a faixa.</p>
+        <p class="verdict ok">Título sempre legível. <span class="warn">Menos impacto visual à entrada.</span></p>
+      </div>
+    </header>
+    <div class="C">
+      <div class="band">
+        <span class="badge">Fundação</span>
+        <h2 class="ttl">Portugal &amp; Brasil: Investir com Futuro</h2>
+        <div class="meta">
+          <span class="chip"><span class="dot"></span>24 de nov. de 2026 · 10:00</span>
+          <span class="chip"><span class="dot"></span>Tivoli Hotels, São Paulo</span>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="card">
+          <div class="flyer">
+            <span class="kicker">Fundação</span>
+            <span class="big">INVESTIR<br>COM FUTURO</span>
+            <span class="yr">2026</span>
+            <span class="ft">São Paulo</span>
+          </div>
+        </div>
+        <p class="side">A Fundação Luso-Brasileira tem o prazer de anunciar a nova edição do seu encontro anual, que volta a reunir em São Paulo líderes, investidores e decisores dos dois países…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section class="opt">
+    <header>
+      <span class="tag">Opção D</span>
+      <div>
+        <p class="hname">Adaptativo — decide pela proporção da imagem</p>
+        <p class="hdesc">Ao carregar, mede-se a imagem: se for vertical usa a Opção B; se for horizontal mantém exactamente o cabeçalho de hoje.</p>
+        <p class="verdict ok">Os eventos antigos com imagem horizontal não mudam nada. <span class="warn">É a que tem mais código.</span></p>
+      </div>
+    </header>
+    <div class="D">
+      <div class="row">
+        <div class="case">
+          <p class="caseh">Imagem vertical (9:16) → cartaz inteiro</p>
+          <div class="mini">
+            <div class="blurbg"></div>
+            <div class="flyer"><span class="kicker">FLB</span><span class="big">INVESTIR</span><span class="yr">2026</span></div>
+          </div>
+          <p class="cap">Nada é cortado.</p>
+        </div>
+        <div class="case">
+          <p class="caseh">Imagem horizontal (16:9) → como hoje</p>
+          <div class="mini"><div class="wide">Portugal &amp; Brasil</div></div>
+          <p class="cap">Comportamento actual, intacto.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="note">
+    <b>Sobre não partir nada:</b> qualquer uma destas opções mexe apenas em
+    <code>EventDetailHeader</code> (<code>component.domain.tsx:576-611</code>). Não toca no banco,
+    nas rotas, na galeria nem no painel. Os campos <code>coverImage</code>, <code>image</code> e
+    <code>cardImage</code> continuam a existir e a ser usados como hoje — o cartão da listagem de
+    eventos não muda.
+    <br><br>
+    <b>Nota honesta:</b> os cartazes simulados aqui são desenhados em CSS. A proporção e o
+    enquadramento são fiéis, mas só verá o resultado final com o seu ficheiro real.
+  </div>
+</div>
