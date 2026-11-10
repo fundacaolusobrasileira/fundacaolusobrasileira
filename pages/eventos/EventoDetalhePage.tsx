@@ -159,7 +159,10 @@ export const EventoDetalhePage = () => {
                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
                     <span className="w-8 h-px bg-sand-400"></span> Sobre o Evento
                  </h3>
-                 <p className="text-xl text-slate-600 font-light leading-relaxed mb-12 text-justify font-serif">
+                 {/* whitespace-pre-line: o HTML colapsa quebras de linha, por isso
+                     o texto escrito no painel saía todo corrido. Esta classe
+                     preserva os parágrafos tal como foram escritos. */}
+                 <p className="text-xl text-slate-600 font-light leading-relaxed mb-12 font-serif whitespace-pre-line">
                     {event.description}
                  </p>
 

@@ -598,7 +598,10 @@ export const EventDetailHeader = ({ event }: { event: Event }) => {
                 style={{ background: 'radial-gradient(90% 120% at 12% 50%, rgba(47,77,64,0.55), transparent 70%)' }}
             />
 
-            <div className="relative max-w-[1400px] mx-auto px-6 md:px-12 py-12 md:py-20">
+            {/* pt generoso: o cabeçalho do site é fixo e sobrepõe-se ao topo da
+                página. Sem esta folga o cartaz passa por baixo do menu e fica
+                cortado — as restantes páginas usam pt-32 pela mesma razão. */}
+            <div className="relative max-w-[1400px] mx-auto px-6 md:px-12 pt-32 md:pt-40 pb-14 md:pb-20">
                 <div className="flex flex-col md:flex-row items-center gap-10 md:gap-14 animate-fadeInUpSlow">
                     {poster && (
                         <div className="w-full max-w-[250px] md:max-w-[340px] shrink-0">
