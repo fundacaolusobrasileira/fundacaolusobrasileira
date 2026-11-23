@@ -3,11 +3,13 @@ import { setAuthSession, AUTH_SESSION, isAdmin, notifyState, showToast, logActiv
 import { LoginSchema, CadastroSchema } from '../validation/schemas';
 import type { UserProfile } from '../types';
 
-// Orçamento TOTAL para resolver o papel do utilizador, repartido pelas
-// tentativas. O total mantém-se em 3s para não alongar o arranque da app.
-const ROLE_TIMEOUT_MS = 3000;
+// Orçamento POR TENTATIVA. Já esteve a 1500ms (3000 repartidos por 2
+// tentativas) e isso foi um erro: num login novo não há papel anterior para
+// preservar, por isso um timeout faz o utilizador cair em `viewer` e ser
+// expulso do dashboard. 3000ms por tentativa é o valor que o projeto sempre
+// teve; o retry acrescenta uma segunda hipótese em vez de encurtar a primeira.
+const ROLE_ATTEMPT_TIMEOUT_MS = 3000;
 const ROLE_ATTEMPTS = 2;
-const ROLE_ATTEMPT_TIMEOUT_MS = ROLE_TIMEOUT_MS / ROLE_ATTEMPTS;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const AUTH_BYPASS_URL = import.meta.env.VITE_AUTH_BYPASS_URL || 'http://127.0.0.1:8787';
 

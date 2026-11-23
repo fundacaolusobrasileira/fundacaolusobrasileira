@@ -1,5 +1,6 @@
 // store/app.store.ts
 import type { Event, Partner, PreCadastro, PendingMediaSubmission, ActivityLogItem, AuthSession, EstatutosLead, CouncilMember, InstitutionalDocument } from '../types';
+import type { Article, ArticleCategory, ArticleAuthor } from '../types/articles';
 
 export const FLB_STATE_EVENT = 'flb_state_update';
 export const FLB_TOAST_EVENT = 'flb_toast_event';
@@ -12,6 +13,22 @@ export const ACTIVITY_LOG: ActivityLogItem[] = [];
 export const ESTATUTOS_LEADS: EstatutosLead[] = [];
 export const COUNCILS: CouncilMember[] = [];
 export const DOCUMENTS: InstitutionalDocument[] = [];
+
+// --- Área Editorial -------------------------------------------------------
+// Preenchidos por services/articles.service.ts. Para visitantes contêm apenas
+// o que a RLS devolve; para editores, tudo.
+export const ARTICLES: Article[] = [];
+export const ARTICLE_CATEGORIES: ArticleCategory[] = [];
+export const ARTICLE_AUTHORS: ArticleAuthor[] = [];
+
+/** Tabela site_settings achatada em { key: value }. */
+export let SITE_SETTINGS: Record<string, unknown> = {};
+/** false até syncSiteSettings() correr — distingue "desligado" de "ainda não sei". */
+export let SITE_SETTINGS_LOADED = false;
+export const setSiteSettings = (settings: Record<string, unknown>) => { SITE_SETTINGS = settings; };
+export const setSiteSettingsLoaded = (loaded: boolean) => { SITE_SETTINGS_LOADED = loaded; };
+export let ARTICLES_LOADING = true;
+export const setArticlesLoading = (loading: boolean) => { ARTICLES_LOADING = loading; };
 export let AUTH_SESSION: AuthSession = { isLoggedIn: false, role: 'viewer' };
 export let AUTH_LOADING = true;
 export let EVENTS_LOADING = true;

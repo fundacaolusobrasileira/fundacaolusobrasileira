@@ -16,6 +16,7 @@ import { syncCommunityMedia } from './services/community-media.service';
 import { syncActivityLog } from './services/activity-log.service';
 import { syncPreCadastros } from './services/precadastros.service';
 import { syncEstatutosLeads } from './services/estatutos-leads.service';
+import { syncArticles, syncArticleTaxonomy, syncSiteSettings, isArticlesEnabled } from './services/articles.service';
 import { resolveUserRoleDetailed, decideSessionRole } from './services/auth.service';
 import {
   AUTH_SESSION, AUTH_LOADING,
@@ -39,6 +40,20 @@ syncMembers();
 syncCouncils();
 syncDocuments();
 syncEvents();
+
+// Área Editorial. `syncSiteSettings` tem de correr sempre: é dele que sai o
+// interruptor `articles_enabled` que o Header lê para decidir se mostra o link.
+//
+// Os artigos só são carregados DEPOIS, e apenas se a área estiver ligada.
+// Carregá-los no arranque acrescentava 2 consultas a toda a gente — incluindo
+// visitantes anónimos — para uma funcionalidade desligada, e competia com o
+// `resolveUserRole`, que corre contra um cronómetro no momento do login.
+syncSiteSettings().then(() => {
+  if (isArticlesEnabled()) {
+    syncArticleTaxonomy();
+    syncArticles();
+  }
+});
 
 // --- Auth Listener ---
 
@@ -105,6 +120,9 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
       syncCommunityMedia();
       syncActivityLog();
       syncEstatutosLeads();
+      // Re-sincroniza para o editor passar a ver rascunhos e agendados, que a
+      // RLS esconde de quem não está autenticado.
+      syncArticles();
     } else {
       clearEditorOnlyState();
     }
@@ -121,6 +139,8 @@ const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateCh
     syncCouncils();
     syncDocuments();
     syncEvents();
+    // Deixa cair rascunhos e agendados que o editor via enquanto autenticado.
+    syncArticles();
   }
 
   notifyState();

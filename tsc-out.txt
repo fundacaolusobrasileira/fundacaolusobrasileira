@@ -1,0 +1,2 @@
+﻿pages/dashboard/ArticleEditor.tsx(394,43): error TS2345: Argument of type 'Partial<Article>' is not assignable to parameter of type 'CreateArticleInput'.
+  Property 'title' is optional in type 'Partial<Article>' but required in type 'CreateArticleInput'.

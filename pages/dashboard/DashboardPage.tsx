@@ -8,6 +8,7 @@ import { UserManagerModal } from './UserManagerModal';
 import { BenefitsManagerSection } from './BenefitsManagerSection';
 import { CouncilManagerSection } from './CouncilManagerSection';
 import { DocumentManagerSection } from './DocumentManagerSection';
+import { ArticlesManagerSection } from './ArticlesManagerSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { updatePreCadastro, deletePreCadastro, syncPreCadastros } from '../../services/precadastros.service';
@@ -413,6 +414,8 @@ export const DashboardPage = () => {
         </div>
 
         <BenefitsManagerSection />
+
+        <ArticlesManagerSection />
 
         <CouncilManagerSection />
 

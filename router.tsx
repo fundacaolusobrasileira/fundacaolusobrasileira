@@ -99,6 +99,10 @@ const BeneficiosPage = lazy(() => import('./pages/beneficios/BeneficiosPage').th
 const LegaltechSpacePage = lazy(() => import('./pages/legaltech-space/LegaltechSpacePage').then(m => ({ default: m.LegaltechSpacePage })));
 const ParceiroPerfilPage = lazy(() => import('./pages/parceiros/ParceiroPerfilPage').then(m => ({ default: m.ParceiroPerfilPage })));
 const ContactoPage = lazy(() => import('./pages/contacto/ContactoPage').then(m => ({ default: m.ContactoPage })));
+// Área Editorial: as rotas existem sempre. É o link no menu (Header) que
+// depende de `isArticlesEnabled()` — quem souber o URL entra.
+const ArtigosPage = lazy(() => import('./pages/artigos/ArtigosPage').then(m => ({ default: m.ArtigosPage })));
+const ArtigoDetalhePage = lazy(() => import('./pages/artigos/ArtigoDetalhePage').then(m => ({ default: m.ArtigoDetalhePage })));
 
 /** Liberta o "1 reload por sessão" assim que a app monta sem falha de chunk. */
 const useClearChunkReloadFlag = () => {
@@ -125,6 +129,8 @@ export const AppRouter = () => {
       <Route path="/eventos" element={<EventosPage />} />
       <Route path="/eventos/:id" element={<EventoDetalhePage />} />
       <Route path="/eventos/:id/colaborar" element={<EventoColaborarPage />} />
+      <Route path="/artigos" element={<ArtigosPage />} />
+      <Route path="/artigos/:slug" element={<ArtigoDetalhePage />} />
       <Route path="/precadastro" element={<PreCadastroPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

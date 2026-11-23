@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowRight, LogOut } from 'lucide-react';
 import { AUTH_SESSION, FLB_STATE_EVENT } from '../../store/app.store';
 import { logout } from '../../services/auth.service';
+import { isArticlesEnabled } from '../../services/articles.service';
 import { BrandLogo } from './BrandLogo';
 
 export const Header = () => {
@@ -12,11 +13,24 @@ export const Header = () => {
   const [authTick, setAuthTick] = useState(0);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Área Editorial: o link só aparece quando o interruptor
+  // `articles_enabled` está ligado. As rotas /artigos existem sempre — a área
+  // nasce oculta do menu e entra quando for ativada. A comparação explícita
+  // com `true` evita que um valor ainda não carregado (ou uma promessa) seja
+  // lido como verdadeiro.
+  let articlesEnabled = false;
+  try {
+    articlesEnabled = isArticlesEnabled() === true;
+  } catch {
+    articlesEnabled = false;
+  }
+
   const navLinks = [
     { name: 'Início', path: '/' },
     { name: 'A Fundação', path: '/quem-somos' },
     { name: 'Pessoas', path: '/administracao' },
     { name: 'Eventos', path: '/eventos' },
+    ...(articlesEnabled ? [{ name: 'Artigos', path: '/artigos' }] : []),
     { name: 'Parceiros', path: '/parceiros' },
     { name: 'Benefícios', path: '/beneficios' },
     { name: 'Contacto', path: '/contacto' },
