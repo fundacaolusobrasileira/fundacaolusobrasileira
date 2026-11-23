@@ -1,7 +1,7 @@
 // services/media.service.ts
 import { supabase } from '../supabaseClient';
 import { logActivity, showToast } from '../store/app.store';
-import { MediaUploadSchema } from '../validation/schemas';
+import { MediaUploadSchema, CommunityMediaUploadSchema } from '../validation/schemas';
 
 // FIX: previous version used Date.now() which collided on parallel uploads
 // in the same millisecond with the same source filename. crypto.randomUUID()
@@ -40,9 +40,12 @@ export async function resolveGalleryItemSrc(item: { url: string }): Promise<stri
   return item.url || null;
 }
 
-// Upload para a pasta community/ — não requer autenticação (política RLS específica)
+// Upload para a pasta community/ — não requer autenticação (política RLS específica).
+// Usa o schema PRÓPRIO das submissões públicas: 50MB e só foto/vídeo. O
+// MediaUploadSchema (5MB) é para o painel e rejeitava quase todos os vídeos
+// de telemóvel, que é precisamente o caso de uso de um QR code num evento.
 export const saveCommunityMediaBlob = async (file: File): Promise<string> => {
-  const parsed = MediaUploadSchema.safeParse(file);
+  const parsed = CommunityMediaUploadSchema.safeParse(file);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message || 'Arquivo inválido.');
   }

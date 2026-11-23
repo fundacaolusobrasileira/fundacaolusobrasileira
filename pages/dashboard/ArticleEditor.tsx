@@ -18,7 +18,7 @@ import {
   List as ListIcon, Video, Minus, Heading2, Eye,
 } from 'lucide-react';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/ui';
-import { ARTICLE_CATEGORIES, ARTICLE_AUTHORS, PARTNERS, EVENTS, generateId } from '../../store/app.store';
+import { ARTICLE_CATEGORIES, ARTICLE_AUTHORS, PARTNERS, EVENTS, generateId, showToast } from '../../store/app.store';
 import {
   createArticle, updateArticle, autosaveArticle, publishArticle, uploadArticleImage, setArticleEntities,
 } from '../../services/articles.service';
@@ -388,10 +388,18 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({ isOpen, article, o
   const persist = async (): Promise<string | null> => {
     let id = articleId;
     if (!id) {
+      // O título é o único campo obrigatório para criar. Validamos aqui em vez
+      // de deixar o tipo em `Partial<Article>` chegar ao serviço: sem isto o
+      // utilizador clicava em Guardar e nada acontecia, sem explicação.
+      const title = draft.title?.trim();
+      if (!title) {
+        showToast('Dê um título ao artigo antes de guardar.', 'error');
+        return null;
+      }
       // `status` não entra aqui de propósito: createArticle cria sempre como
       // rascunho, e a policy de INSERT só aceita 'rascunho'/'em_revisao'.
       // Quem promove o estado é publishArticle/archiveArticle.
-      const created = await createArticle(draft);
+      const created = await createArticle({ ...draft, title });
       id = created?.id ?? null;
       if (!id) return null;
       setArticleId(id);

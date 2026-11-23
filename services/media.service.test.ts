@@ -34,9 +34,13 @@ describe('MediaUploadSchema (unit)', () => {
     expect(() => MediaUploadSchema.parse(f)).not.toThrow();
   });
 
-  it('accepts SVG (storage RLS allows it)', () => {
+  // MUDANÇA DELIBERADA: o SVG deixou de ser aceite. O bucket `media` é público
+  // e a sua whitelist de mimes no servidor nunca incluiu image/svg+xml — o
+  // ficheiro passava aqui e falhava lá com erro confuso. E SVG é executável:
+  // pode conter <script>, o que num bucket público é vetor de XSS.
+  it('REJEITA SVG — executável e fora da whitelist do bucket', () => {
     const f = makeFile('icon.svg', 'image/svg+xml', 100);
-    expect(() => MediaUploadSchema.parse(f)).not.toThrow();
+    expect(() => MediaUploadSchema.parse(f)).toThrow();
   });
 
   it('accepts MOV (storage RLS allows it)', () => {
@@ -141,14 +145,29 @@ describe('saveCommunityMediaBlob', () => {
     vi.resetModules();
   });
 
-  it('rejects file > 5MB before calling storage', async () => {
+  // MUDANÇA DELIBERADA: o limite das submissões públicas subiu de 5MB para
+  // 50MB. A 5MB praticamente todos os vídeos de telemóvel eram recusados, e o
+  // caso de uso é exatamente esse: QR code num evento, pessoas a enviar do
+  // telemóvel. O painel continua limitado a 5MB (MediaUploadSchema).
+  it('ACEITA ficheiro de 20MB — vídeo de telemóvel é o caso de uso', async () => {
+    const { saveCommunityMediaBlob } = await import('./media.service');
+    const video = Object.defineProperty(
+      new File(['x'], 'festa.mp4', { type: 'video/mp4' }),
+      'size', { value: 20 * 1024 * 1024 }
+    );
+
+    await expect(saveCommunityMediaBlob(video)).resolves.toBeTruthy();
+    expect(mockUpload).toHaveBeenCalled();
+  });
+
+  it('rejeita acima de 50MB, que é o tecto do bucket', async () => {
     const { saveCommunityMediaBlob } = await import('./media.service');
     const bigFile = Object.defineProperty(
       new File(['x'], 'big.mp4', { type: 'video/mp4' }),
-      'size', { value: 5 * 1024 * 1024 + 1 }
+      'size', { value: 50 * 1024 * 1024 + 1 }
     );
 
-    await expect(saveCommunityMediaBlob(bigFile)).rejects.toThrow(/5MB/i);
+    await expect(saveCommunityMediaBlob(bigFile)).rejects.toThrow(/50MB/i);
     expect(mockUpload).not.toHaveBeenCalled();
   });
 

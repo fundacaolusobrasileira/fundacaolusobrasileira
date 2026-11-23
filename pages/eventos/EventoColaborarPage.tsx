@@ -10,7 +10,16 @@ import { supabase } from '../../supabaseClient';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import type { Event } from '../../types';
 import { CheckCircle, Image as ImageIcon, Video, ArrowLeft, Check, UserPlus, Link as LinkIcon, FileUp, Loader2 } from 'lucide-react';
-import { ColaborarSchema } from '../../validation/schemas';
+import { ColaborarSchema, MAX_COMMUNITY_MEDIA_BYTES } from '../../validation/schemas';
+
+const MAX_MB_LABEL = `${Math.round(MAX_COMMUNITY_MEDIA_BYTES / (1024 * 1024))}MB`;
+
+const formatFileSize = (bytes: number): string => {
+  if (!bytes || bytes < 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export const EventoColaborarPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +33,9 @@ export const EventoColaborarPage = () => {
     AUTH_SESSION.isLoggedIn ? 'upload' : 'link'
   );
   const [previewUrl, setPreviewUrl] = useState('');
+  // Ficheiro escolhido: nome e tamanho, para o utilizador perceber o que está
+  // a enviar (a 50MB em rede móvel o envio demora e sem isto parece bloqueado).
+  const [selectedFile, setSelectedFile] = useState<{ name: string; size: number } | null>(null);
 
   const [formData, setFormData] = useState({
     authorName: '',
@@ -136,6 +148,7 @@ export const EventoColaborarPage = () => {
           // Show preview immediately
           setPreviewUrl(URL.createObjectURL(file));
           setFormData(prev => ({ ...prev, type: type }));
+          setSelectedFile({ name: file.name, size: file.size });
           setUploadingMedia(true);
 
           try {
@@ -145,6 +158,7 @@ export const EventoColaborarPage = () => {
           } catch (err: any) {
               if (import.meta.env.DEV) console.error(err);
               setPreviewUrl('');
+              setSelectedFile(null);
               setFormData(prev => ({ ...prev, url: '' }));
               setError(err?.message || "Erro ao salvar arquivo. Tente novamente.");
           } finally {
@@ -194,7 +208,7 @@ export const EventoColaborarPage = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                    <Button variant="white" onClick={() => navigate(`/eventos/${id}`)}>Ver página do evento</Button>
-                   <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => { setSuccess(false); setFormData({...formData, url: '', message: ''}); setPreviewUrl(''); }}>Enviar outra</Button>
+                   <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => { setSuccess(false); setFormData({...formData, url: '', message: ''}); setPreviewUrl(''); setSelectedFile(null); }}>Enviar outra</Button>
                 </div>
              </Card>
            ) : (
@@ -246,7 +260,7 @@ export const EventoColaborarPage = () => {
                             <div className="relative group">
                                 <input
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp,video/mp4"
+                                    accept="image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/quicktime,video/webm"
                                     onChange={handleFileUpload}
                                     disabled={uploadingMedia}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
@@ -288,12 +302,36 @@ export const EventoColaborarPage = () => {
                             </div>
                         )}
 
-                        <p className="text-[10px] text-white/70 ml-3 font-light pt-1">* {uploadMode === 'upload' ? 'Suportamos JPG, PNG, WEBP e MP4 até 5MB. Documentos não são aceites neste fluxo.' : 'Cole o link direto da imagem ou vídeo.'}</p>
+                        <p className="text-[10px] text-white/70 ml-3 font-light pt-1">* {uploadMode === 'upload' ? `Aceitamos uma fotografia (JPEG, PNG, WEBP, AVIF, GIF) ou um vídeo (MP4, MOV, WEBM) até ${MAX_MB_LABEL}. Documentos não são aceites neste fluxo.` : 'Cole o link direto da imagem ou vídeo.'}</p>
                         <p className="text-[10px] text-white/70 ml-3 font-light">Após aprovação, a contribuição aparecerá na Galeria da Comunidade da página deste evento.</p>
+
+                        {uploadMode === 'upload' && selectedFile && (
+                            <p className="text-[10px] text-white/70 ml-3 font-light pt-1">
+                                Ficheiro escolhido: <span className="text-white font-medium break-all">{selectedFile.name}</span>
+                                {formatFileSize(selectedFile.size) ? <> · <span className="text-sand-200">{formatFileSize(selectedFile.size)}</span></> : null}
+                            </p>
+                        )}
+
+                        {/* Indicador INDETERMINADO de propósito: o supabase-js não expõe
+                            progresso em storage.upload(), por isso não há percentagem real
+                            para mostrar — inventar uma seria pior do que não a mostrar. */}
                         {uploadingMedia && (
-                            <div className="flex items-center gap-2 text-xs text-sand-200 ml-3 pt-1" role="status" aria-live="polite">
-                                <Loader2 size={14} className="animate-spin" />
-                                A carregar imagem ou vídeo para revisão...
+                            <div className="ml-3 pt-2 space-y-2" role="status" aria-live="polite">
+                                <div className="flex items-center gap-2 text-xs text-sand-200">
+                                    <Loader2 size={14} className="animate-spin" />
+                                    A enviar… isto pode demorar em rede móvel
+                                </div>
+                                <div
+                                    className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden"
+                                    role="progressbar"
+                                    aria-label="A enviar ficheiro"
+                                    aria-valuetext="Em progresso, duração desconhecida"
+                                >
+                                    <div className="h-full w-full bg-gradient-to-r from-sand-400/10 via-sand-400 to-sand-400/10 animate-pulse" />
+                                </div>
+                                <p className="text-[10px] text-white/50 font-light">
+                                    A carregar imagem ou vídeo para revisão — não feche nem atualize esta página.
+                                </p>
                             </div>
                         )}
 

@@ -9,6 +9,8 @@ import { BenefitsManagerSection } from './BenefitsManagerSection';
 import { CouncilManagerSection } from './CouncilManagerSection';
 import { DocumentManagerSection } from './DocumentManagerSection';
 import { ArticlesManagerSection } from './ArticlesManagerSection';
+import { EventQrSection } from './EventQrSection';
+import { InviteMemberSection } from './InviteMemberSection';
 import { deleteEvent } from '../../services/events.service';
 import { deleteMember } from '../../services/members.service';
 import { updatePreCadastro, deletePreCadastro, syncPreCadastros } from '../../services/precadastros.service';
@@ -412,6 +414,10 @@ export const DashboardPage = () => {
             </div>
           </Card>
         </div>
+
+        <EventQrSection />
+
+        {isAdmin() && <InviteMemberSection />}
 
         <BenefitsManagerSection />
 

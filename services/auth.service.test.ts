@@ -215,22 +215,24 @@ describe('resolveUserRole (integration)', () => {
     expect(role).toBe('viewer');
   });
 
-  it('returns viewer when query exceeds 3s timeout', async () => {
-    // Reset modules BEFORE installing fake timers so the dynamic import below
-    // re-evaluates auth.service with the fake timer-aware setTimeout.
+  // CONTRATO ATUALIZADO: o orçamento é de 3s POR TENTATIVA, e há 2 tentativas.
+  // Esteve a 1500ms cada (3s repartidos) e isso expulsava admins do dashboard
+  // em logins novos, onde não há papel anterior para preservar. Por isso o
+  // relógio tem de avançar ~6s, não 3s — e o timeout do próprio teste também.
+  it('returns viewer when both attempts exceed the 3s-per-attempt timeout', async () => {
     vi.resetModules();
     vi.useFakeTimers();
     try {
-      mockProfileSingle.mockImplementation(() => new Promise(() => {})); // never resolves
+      mockProfileSingle.mockImplementation(() => new Promise(() => {})); // nunca resolve
       const { resolveUserRole } = await import('./auth.service');
       const rolePromise = resolveUserRole('user-uuid-5');
-      await vi.advanceTimersByTimeAsync(3001);
+      await vi.advanceTimersByTimeAsync(6002); // 2 tentativas × 3000ms
       const role = await rolePromise;
       expect(role).toBe('viewer');
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 15000);
 });
 
 // ============================================================================
@@ -289,22 +291,25 @@ describe('resolveUserRoleDetailed (P1 — sem degradação silenciosa)', () => {
     expect(mockProfileSingle).toHaveBeenCalledTimes(2);
   });
 
-  it('timeout total de 3s devolve resolved:false com reason timeout', async () => {
+  it('timeout de 3s por tentativa (2 tentativas) devolve resolved:false com reason timeout', async () => {
     vi.resetModules();
     vi.useFakeTimers();
     try {
       mockProfileSingle.mockImplementation(() => new Promise(() => {})); // nunca resolve
       const { resolveUserRoleDetailed } = await import('./auth.service');
       const pending = resolveUserRoleDetailed('user-p1-timeout');
-      await vi.advanceTimersByTimeAsync(3001);
+      await vi.advanceTimersByTimeAsync(6002); // 2 × 3000ms
       const result = await pending;
       expect(result.role).toBe('viewer');
       expect(result.resolved).toBe(false);
       expect(result.reason).toBe('timeout');
+      // O que importa não é o viewer: é o `resolved:false`, que diz a quem
+      // chama "não sei", para o App.tsx preservar o papel anterior em vez de
+      // rebaixar o utilizador por causa de uma falha de rede.
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 15000);
 });
 
 describe('decideSessionRole (P1 — preservação de privilégio)', () => {

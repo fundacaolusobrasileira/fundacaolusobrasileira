@@ -71,23 +71,52 @@ export type BenefitInput = z.infer<typeof BenefitSchema>;
 // jpg/jpeg/png/gif/webp/svg/mp4/mov/webm/pdf.
 // Schema must accept the same set so client-side validation doesn't reject
 // files the storage policy would otherwise allow.
+// NOTA: `image/svg+xml` foi REMOVIDO. O bucket `media` tem whitelist de mimes
+// no servidor e não o inclui, por isso um SVG passava aqui e falhava lá com
+// erro confuso. Além disso SVG é executável e o bucket é público.
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
+  'image/avif',
   'video/mp4',
   'video/quicktime', // .mov
   'video/webm',
   'application/pdf',
 ] as const;
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB — capas, avatares, galeria do painel
 
 export const MediaUploadSchema = z.instanceof(File)
   .refine(f => f.size <= MAX_FILE_SIZE_BYTES, { message: `Arquivo muito grande. Máximo 5MB.` })
   .refine(f => (ALLOWED_MIME_TYPES as readonly string[]).includes(f.type), {
-    message: `Tipo de arquivo não suportado. Use JPEG, PNG, GIF, WEBP, SVG, MP4, MOV, WEBM ou PDF.`,
+    message: `Tipo de arquivo não suportado. Use JPEG, PNG, GIF, WEBP, AVIF, MP4, MOV, WEBM ou PDF.`,
+  });
+
+// ---------------------------------------------------------------------------
+// SUBMISSÕES PÚBLICAS EM EVENTOS (QR code / telemóvel)
+// Limite próprio: 5MB rejeitava praticamente todos os vídeos de telemóvel e
+// até fotografias de câmaras recentes. 50MB é o tecto do bucket `media`.
+// Sem PDF nem SVG: aqui só entram fotografias e vídeos.
+// ---------------------------------------------------------------------------
+export const COMMUNITY_MEDIA_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/avif',
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+] as const;
+export const MAX_COMMUNITY_MEDIA_BYTES = 50 * 1024 * 1024; // 50MB
+
+export const CommunityMediaUploadSchema = z.instanceof(File)
+  .refine(f => f.size <= MAX_COMMUNITY_MEDIA_BYTES, {
+    message: 'Ficheiro demasiado grande. O máximo são 50MB.',
+  })
+  .refine(f => (COMMUNITY_MEDIA_MIME_TYPES as readonly string[]).includes(f.type), {
+    message: 'Formato não suportado. Envie uma fotografia (JPEG, PNG, WEBP, AVIF, GIF) ou um vídeo (MP4, MOV, WEBM).',
   });
 
 export type LoginInput = z.infer<typeof LoginSchema>;
