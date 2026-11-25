@@ -5,7 +5,7 @@ import { BrandLogo } from '../../components/domain';
 import { loginAsEditor } from '../../services/auth.service';
 import { supabase } from '../../supabaseClient';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { ArrowLeft, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Lock, Mail, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { LoginSchema } from '../../validation/schemas';
 
 export const LoginPage = () => {
@@ -15,6 +15,7 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
@@ -158,15 +159,24 @@ export const LoginPage = () => {
                    <Input
                      id="login-password"
                      aria-label="Senha"
-                     type="password"
+                     type={showPassword ? 'text' : 'password'}
                      required
                      variant="dark"
                      placeholder="--------"
                      value={formData.password}
                      onChange={(e: any) => setFormData({...formData, password: e.target.value})}
-                     className="pl-12 bg-white/5 border-white/10 focus:border-sand-400/50 focus:bg-white/10 transition-all h-14"
+                     className="pl-12 pr-12 bg-white/5 border-white/10 focus:border-sand-400/50 focus:bg-white/10 transition-all h-14"
                    />
                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-sand-400 transition-colors" size={18} />
+                   <button
+                     type="button"
+                     onClick={() => setShowPassword(v => !v)}
+                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                     aria-pressed={showPassword}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-white/40 hover:text-sand-400 focus:outline-none focus:ring-2 focus:ring-sand-400/50 transition-colors"
+                   >
+                     {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                   </button>
                 </div>
               </div>
 

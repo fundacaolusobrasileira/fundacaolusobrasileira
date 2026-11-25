@@ -123,12 +123,18 @@ const RelatedCard: React.FC<{ article: ArticleWithRelations }> = ({ article }) =
     <article className="h-full bg-white rounded-[2rem] overflow-hidden border border-slate-100/60 p-2 flex flex-col hover:shadow-premium transition-all duration-700">
       <div className="bg-slate-100 relative overflow-hidden rounded-[1.5rem] aspect-[16/10]">
         {article.cover_url && (
-          <img
-            src={article.cover_url}
-            alt={article.cover_alt || ''}
-            loading="lazy"
-            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-          />
+          <>
+            <img
+              src={article.cover_url} alt="" aria-hidden="true" loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
+            />
+            <img
+              src={article.cover_url}
+              alt={article.cover_alt || ''}
+              loading="lazy"
+              className="relative w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-1000"
+            />
+          </>
         )}
       </div>
       <div className="p-6 flex flex-col flex-grow">

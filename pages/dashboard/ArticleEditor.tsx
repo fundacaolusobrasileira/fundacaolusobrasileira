@@ -17,7 +17,7 @@ import {
   Send, Clock, AlertTriangle, Link2, Image as ImageIcon, Type, Quote,
   List as ListIcon, Video, Minus, Heading2, Eye,
 } from 'lucide-react';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../components/ui';
+import { Modal, ModalHeader, ModalBody, ModalFooter, ImageCropper } from '../../components/ui';
 import { ARTICLE_CATEGORIES, ARTICLE_AUTHORS, PARTNERS, EVENTS, generateId, showToast } from '../../store/app.store';
 import {
   createArticle, updateArticle, autosaveArticle, publishArticle, uploadArticleImage, setArticleEntities,
@@ -79,18 +79,20 @@ const toLocalInput = (iso?: string | null): string => {
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
 // ---------------------------------------------------------------- uploader
-const ImageField: React.FC<{ url: string; onUrl: (u: string) => void; placeholder?: string }> = ({
-  url, onUrl, placeholder = 'Cole o link da imagem ou envie um ficheiro →',
+// `crop` só é ligado no campo de capa: nos blocos do corpo o fluxo continua
+// a ser envio direto, sem passo intermédio.
+const ImageField: React.FC<{
+  url: string; onUrl: (u: string) => void; placeholder?: string; crop?: boolean;
+}> = ({
+  url, onUrl, placeholder = 'Cole o link da imagem ou envie um ficheiro →', crop = false,
 }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pending, setPending] = useState<File | null>(null);
   const aliveRef = useRef(true);
   useEffect(() => () => { aliveRef.current = false; }, []);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    e.target.value = '';
-    if (!f) return;
+  const doUpload = async (f: File) => {
     setUploading(true);
     const uploaded = await uploadArticleImage(f);
     if (!aliveRef.current) return;
@@ -98,19 +100,60 @@ const ImageField: React.FC<{ url: string; onUrl: (u: string) => void; placeholde
     if (uploaded) onUrl(uploaded);
   };
 
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    if (crop) { setPending(f); return; }
+    await doUpload(f);
+  };
+
+  // uploadArticleImage() espera um File e valida o mime contra a whitelist do
+  // bucket — o Blob do canvas tem de ser embrulhado.
+  const handleCropped = async (blob: Blob) => {
+    setPending(null);
+    await doUpload(new File([blob], 'capa.jpg', { type: 'image/jpeg' }));
+  };
+
+  const handleRaw = async () => {
+    const f = pending;
+    setPending(null);
+    if (f) await doUpload(f);
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row gap-2">
-      <input value={url} onChange={e => onUrl(e.target.value)} placeholder={placeholder} className={inputCls} />
-      <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        disabled={uploading}
-        className="shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
-      >
-        {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-        {uploading ? 'A enviar...' : 'Enviar'}
-      </button>
+    <div className="space-y-2">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input value={url} onChange={e => onUrl(e.target.value)} placeholder={placeholder} className={inputCls} />
+        <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="shrink-0 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+        >
+          {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+          {uploading ? 'A enviar...' : 'Enviar'}
+        </button>
+      </div>
+
+      {pending && (
+        <div className="space-y-2">
+          <ImageCropper
+            file={pending}
+            initialAspect={16 / 10}
+            onCancel={() => setPending(null)}
+            onCropped={handleCropped}
+          />
+          <button
+            type="button"
+            onClick={handleRaw}
+            className="text-[11px] font-bold uppercase tracking-wider text-slate-500 underline hover:text-brand-900 transition-colors"
+          >
+            Usar sem recortar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -545,7 +588,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({ isOpen, article, o
 
             <div>
               <label className={labelCls}>Imagem de capa</label>
-              <ImageField url={coverUrl} onUrl={u => { markDirty(); setCoverUrl(u); }} />
+              <ImageField url={coverUrl} crop onUrl={u => { markDirty(); setCoverUrl(u); }} />
               <input
                 value={coverAlt}
                 onChange={e => { markDirty(); setCoverAlt(e.target.value); }}

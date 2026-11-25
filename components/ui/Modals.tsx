@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Lock } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Forms';
@@ -90,7 +91,15 @@ export const Modal = ({ isOpen, onClose, children, className = '', titleId = 'mo
 
   if (!isOpen) return null;
 
-  return (
+  // PORTAL — não é cosmético, é o que faz o modal funcionar.
+  // Um ancestral com `transform`, `filter` ou `backdrop-filter` cria um bloco
+  // de contenção, e um `position: fixed` lá dentro passa a ser relativo a esse
+  // elemento em vez do ecrã. Este projeto usa `animate-fadeInUpSlow`
+  // (que anima transform) em quase todas as secções do dashboard, por isso o
+  // modal ficava preso dentro da secção: o fundo não cobria a página e o
+  // rodapé com os botões ficava cortado. Montar em document.body resolve
+  // para todos os modais, e não só para o do editor de artigos.
+  const content = (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
@@ -119,6 +128,10 @@ export const Modal = ({ isOpen, onClose, children, className = '', titleId = 'mo
       </div>
     </div>
   );
+
+  // `document.body` pode não existir em render de servidor; nesse caso
+  // devolvemos a árvore na mesma, sem portal.
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
 
 // Modal Header
@@ -129,8 +142,14 @@ export const ModalHeader = ({ children, className = '', id }: any) => (
 );
 
 // Modal Body
+// `min-h-0` é indispensável: num container flex-col, um item com
+// `overflow-y-auto` só encolhe abaixo da altura do seu conteúdo se tiver
+// min-height a zero. Sem isto o corpo cresce até ao tamanho do conteúdo, o
+// modal ultrapassa o max-h-[90vh] e o `overflow-hidden` do contentor corta o
+// fundo — levando o rodapé com os botões consigo. Era por isso que o editor
+// de artigos aparecia cortado e não se chegava ao agendamento nem a Publicar.
 export const ModalBody = ({ children, className = '' }: any) => (
-  <div className={`p-8 overflow-y-auto custom-scrollbar flex-grow bg-white ${className}`}>
+  <div className={`p-8 overflow-y-auto custom-scrollbar flex-grow min-h-0 bg-white ${className}`}>
     {children}
   </div>
 );

@@ -74,11 +74,20 @@ const FeaturedArticle: React.FC<{ article: ArticleWithRelations }> = ({ article 
       <div className="grid lg:grid-cols-2 gap-0">
         <div className="relative bg-slate-100 overflow-hidden rounded-[2rem] aspect-[16/11] lg:aspect-auto lg:min-h-[26rem]">
           {article.cover_url && (
-            <img
-              src={article.cover_url}
-              alt={article.cover_alt || ''}
-              className="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-[1.02] transition-all duration-1000"
-            />
+            <>
+              {/* Fundo desfocado: preenche a caixa quando a capa não tem a
+                  proporção dela (ex.: cartaz 9:16). Decorativo. */}
+              <img
+                src={article.cover_url} alt="" aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
+              />
+              {/* object-contain: a capa aparece SEMPRE inteira, nunca cortada. */}
+              <img
+                src={article.cover_url}
+                alt={article.cover_alt || ''}
+                className="absolute inset-0 w-full h-full object-contain grayscale-[20%] group-hover:grayscale-0 group-hover:scale-[1.02] transition-all duration-1000"
+              />
+            </>
           )}
           <Badge variant="light" className="absolute top-5 left-5 backdrop-blur-md bg-white/90">
             Em destaque
@@ -117,12 +126,18 @@ const ArticleCard: React.FC<{ article: ArticleWithRelations }> = ({ article }) =
     <article className="h-full bg-white rounded-[2rem] overflow-hidden border border-slate-100/60 p-2 flex flex-col hover:shadow-premium transition-all duration-700">
       <div className="bg-slate-100 relative overflow-hidden rounded-[1.5rem] aspect-[16/10]">
         {article.cover_url && (
-          <img
-            src={article.cover_url}
-            alt={article.cover_alt || ''}
-            loading="lazy"
-            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-          />
+          <>
+            <img
+              src={article.cover_url} alt="" aria-hidden="true" loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
+            />
+            <img
+              src={article.cover_url}
+              alt={article.cover_alt || ''}
+              loading="lazy"
+              className="relative w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-1000"
+            />
+          </>
         )}
         {article.category?.name && (
           <Badge variant="light" className="absolute top-4 left-4 backdrop-blur-md bg-white/90">
